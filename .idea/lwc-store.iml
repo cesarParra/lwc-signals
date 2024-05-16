@@ -2,7 +2,10 @@
 <module type="GENERAL_MODULE" version="4">
   <component name="FacetManager">
     <facet type="IlluminatedCloud" name="Illuminated Cloud">
-      <configuration />
+      <configuration>
+        <option name="connectionName" value="test-pd71nsaelrbr@example.com" />
+        <option name="connectionType" value="SFDX" />
+      </configuration>
     </facet>
   </component>
   <component name="NewModuleRootManager" inherit-compiler-output="true">
