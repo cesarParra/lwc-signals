@@ -1,5 +1,5 @@
 import { LightningElement } from "lwc";
-import { counter } from "c/counter";
+import { counter } from "c/demoStores";
 
 export default class CountChanger extends LightningElement {
   incrementCount() {
