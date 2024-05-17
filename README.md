@@ -4,7 +4,7 @@ A simple yet powerful reactive store for Lightning Web Components.
 
 ---
 
-Inspired by Svelte runes, SolidJs and Preact signals, and the Vue 3 Composition API, LWC Store is a
+Inspired by the Signals technology used by SolidJs, Preact, Svelte 5 Runes and the Vue 3 Composition API, LWC Store is a
 reactive store for Lightning Web Components that allows you to create reactive data stores
 that can be used to share state between components.
 
@@ -22,18 +22,17 @@ to communicate between components.
 
 This can be cumbersome when you have a lot of components that need to share state for many reasons:
 
-- You have to pass the state through all the components in the hierarchy
-- You have to manage the state in a parent component, which relies on having the component on the page
+- You have to dispatch and handle the state events through all the components in the hierarchy (when using CustomEvents)
+- You have to manage the state in a parent component, which relies on having the component on the page (when using
+  pub/sub and messages)
 - You have to make sure manage subscriptions and unsubscriptions to events
 
 An alternative is to use the `wire` service to get the data from the server and let the framework handle the caching
 for you, but this only works for data that is stored in the server, and still forces you to implement a lot of
-boilerplate
-code to manage each wire adapter for each component.
+boilerplate code to manage each wire adapter for each component.
 
 `LWC Store` provides a simple way to create reactive data stores that can be used to share state between components
-without
-the need to broadcast messages or manage subscriptions and wires.
+without the need to broadcast messages or manage subscriptions and wires.
 
 ## Creating a store
 
@@ -110,13 +109,13 @@ export default class Display extends LightningElement {
 }
 ```
 
-<div style="text-align: center;">
-    <img src="./doc-assets/counter-example.gif" alt="Counter Example" />
-</div>
-
 > ❗ Note that in the $computed callback we need to reassign the value to `this.counter`
 > to trigger the reactivity. This is because we need the value to be reassigned so that
 > LWC reactive system can detect the change and update the UI.
+
+<div style="text-align: center;">
+    <img src="./doc-assets/counter-example.gif" alt="Counter Example" />
+</div>
 
 # Contributing
 
