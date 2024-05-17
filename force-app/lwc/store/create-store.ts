@@ -10,10 +10,10 @@ type Store<T> = {
 
 function $store<T>(initialValue: T): Store<T> {
   let _value = initialValue;
-  let subscribers: Subscriber<T>[] = [];
+  const subscribers: Subscriber<T>[] = [];
 
   function notify() {
-    for (let subscriber of subscribers) {
+    for (const subscriber of subscribers) {
       subscriber(_value);
     }
   }

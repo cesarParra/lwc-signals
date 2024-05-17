@@ -1,3 +1,1 @@
-class Store {}
-
-export { Store };
+export * from "./create-store";
