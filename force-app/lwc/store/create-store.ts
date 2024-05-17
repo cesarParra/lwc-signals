@@ -1,23 +1,28 @@
+type Store<T> = {
+  get value(): T;
+  set value(newValue: T);
+};
+
 const context: VoidFunction[] = [];
 
 function _getCurrentObserver(): VoidFunction | undefined {
   return context[context.length - 1];
 }
 
-function $computed<T>(getter: () => T) {
+function $computed<T>(getter: () => T): T {
   const execute = () => {
     context.push(execute);
     try {
-      getter();
+      return getter();
     } finally {
       context.pop();
     }
   };
 
-  execute();
+  return execute();
 }
 
-function $store<T>(value: T) {
+function $store<T>(value: T): Store<T> {
   let _value: T = value;
   const subscribers: Set<VoidFunction> = new Set();
 

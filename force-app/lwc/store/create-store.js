@@ -6,12 +6,12 @@ function $computed(getter) {
   const execute = () => {
     context.push(execute);
     try {
-      getter();
+      return getter();
     } finally {
       context.pop();
     }
   };
-  execute();
+  return execute();
 }
 function $store(value) {
   let _value = value;
