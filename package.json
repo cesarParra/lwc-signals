@@ -1,9 +1,10 @@
 {
-  "name": "salesforce-app",
+  "name": "lwc-store",
   "private": true,
   "version": "1.0.0",
-  "description": "Salesforce App",
   "scripts": {
+    "create:scratch": "sf org create scratch --alias lwc-store --definition-file config/project-scratch-def.json --set-default",
+    "dev:start": "npm run create:scratch && sf project deploy start",
     "lint": "eslint **/{aura,lwc}/**/*.js",
     "test": "npm run test:unit",
     "test:unit": "sfdx-lwc-jest",

@@ -1,13 +1,22 @@
 {
-  "orgName": "cesarparra company",
+  "orgName": "lwc store",
   "edition": "Developer",
-  "features": ["EnableSetPasswordInApi"],
+  "features": ["EnableSetPasswordInApi", "Communities", "Sites", "AuthorApex"],
   "settings": {
+    "experienceBundleSettings": {
+      "enableExperienceBundleMetadata": true
+    },
+    "communitiesSettings": {
+      "enableNetworksEnabled": true
+    },
     "lightningExperienceSettings": {
       "enableS1DesktopEnabled": true
     },
     "mobileSettings": {
       "enableS1EncryptedStoragePref2": false
+    },
+    "userManagementSettings": {
+      "enableNewProfileUI": true
     }
   }
 }
