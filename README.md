@@ -117,6 +117,100 @@ export default class Display extends LightningElement {
     <img src="./doc-assets/counter-example.gif" alt="Counter Example" />
 </div>
 
+## Reacting to multiple stores
+
+You can also use multiple stores in a single `computed` and react to changes in all of them.
+This gives you the ability to create complex reactive values that depend on multiple data sources
+without having to track each one independently.
+
+> 👀 You can find the full working code for the following example in the `examples`
+> folder.
+
+**Given the following stores**
+
+```javascript
+// LWC Service: contact-info.js
+
+import { $store } from "c/store";
+
+export const accountName = $store("ACME");
+
+export const contactName = $store("John Doe");
+```
+
+**And given a component that updates both stores**
+
+```html
+<!-- contactInfoForm.html -->
+<template>
+  <lightning-input
+    label="Account Name"
+    value="{accountName}"
+    onchange="{handleAccountNameChange}"
+  ></lightning-input>
+  <lightning-input
+    label="Contact Name"
+    value="{contactName}"
+    onchange="{handleContactNameChange}"
+  ></lightning-input>
+</template>
+```
+
+```javascript
+// contactInfoForm.js
+import { LightningElement } from "lwc";
+import { $computed } from "c/store";
+import { accountName, contactName } from "c/demoStores";
+
+export default class ContactInfoForm extends LightningElement {
+  accountName = $computed(() => (this.accountName = accountName.value));
+  contactName = $computed(() => (this.contactName = contactName.value));
+
+  handleAccountNameChange(event) {
+    accountName.value = event.target.value;
+  }
+
+  handleContactNameChange(event) {
+    contactName.value = event.target.value;
+  }
+}
+```
+
+**You can create a computed value that depends on both stores**
+
+```html
+<!-- businessCard.html -->
+<template>
+  <div class="slds-card">
+    <div class="slds-card__body slds-card__body_inner">
+      <div>Account Name: {contactInfo.accountName}</div>
+      <div>Contact Name: {contactInfo.contactName}</div>
+    </div>
+  </div>
+</template>
+```
+
+```javascript
+// businessCard.js
+import { LightningElement } from "lwc";
+import { $computed } from "c/store";
+import { accountName, contactName } from "c/demoStores";
+
+export default class BusinessCard extends LightningElement {
+  contactInfo = $computed(
+    () =>
+      (this.contactInfo = {
+        accountName: accountName.value,
+        contactName: contactName.value
+      })
+  );
+}
+```
+
+<div style="text-align: center;">
+    <img src="./doc-assets/business-card-example.gif" alt="Counter Example" />
+</div>
+
 # Contributing
 
 Contributions are welcome! Please read the [Contributing Guide](CONTRIBUTING.md) for more information.
