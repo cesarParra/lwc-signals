@@ -1,33 +1,35 @@
-function $store(initialValue) {
-  let _value = initialValue;
-  let subscribers = [];
-  function notify() {
-    for (let subscriber of subscribers) {
-      subscriber(_value);
+const context = [];
+function _getCurrentObserver() {
+  return context[context.length - 1];
+}
+function $computed(getter) {
+  const execute = () => {
+    context.push(execute);
+    try {
+      getter();
+    } finally {
+      context.pop();
     }
-  }
+  };
+  execute();
+}
+function $store(value) {
+  let _value = value;
+  const subscribers = new Set();
   return {
     get value() {
+      const current = _getCurrentObserver();
+      if (current) {
+        subscribers.add(current);
+      }
       return _value;
     },
-    set value(v) {
-      _value = v;
-      notify();
-    },
-    subscribe: (subscriber) => {
-      subscribers.push(subscriber);
-    },
-    bind: (arg1, key) => {
-      if (typeof arg1 === "function") {
-        subscribers.push(arg1);
-        return _value;
-      } else {
-        subscribers.push((value) => {
-          arg1[key] = value;
-        });
-        return _value;
+    set value(newValue) {
+      _value = newValue;
+      for (const subscriber of subscribers) {
+        subscriber();
       }
     }
   };
 }
-export default $store;
+export { $store, $computed };

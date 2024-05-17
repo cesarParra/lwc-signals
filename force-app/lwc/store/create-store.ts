@@ -1,46 +1,41 @@
-type Subscriber<T> = (value: T) => void;
+const context: VoidFunction[] = [];
 
-type Component = { [key: string]: any };
+function _getCurrentObserver(): VoidFunction | undefined {
+  return context[context.length - 1];
+}
 
-type Store<T> = {
-  value: T;
-  subscribe: (subscriber: Subscriber<T>) => void;
-  bind: (arg1: Subscriber<T> | Component, key?: string) => T;
-};
-
-function $store<T>(initialValue: T): Store<T> {
-  let _value = initialValue;
-  const subscribers: Subscriber<T>[] = [];
-
-  function notify() {
-    for (const subscriber of subscribers) {
-      subscriber(_value);
+function $computed<T>(getter: () => T) {
+  const execute = () => {
+    context.push(execute);
+    try {
+      getter();
+    } finally {
+      context.pop();
     }
-  }
+  };
+
+  execute();
+}
+
+function $store<T>(value: T) {
+  let _value: T = value;
+  const subscribers: Set<VoidFunction> = new Set();
 
   return {
     get value() {
+      const current = _getCurrentObserver();
+      if (current) {
+        subscribers.add(current);
+      }
       return _value;
     },
-    set value(v) {
-      _value = v;
-      notify();
-    },
-    subscribe: (subscriber: Subscriber<T>) => {
-      subscribers.push(subscriber);
-    },
-    bind: (arg1, key) => {
-      if (typeof arg1 === "function") {
-        subscribers.push(arg1 as Subscriber<T>);
-        return _value;
-      } else {
-        subscribers.push((value) => {
-          arg1[key!] = value;
-        });
-        return _value;
+    set value(newValue: T) {
+      _value = newValue;
+      for (const subscriber of subscribers) {
+        subscriber();
       }
     }
   };
 }
 
-export default $store;
+export { $store, $computed };
