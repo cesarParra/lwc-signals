@@ -367,12 +367,10 @@ export const { data: fetchContacts } = $resource(getContacts);
 ```html
 <!-- contactList.html -->
 <template>
-  <template if:true={contacts.loading}>
-    Loading
-  </template>
-  <template if:false={contacts.loading}>
-    <template for:each={contacts.data} for:item="contact">
-      <div key={contact.Id}>
+  <template if:true="{contacts.loading}"> Loading </template>
+  <template if:false="{contacts.loading}">
+    <template for:each="{contacts.data}" for:item="contact">
+      <div key="{contact.Id}">
         <p>{contact.Name}</p>
       </div>
     </template>
@@ -387,7 +385,7 @@ import { $computed } from "c/store";
 import { fetchContacts } from "c/contact-store";
 
 export default class ContactList extends LightningElement {
-  contacts = $computed(() => this.contacts = fetchContacts.value).value;
+  contacts = $computed(() => (this.contacts = fetchContacts.value)).value;
 }
 ```
 
@@ -464,9 +462,9 @@ Let's now create our picklist component that allows the user to select an accoun
 <template>
   <lightning-select
     label="Select Account"
-    value={currentAccountId}
-    options={accounts}
-    onchange={handleAccountChange}
+    value="{currentAccountId}"
+    options="{accounts}"
+    onchange="{handleAccountChange}"
   ></lightning-select>
 </template>
 ```
@@ -518,12 +516,15 @@ Now, let's create the component that displays the details of the selected accoun
 <template>
   <div>
     <h1>Selected Account</h1>
-    <template if:true={account.loading}>
-      <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+    <template if:true="{account.loading}">
+      <lightning-spinner
+        alternative-text="Loading"
+        size="large"
+      ></lightning-spinner>
     </template>
 
-    <template if:false={account.loading}>
-      <template if:true={account.data}>
+    <template if:false="{account.loading}">
+      <template if:true="{account.data}">
         <p>Account Name: {account.data.Name}</p>
         <p>Phone: {account.data.Phone}</p>
         <p>Website: {account.data.Website}</p>
@@ -548,10 +549,45 @@ export default class AccountDetails extends LightningElement {
     <img src="./doc-assets/account-picker.gif" alt="Account Picker Example" /> 
 </div>
 
+> 🍪 One extra feature of the data returned by the `$resource` function is that when it is reloading the data, the
+> previous data is still available in the `data` property. This allows you to keep the old value while the new value is
+> being loaded and provide for a smoother experience, to avoid flickering or loading spinners that disappear immediately,
+> when you know the data is going to be fetched quickly.
+
 ---
-TODO: Remember refetching
-TODO: Benefits, allows you to keep the old value while the new values are being loaded
----
+
+### Refetching data
+
+When you use the `$resource` function, the store will automatically refetch the data whenever the reactive values
+change. This is useful when you want to refetch the data when the parameters change, but it can also be a problem when
+you want to keep the data in the store and only refetch it when you explicitly tell it to.
+
+To solve this problem, you can use the `refetch` function that is returned by the `$resource` function.
+
+```javascript
+import { $store, $resource } from "c/store";
+import getContacts from "@salesforce/apex/ContactController.getContacts";
+
+export const { data: fetchContacts, refetch: refetchContacts } =
+  $resource(getContacts);
+```
+
+You can then call the `refetch` function whenever you want to refetch the data.
+
+```javascript
+// contactList.js
+import { LightningElement } from "lwc";
+import { $computed } from "c/store";
+import { fetchContacts, refetchContacts } from "c/contact-store";
+
+export default class ContactList extends LightningElement {
+  contacts = $computed(() => (this.contacts = fetchContacts.value)).value;
+
+  handleRefresh() {
+    refetchContacts();
+  }
+}
+```
 
 # Contributing
 
