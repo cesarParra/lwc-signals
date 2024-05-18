@@ -2,16 +2,42 @@ const context = [];
 function _getCurrentObserver() {
   return context[context.length - 1];
 }
-function $computed(getter) {
+function $effect(fn) {
   const execute = () => {
     context.push(execute);
     try {
-      return getter();
+      fn();
     } finally {
       context.pop();
     }
   };
-  return execute();
+  execute();
+}
+function $computed(fn) {
+  const computedStore = $store(fn());
+  let newValue = computedStore.value;
+  $effect(() => {
+    newValue = fn();
+  });
+  return {
+    get value() {
+      return newValue;
+    }
+  };
+}
+// To be used for reactive LWC properties
+// This function subscribes to the store and returns the store's current value.
+function $rxProp(store, fn) {
+  $effect(() => {
+    fn();
+  });
+  return store.value;
+}
+function $rxProp2(store) {
+  $effect(() => {
+    console.log(store.value);
+  });
+  return store.value;
 }
 function $store(value) {
   let _value = value;
@@ -32,4 +58,4 @@ function $store(value) {
     }
   };
 }
-export { $store, $computed };
+export { $store, $effect, $computed, $rxProp, $rxProp2 };
