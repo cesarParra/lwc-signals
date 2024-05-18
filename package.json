@@ -3,7 +3,9 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
-    "test": "node --experimental-vm-modules node_modules/.bin/jest",
+    "test": "jest",
+    "test:watch": "jest --watch",
+    "test:coverage": "jest --coverage",
     "create:scratch": "sf org create scratch --alias lwc-signals --definition-file config/project-scratch-def.json --set-default",
     "dev:start": "npm run create:scratch && sf project deploy start",
     "lint": "eslint **/{aura,lwc}/**/*.js",

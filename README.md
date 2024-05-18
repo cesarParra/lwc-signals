@@ -1,10 +1,10 @@
 # LWC Signals
 
-![GitHub Workflow Status](https://github.com/cesarParra/lwc-signals/actions/workflows/ci.yml/badge.svg)
-
 A simple yet powerful reactive state management solution for Lightning Web Components.
 
 ---
+
+![GitHub Workflow Status](https://github.com/cesarParra/lwc-signals/actions/workflows/ci.yml/badge.svg)
 
 Inspired by the Signals technology behind SolidJs, Preact, Svelte 5 Runes and the Vue 3 Composition API, LWC Signals is
 a
