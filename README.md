@@ -127,8 +127,8 @@ export default class Display extends LightningElement {
 ### `$computed`
 
 You can also use the `$computed` function to create a reactive value that depends on the store.
-The difference between `$reactTo` and `$computed` is that `$computed` allows you return a derived computed value
-instead of the exact value of the store.
+The difference between `$reactTo` and `$computed` is that `$computed` allows you return a derived computed store
+from the original, or multiple stores.
 
 ```javascript
 // display.js
@@ -138,7 +138,7 @@ import { counter } from "c/counter-store";
 
 export default class Display extends LightningElement {
   get counterMultiplied() {
-    return $computed(() => counter.value * 2);
+    return $computed(() => counter.value * 2).value;
   }
 }
 ```
@@ -165,7 +165,7 @@ import { $computed } from "c/store";
 import { counter } from "c/counter-store";
 
 export default class Display extends LightningElement {
-  counter = $computed(counter, () => (this.counter = counter.value));
+  counter = $computed(counter, () => (this.counter = counter.value)).value;
 }
 ```
 
@@ -264,7 +264,7 @@ export default class BusinessCard extends LightningElement {
         accountName: accountName.value,
         contactName: contactName.value
       })
-  );
+  ).value;
 }
 ```
 
