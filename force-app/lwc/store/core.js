@@ -57,4 +57,27 @@ function $store(value) {
     }
   };
 }
-export { $store, $effect, $computed, $reactTo };
+function $resource(fn) {
+  const store = $store({
+    data: null,
+    loading: true,
+    error: null
+  });
+  $effect(async () => {
+    try {
+      store.value = {
+        data: await fn(),
+        loading: false,
+        error: null
+      };
+    } catch (error) {
+      store.value = {
+        data: null,
+        loading: false,
+        error
+      };
+    }
+  });
+  return store.readOnly;
+}
+export { $store, $effect, $computed, $reactTo, $resource };

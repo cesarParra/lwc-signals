@@ -82,4 +82,38 @@ function $store<T>(value: T): Store<T> {
   };
 }
 
-export { $store, $effect, $computed, $reactTo };
+type AsyncData<T> = {
+  data: T | null;
+  loading: boolean;
+  error: unknown | null;
+};
+
+function $resource<T>(
+  fn: () => Promise<T>
+): Store<AsyncData<T>> | ReadOnlyStore<AsyncData<T>> {
+  const store = $store<AsyncData<T>>({
+    data: null,
+    loading: true,
+    error: null
+  });
+
+  $effect(async () => {
+    try {
+      store.value = {
+        data: await fn(),
+        loading: false,
+        error: null
+      };
+    } catch (error) {
+      store.value = {
+        data: null,
+        loading: false,
+        error
+      };
+    }
+  });
+
+  return store.readOnly;
+}
+
+export { $store, $effect, $computed, $reactTo, $resource };
