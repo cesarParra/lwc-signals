@@ -173,6 +173,21 @@ export default class Display extends LightningElement {
 > to trigger the reactivity. This is because we need the value to be reassigned so that
 > LWC reactive system can detect the change and update the UI.
 
+### Stacking computed values
+
+You can also stack computed values to create more complex reactive values that derive from each other
+
+```javascript
+import { $store, $computed } from "c/store";
+
+export const counter = $store(0);
+
+export const counterPlusOne = $computed(() => counter.value + 1);
+export const counterPlusTwo = $computed(() => counterPlusOne.value + 1);
+```
+
+Because `$computed` values return a store, you can use them as you would use any other store.
+
 ## Reacting to multiple stores
 
 You can also use multiple stores in a single `computed` and react to changes in any of them.
