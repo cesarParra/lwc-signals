@@ -367,7 +367,7 @@ export const { data: fetchContacts } = $resource(getContacts);
 ```html
 <!-- contactList.html -->
 <template>
-  <template if:true="{contacts.loading}"> Loading </template>
+  <template if:true="{contacts.loading}"> Loading</template>
   <template if:false="{contacts.loading}">
     <template for:each="{contacts.data}" for:item="contact">
       <div key="{contact.Id}">
@@ -449,8 +449,12 @@ export const { data: getAccount } = $resource(getAccountDetails, () => ({
 ```
 
 Notice that the resource store takes a second optional argument, which in this case is a function that returns an
-object with the parameters that the Apex method needs. Because this function is accessing a reactive value (`selectedAccountId`),
+object with the parameters that the Apex method needs. Because this function is accessing a reactive
+value (`selectedAccountId`),
 the resource store will automatically refetch the data whenever the `selectedAccountId` changes!
+
+> 🍪 The value doesn't need to be a function unless you need the reactivity, it can also be a regular JS object in the
+> format expected by your Apex method (e.g. `{ accountId: "001200000XyZ1QAQ" }`).
 
 This works no matter how many reactive values you use in the function, and it will automatically refetch the data
 whenever any of the reactive values change.
@@ -478,8 +482,7 @@ import { selectedAccountId } from "c/demoStores";
 export default class AccountPicker extends LightningElement {
   @track accounts = [];
 
-  @wire(getAccounts)
-  getAccounts({ error, data }) {
+  @wire(getAccounts) getAccounts({ error, data }) {
     if (data) {
       this.accounts = data.map((account) => ({
         label: account.Name,
@@ -551,10 +554,23 @@ export default class AccountDetails extends LightningElement {
 
 > 🍪 One extra feature of the data returned by the `$resource` function is that when it is reloading the data, the
 > previous data is still available in the `data` property. This allows you to keep the old value while the new value is
-> being loaded and provide for a smoother experience, to avoid flickering or loading spinners that disappear immediately,
+> being loaded and provide for a smoother experience, to avoid flickering or loading spinners that disappear
+> immediately,
 > when you know the data is going to be fetched quickly.
 
 ---
+
+### Providing a default value to an async resource
+
+You can provide a default value to an async resource by passing it as the third argument to the `$resource` function.
+
+```javascript
+import { $resource } from "c/store";
+
+const { data: resource } = $resource(asyncFunction, undefined, {
+  initialValue: "initial"
+});
+```
 
 ### Refetching data
 
