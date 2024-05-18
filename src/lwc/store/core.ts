@@ -90,9 +90,14 @@ type AsyncData<T> = {
 
 type UnknownArgsMap = { [key: string]: unknown };
 
+type ResourceOptions<T> = {
+  initialData?: T;
+};
+
 function $resource<T>(
   fn: (params?: { [key: string]: unknown }) => Promise<T>,
-  source?: UnknownArgsMap | (() => UnknownArgsMap)
+  source?: UnknownArgsMap | (() => UnknownArgsMap),
+  options?: ResourceOptions<T>
 ): ReadOnlyStore<AsyncData<T>> {
   function loadingState(data: T | null): AsyncData<T> {
     return {
@@ -102,18 +107,19 @@ function $resource<T>(
     };
   }
 
-  let previousValue: T | null = null;
+  let _value: T | null = options?.initialData ?? null;
   const store = $store<AsyncData<T>>(loadingState(null));
 
   $effect(async () => {
-    store.value = loadingState(previousValue);
+    store.value = loadingState(_value);
 
     const derivedSource: UnknownArgsMap | undefined =
       source instanceof Function ? source() : source;
 
     try {
       const data = await fn(derivedSource);
-      previousValue = data;
+      // Keep track of the previous value
+      _value = data;
       store.value = {
         data,
         loading: false,

@@ -1,4 +1,4 @@
-import { $store, $computed, $effect, $resource } from "../store";
+import { $store, $computed, $effect, $resource } from "../core";
 
 describe("store", () => {
   test("should have a default value", () => {
@@ -85,6 +85,30 @@ describe("store", () => {
 
     expect(resource.value).toEqual({
       data: 1,
+      loading: false,
+      error: null
+    });
+  });
+
+  test("can create a resource using an async function and set an initial value", async () => {
+    const asyncFunction = async () => {
+      return "done";
+    };
+
+    const resource = $resource(asyncFunction, undefined, {
+      initialData: "initial"
+    });
+
+    expect(resource.value).toEqual({
+      data: "initial",
+      loading: true,
+      error: null
+    });
+
+    await new Promise(process.nextTick);
+
+    expect(resource.value).toEqual({
+      data: "done",
       loading: false,
       error: null
     });
