@@ -1,5 +1,7 @@
 # LWC Signals
 
+![GitHub Workflow Status](https://img.shields.io/github/workflow/status/cesarParra/lwc-signals/Node.js%20CI)
+
 A simple yet powerful reactive state management solution for Lightning Web Components.
 
 ---
