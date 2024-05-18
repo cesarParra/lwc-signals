@@ -26,6 +26,7 @@ describe("store", () => {
     const anotherComputed = $computed(() => computed.value * 2);
     expect(anotherComputed.value).toBe(0);
     store.value = 1;
+    expect(computed.value).toBe(2);
     expect(anotherComputed.value).toBe(4);
   });
 
