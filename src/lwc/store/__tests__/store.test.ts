@@ -48,7 +48,6 @@ describe("store", () => {
 
   test("can create a resource using an async function", async () => {
     const asyncFunction = async () => {
-      await new Promise((resolve) => setTimeout(resolve, 50));
       return "done";
     };
 
@@ -60,7 +59,7 @@ describe("store", () => {
       error: null
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise(process.nextTick);
 
     expect(resource.value).toEqual({
       data: "done",
@@ -69,9 +68,30 @@ describe("store", () => {
     });
   });
 
+  test("can create a resource using an async function with params", async () => {
+    const asyncFunction = async (params?: { [key: string]: unknown }) => {
+      return params?.["source"];
+    };
+
+    const resource = $resource(asyncFunction, { source: 1 });
+
+    expect(resource.value).toEqual({
+      data: null,
+      loading: true,
+      error: null
+    });
+
+    await new Promise(process.nextTick);
+
+    expect(resource.value).toEqual({
+      data: 1,
+      loading: false,
+      error: null
+    });
+  });
+
   test("can create a resource using an async function with a reactive source", async () => {
     const asyncFunction = async (params?: { [key: string]: unknown }) => {
-      await new Promise((resolve) => setTimeout(resolve, 50));
       return params?.["source"];
     };
 
@@ -84,7 +104,7 @@ describe("store", () => {
       error: null
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise(process.nextTick);
 
     expect(resource.value).toEqual({
       data: 0,
@@ -100,7 +120,7 @@ describe("store", () => {
       error: null
     });
 
-    await new Promise((resolve) => setTimeout(resolve, 100));
+    await new Promise(process.nextTick);
 
     expect(resource.value).toEqual({
       data: 1,
