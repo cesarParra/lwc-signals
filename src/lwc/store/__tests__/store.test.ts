@@ -68,4 +68,44 @@ describe("store", () => {
       error: null
     });
   });
+
+  test("can create a resource using an async function with a reactive source", async () => {
+    const asyncFunction = async (params?: { [key: string]: unknown }) => {
+      await new Promise((resolve) => setTimeout(resolve, 50));
+      return params?.["source"];
+    };
+
+    const source = $store(0);
+    const resource = $resource(asyncFunction, () => ({ source: source.value }));
+
+    expect(resource.value).toEqual({
+      data: null,
+      loading: true,
+      error: null
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(resource.value).toEqual({
+      data: 0,
+      loading: false,
+      error: null
+    });
+
+    source.value = 1;
+
+    expect(resource.value).toEqual({
+      data: 0,
+      loading: true,
+      error: null
+    });
+
+    await new Promise((resolve) => setTimeout(resolve, 100));
+
+    expect(resource.value).toEqual({
+      data: 1,
+      loading: false,
+      error: null
+    });
+  });
 });

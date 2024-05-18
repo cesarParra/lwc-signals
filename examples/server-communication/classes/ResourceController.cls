@@ -1,0 +1,20 @@
+
+public with sharing class ResourceController {
+    @AuraEnabled(Cacheable=true)
+    public static List<Account> getAccounts() {
+        return [SELECT Id, Name FROM Account];
+    }
+
+    @AuraEnabled
+    public static Account getAccountDetails(Id accountId) {
+        if (accountId == null) {
+            return null;
+        }
+        return [SELECT Id, Name, Phone, Website FROM Account WHERE Id = :accountId];
+    }
+
+    @AuraEnabled
+    public static String getHelloWorld() {
+        return 'Hello World!';
+    }
+}

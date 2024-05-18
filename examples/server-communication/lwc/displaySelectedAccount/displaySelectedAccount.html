@@ -1,0 +1,18 @@
+<!-- Display Selected Account -->
+<template>
+  <div>
+    <h1>Selected Account</h1>
+    <template if:true={account.loading}>
+      <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+    </template>
+
+    <template if:false={account.loading}>
+      <template if:true={account.data}>
+        <p>Account Name: {account.data.Name}</p>
+        <p>Account Number: {account.data.AccountNumber}</p>
+        <p>Phone: {account.data.Phone}</p>
+        <p>Website: {account.data.Website}</p>
+      </template>
+    </template>
+  </div>
+</template>

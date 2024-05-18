@@ -1,0 +1,9 @@
+<!-- Server Fetcher -->
+<template>
+  <template if:true={helloWorld.loading}>
+    Loading
+  </template>
+  <template if:false={helloWorld.loading}>
+    {helloWorld.data}
+  </template>
+</template>
