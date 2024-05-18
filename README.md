@@ -127,7 +127,8 @@ export default class Display extends LightningElement {
 ### `$computed`
 
 You can also use the `$computed` function to create a reactive value that depends on the store.
-The difference between `$reactTo` and `$computed` is that `$computed` allows you return a derived computed store
+The difference between `$reactTo` and `$computed` is that `$computed` allows you return a derived computed store (with
+the difference of it being read only)
 from the original, or multiple stores.
 
 ```javascript
@@ -146,13 +147,13 @@ export default class Display extends LightningElement {
 ---
 
 Notice that in the examples we have been using getters to react to value changes. This is because LWC's reactive system
-can automatically detects changes in getters for simple values and updates the UI accordingly, which makes for a cleaner
+can automatically detect changes in getters for simple values and updates the UI accordingly, which makes for a cleaner
 developer experience
 and easier to reason about the code.
 
 But there are cases where we need to use a property in case of a getter, for example when computing values into a
 complex object, in which case the LWC
-framework won't update the UI automatically. For cases like this, you can leverage
+framework won't update the UI automatically. For cases like this, you can leverage the
 `$computed` function to create a reactive property that will update whenever the store changes.
 
 > See the (Reacting to multiple stores)[#reacting-to-multiple-stores] section for an example where we need
