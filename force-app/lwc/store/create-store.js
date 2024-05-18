@@ -21,11 +21,11 @@ function $computed(fn) {
   return computedStore;
 }
 function $reactTo(store) {
+  let _value = store.value;
   $effect(() => {
-    // Simply access the store to subscribe to it
-    store.value;
+    _value = store.value;
   });
-  return store.value;
+  return _value;
 }
 function $store(value) {
   let _value = value;

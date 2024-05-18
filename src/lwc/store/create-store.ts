@@ -35,12 +35,12 @@ function $computed<T>(fn: ComputedFunction<T>): Store<T> {
 }
 
 function $reactTo<T>(store: Store<T>): T {
+  let _value: T = store.value;
   $effect(() => {
-    // Simply access the store to subscribe to it
-    store.value;
+    _value = store.value;
   });
 
-  return store.value;
+  return _value;
 }
 
 function $store<T>(value: T): Store<T> {
