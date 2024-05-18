@@ -8,6 +8,12 @@ Inspired by the Signals technology behind SolidJs, Preact, Svelte 5 Runes and th
 reactive store for Lightning Web Components that allows you to create reactive data stores
 that can be used to share state between components.
 
+It features:
+
+- 🚀 **Reactivity** Based on SolidJs and Preact Signals it provides a fine-grained reactivity system that will automatically track dependencies and free them when not needed
+- 🦥 **Lazy Evaluation** Stores are lazy and will only compute values when read.
+- 🔬️ **Small Surface** The API does not offer more than what is needed, keeping the learning curve and bloat to a minimum
+
 # Getting Started
 
 Copy the `force-app/lwc/store` folder to your project.
