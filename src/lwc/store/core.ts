@@ -82,10 +82,17 @@ function $store<T>(value: T): Store<T> {
   };
 }
 
+// $resource
+
 type AsyncData<T> = {
   data: T | null;
   loading: boolean;
   error: unknown | null;
+};
+
+type ResourceResponse<T> = {
+  data: ReadOnlyStore<AsyncData<T>>;
+  refetch: () => void;
 };
 
 type UnknownArgsMap = { [key: string]: unknown };
@@ -98,7 +105,7 @@ function $resource<T>(
   fn: (params?: { [key: string]: unknown }) => Promise<T>,
   source?: UnknownArgsMap | (() => UnknownArgsMap),
   options?: ResourceOptions<T>
-): ReadOnlyStore<AsyncData<T>> {
+): ResourceResponse<T> {
   function loadingState(data: T | null): AsyncData<T> {
     return {
       data: data,
@@ -112,7 +119,7 @@ function $resource<T>(
   let _previousParams: UnknownArgsMap | undefined;
   const _store = $store<AsyncData<T>>(loadingState(_value));
 
-  $effect(async () => {
+  const execute = async () => {
     _store.value = loadingState(_value);
 
     const derivedSource: UnknownArgsMap | undefined =
@@ -142,9 +149,17 @@ function $resource<T>(
       _previousParams = derivedSource;
       _isInitialLoad = false;
     }
-  });
+  };
 
-  return _store.readOnly;
+  $effect(execute);
+
+  return {
+    data: _store.readOnly,
+    refetch: async () => {
+      _isInitialLoad = true;
+      await execute();
+    }
+  };
 }
 
 export { $store, $effect, $computed, $reactTo, $resource };
