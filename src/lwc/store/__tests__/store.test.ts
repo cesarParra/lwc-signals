@@ -20,6 +20,15 @@ describe("store", () => {
     expect(computed.value).toBe(2);
   });
 
+  test("can derive a computed value from another computed value", () => {
+    const store = $store(0);
+    const computed = $computed(() => store.value * 2);
+    const anotherComputed = $computed(() => computed.value * 2);
+    expect(anotherComputed.value).toBe(0);
+    store.value = 1;
+    expect(anotherComputed.value).toBe(4);
+  });
+
   test("can create an effect", () => {
     const store = $store(0);
     let effectTracker = 0;
