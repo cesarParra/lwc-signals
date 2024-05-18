@@ -2,10 +2,12 @@
   "compilerOptions": {
     "target": "ES2020",
     "module": "ES2020",
-    "rootDir": "./force-app/lwc",
+    "rootDir": "./src",
+    "outDir": "./force-app",
     "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "Bundler"
-  }
+  },
+  "exclude": ["node_modules", "./*.ts", "src/**/*.test.ts"]
 }

@@ -3,14 +3,10 @@
   "private": true,
   "version": "1.0.0",
   "scripts": {
+    "test": "node --experimental-vm-modules node_modules/.bin/jest",
     "create:scratch": "sf org create scratch --alias lwc-store --definition-file config/project-scratch-def.json --set-default",
     "dev:start": "npm run create:scratch && sf project deploy start",
     "lint": "eslint **/{aura,lwc}/**/*.js",
-    "test": "npm run test:unit",
-    "test:unit": "sfdx-lwc-jest",
-    "test:unit:watch": "sfdx-lwc-jest --watch",
-    "test:unit:debug": "sfdx-lwc-jest --debug",
-    "test:unit:coverage": "sfdx-lwc-jest --coverage",
     "prettier": "prettier --write \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\"",
     "prettier:verify": "prettier --check \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\"",
     "postinstall": "husky install",
@@ -23,15 +19,20 @@
     "@salesforce/eslint-config-lwc": "^3.2.3",
     "@salesforce/eslint-plugin-aura": "^2.0.0",
     "@salesforce/eslint-plugin-lightning": "^1.0.0",
-    "@salesforce/sfdx-lwc-jest": "^3.1.0",
+    "@types/jest": "^29.5.12",
     "eslint": "^8.57.0",
     "eslint-plugin-import": "^2.25.4",
     "eslint-plugin-jest": "^27.6.0",
     "globals": "^15.2.0",
     "husky": "^8.0.3",
+    "jest": "^29.7.0",
+    "jest-environment-jsdom": "^29.7.0",
     "lint-staged": "^15.1.0",
     "prettier": "^3.1.0",
     "prettier-plugin-apex": "^2.0.1",
+    "ts-jest": "^29.1.2",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.4.5",
     "typescript-eslint": "^7.9.0"
   },
   "lint-staged": {
@@ -41,8 +42,5 @@
     "**/{aura,lwc}/**/*.js": [
       "eslint"
     ]
-  },
-  "dependencies": {
-    "typescript": "^5.4.5"
   }
 }
