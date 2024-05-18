@@ -15,11 +15,10 @@ function $effect(fn) {
 }
 function $computed(fn) {
   const computedStore = $store(fn());
-  let newValue = computedStore.value;
   $effect(() => {
-    newValue = fn();
+    computedStore.value = fn();
   });
-  return newValue;
+  return computedStore;
 }
 function $reactTo(store) {
   $effect(() => {

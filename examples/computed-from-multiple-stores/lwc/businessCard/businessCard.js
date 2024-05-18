@@ -9,5 +9,5 @@ export default class BusinessCard extends LightningElement {
         accountName: accountName.value,
         contactName: contactName.value
       })
-  );
+  ).value;
 }

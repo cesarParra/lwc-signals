@@ -24,15 +24,14 @@ function $effect(fn: VoidFunction): void {
 
 type ComputedFunction<T> = () => T;
 
-function $computed<T>(fn: ComputedFunction<T>): T {
+function $computed<T>(fn: ComputedFunction<T>): Store<T> {
   const computedStore: Store<T> = $store(fn());
-  let newValue: T = computedStore.value;
 
   $effect(() => {
-    newValue = fn();
+    computedStore.value = fn();
   });
 
-  return newValue;
+  return computedStore;
 }
 
 function $reactTo<T>(store: Store<T>): T {
