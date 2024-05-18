@@ -1,6 +1,6 @@
 import { LightningElement, track, wire } from "lwc";
 import getAccounts from "@salesforce/apex/ResourceController.getAccounts";
-import { selectedAccountId } from "c/demoStores";
+import { selectedAccountId } from "c/demoSignals";
 
 export default class ListAccounts extends LightningElement {
   @track accounts = [];

@@ -1,5 +1,5 @@
 {
-  "orgName": "lwc store",
+  "orgName": "lwc signals",
   "edition": "Developer",
   "features": ["EnableSetPasswordInApi", "Communities", "Sites", "AuthorApex"],
   "settings": {

@@ -9,7 +9,7 @@ package.xml
 **/.eslintrc.json
 
 # LWC Jest
-**/__tests__/store.test.ts
+**/__tests__/signals.test.ts
 
 appMenus/
 dashboards/

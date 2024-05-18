@@ -1,6 +1,6 @@
 import { LightningElement } from "lwc";
-import { $computed, $reactTo } from "c/store";
-import { counter, counterPlusTwo } from "c/demoStores";
+import { $computed, $reactTo } from "c/signals";
+import { counter, counterPlusTwo } from "c/demoSignals";
 
 export default class CountTracker extends LightningElement {
   get currentCount() {

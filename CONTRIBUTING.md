@@ -1,16 +1,16 @@
-# Contributing to LWC Store
+# Contributing to LWC Signals
 
-First off, thank you for considering contributing to LWC Store. It's your contributions that make
+First off, thank you for considering contributing to LWC Signals. It's your contributions that make
 the community a great place to be.
 
 ## Where do I go from here?
 
 If you've noticed a bug or have a feature request, make sure to check
-our [Issues](https://github.com/cesarParra/lwc-store/issues) to see if someone else in the community has already created a ticket. If not, go ahead and [make one](https://github.com/cesarParra/lwc-store/issues/new)!
+our [Issues](https://github.com/cesarParra/lwc-signals/issues) to see if someone else in the community has already created a ticket. If not, go ahead and [make one](https://github.com/cesarParra/lwc-signals/issues/new)!
 
 ## Fork & create a branch
 
-If this is something you think you can fix, then [fork LWC Store](https://help.github.com/articles/fork-a-repo) and
+If this is something you think you can fix, then [fork LWC Signals](https://help.github.com/articles/fork-a-repo) and
 create a branch with a descriptive name.
 
 ```bash
@@ -37,10 +37,10 @@ At this point, you're ready to make your changes! Feel free to ask for help; eve
 
 ## Make a Pull Request
 
-At this point, you should switch back to your master branch and make sure it's up to date with LWC Store's master branch:
+At this point, you should switch back to your master branch and make sure it's up to date with LWC Signals' main branch:
 
 ```bash
-git remote add upstream git@github.com:cesarParra/lwc-store.git
+git remote add upstream git@github.com:cesarParra/lwc-signals.git
 git checkout master
 git pull upstream master
 ```
@@ -53,7 +53,7 @@ git rebase master
 git push --set-upstream origin new-feature-or-fix
 ```
 
-Go to the LWC Store repo and press the "Compare & pull request" button.
+Go to the LWC Signals repo and press the "Compare & pull request" button.
 
 ## Keeping your Pull Request updated
 

@@ -1,24 +1,24 @@
-# LWC Store
+# LWC Signals
 
 A simple yet powerful reactive state management solution for Lightning Web Components.
 
 ---
 
-Inspired by the Signals technology behind SolidJs, Preact, Svelte 5 Runes and the Vue 3 Composition API, LWC Store is a
-reactive store for Lightning Web Components that allows you to create reactive data stores
+Inspired by the Signals technology behind SolidJs, Preact, Svelte 5 Runes and the Vue 3 Composition API, LWC Signals is a
+reactive signals for Lightning Web Components that allows you to create reactive data signalss
 that can be used to share state between components.
 
 It features:
 
 - 🚀 **Reactivity** Based on SolidJs and Preact Signals it provides a fine-grained reactivity system that will automatically track dependencies and free them when not needed
-- 🦥 **Lazy Evaluation** Stores are lazy and will only compute values when read.
+- 🦥 **Lazy Evaluation** Signals are lazy and will only compute values when read.
 - 🔬️ **Small Surface** The API does not offer more than what is needed, keeping the learning curve and bloat to a minimum
 
 # Getting Started
 
-Copy the `force-app/lwc/store` folder to your project.
+Copy the `force-app/lwc/signals` folder to your project.
 
-> ✏️ Note that the source code is written in Typescript and is located in the `src` folder. The `force-app/lwc/store`
+> ✏️ Note that the source code is written in Typescript and is located in the `src` folder. The `force-app/lwc/signals`
 > folder
 > contains the compiled code. If you wish to modify the source code you can either modify the resulting JS code, or you
 > can
@@ -40,32 +40,32 @@ This can be cumbersome when you have a lot of components that need to share stat
 - You have to make sure manage subscriptions and unsubscriptions to events
 
 An alternative is to use the `wire` service to get the data from the server and let the framework handle the caching
-for you, but this only works for data that is stored in the server, and still forces you to implement a lot of
+for you, but this only works for data that is signalsd in the server, and still forces you to implement a lot of
 boilerplate code to manage each wire adapter for each component.
 
-`LWC Store` provides a simple way to create reactive data stores that can be used to share state between components
+`LWC Signals` provides a simple way to create reactive data signalss that can be used to share state between components
 without the need to broadcast messages or manage subscriptions and wires.
 
-## Creating a store
+## Creating a signals
 
 > 👀 You can find the full working code for the following example in the `examples`
 > folder.
 
-A `store` is simply an object with a `.value` property which holds a value. Any store you create should be an LWC
-Service that exports your store.
+A `signals` is simply an object with a `.value` property which holds a value. Any signals you create should be an LWC
+Service that exports your signals.
 
 ```javascript
-// LWC Service: counter-store.js
-import { $store } from "c/store";
+// LWC Service: counter-signals.js
+import { $signals } from "c/signals";
 
-const counter = $store(0);
+const counter = $signals(0);
 
 export { counter };
 ```
 
-## Consuming the store
+## Consuming the signals
 
-You can use the store in any LWC component by importing the store and using the `.value` property.
+You can use the signals in any LWC component by importing the signals and using the `.value` property.
 
 For example, let's create a simple counter component that increments and decrements the counter when a button is
 clicked.
@@ -85,7 +85,7 @@ To update the counter, you can simply change the `counter.value` property direct
 ```javascript
 // counter.js
 import { LightningElement } from "lwc";
-import { counter } from "c/counter-store";
+import { counter } from "c/counter-signals";
 
 export default class Counter extends LightningElement {
   increment() {
@@ -102,8 +102,8 @@ export default class Counter extends LightningElement {
 
 ### `$reactTo`
 
-To have your components automatically react to changes in the store, you can use the `$reactTo`
-function to create a reactive value that will update whenever the store changes.
+To have your components automatically react to changes in the signals, you can use the `$reactTo`
+function to create a reactive value that will update whenever the signals changes.
 
 Let's create another component that displays the counter value and automatically updates when the counter changes.
 
@@ -117,8 +117,8 @@ Let's create another component that displays the counter value and automatically
 ```javascript
 // display.js
 import { LightningElement } from "lwc";
-import { $reactTo } from "c/store";
-import { counter } from "c/counter-store";
+import { $reactTo } from "c/signals";
+import { counter } from "c/counter-signals";
 
 export default class Display extends LightningElement {
   get counter() {
@@ -128,7 +128,7 @@ export default class Display extends LightningElement {
 ```
 
 > ❗`$reactTo` should be used inside a getter to make sure that the UI updates when the value changes.
-> Keep reading to see other ways to react to changes in the store.
+> Keep reading to see other ways to react to changes in the signals.
 
 <div style="text-align: center;">
     <img src="./doc-assets/counter-example.gif" alt="Counter Example" />
@@ -138,16 +138,16 @@ export default class Display extends LightningElement {
 
 ### `$computed`
 
-You can also use the `$computed` function to create a reactive value that depends on the store.
-The difference between `$reactTo` and `$computed` is that `$computed` allows you return a derived computed store (with
+You can also use the `$computed` function to create a reactive value that depends on the signals.
+The difference between `$reactTo` and `$computed` is that `$computed` allows you return a derived computed signals (with
 the difference of it being read only)
-from the original, or multiple stores.
+from the original, or multiple signals.
 
 ```javascript
 // display.js
 import { LightningElement } from "lwc";
-import { $computed } from "c/store";
-import { counter } from "c/counter-store";
+import { $computed } from "c/signals";
+import { counter } from "c/counter-signals";
 
 export default class Display extends LightningElement {
   get counterMultiplied() {
@@ -166,16 +166,16 @@ and easier to reason about the code.
 But there are cases where we need to use a property in case of a getter, for example when computing values into a
 complex object, in which case the LWC
 framework won't update the UI automatically. For cases like this, you can leverage the
-`$computed` function to create a reactive property that will update whenever the store changes.
+`$computed` function to create a reactive property that will update whenever the signals changes.
 
-> See the (Reacting to multiple stores)[#reacting-to-multiple-stores] section for an example where we need
+> See the (Reacting to multiple signals)[#reacting-to-multiple-signals] section for an example where we need
 > to use a property instead of a getter.
 
 ```javascript
 // display.js
 import { LightningElement } from "lwc";
-import { $computed } from "c/store";
-import { counter } from "c/counter-store";
+import { $computed } from "c/signals";
+import { counter } from "c/counter-signals";
 
 export default class Display extends LightningElement {
   counter = $computed(counter, () => (this.counter = counter.value)).value;
@@ -191,38 +191,38 @@ export default class Display extends LightningElement {
 You can also stack computed values to create more complex reactive values that derive from each other
 
 ```javascript
-import { $store, $computed } from "c/store";
+import { $signals, $computed } from "c/signals";
 
-export const counter = $store(0);
+export const counter = $signals(0);
 
 export const counterPlusOne = $computed(() => counter.value + 1);
 export const counterPlusTwo = $computed(() => counterPlusOne.value + 1);
 ```
 
-Because `$computed` values return a store, you can use them as you would use any other store.
+Because `$computed` values return a signals, you can use them as you would use any other signals.
 
-## Reacting to multiple stores
+## Reacting to multiple signals
 
-You can also use multiple stores in a single `computed` and react to changes in any of them.
+You can also use multiple signals in a single `computed` and react to changes in any of them.
 This gives you the ability to create complex reactive values that depend on multiple data sources
 without having to track each one independently.
 
 > 👀 You can find the full working code for the following example in the `examples`
 > folder.
 
-**Given the following stores**
+**Given the following signals**
 
 ```javascript
 // LWC Service: contact-info.js
 
-import { $store } from "c/store";
+import { $signals } from "c/signals";
 
-export const accountName = $store("ACME");
+export const accountName = $signals("ACME");
 
-export const contactName = $store("John Doe");
+export const contactName = $signals("John Doe");
 ```
 
-**And given a component that updates both stores**
+**And given a component that updates both signals**
 
 ```html
 <!-- contactInfoForm.html -->
@@ -243,8 +243,8 @@ export const contactName = $store("John Doe");
 ```javascript
 // contactInfoForm.js
 import { LightningElement } from "lwc";
-import { $reactTo } from "c/store";
-import { accountName, contactName } from "c/demoStores";
+import { $reactTo } from "c/signals";
+import { accountName, contactName } from "c/demoSignalss";
 
 export default class ContactInfoForm extends LightningElement {
   get accountName() {
@@ -265,7 +265,7 @@ export default class ContactInfoForm extends LightningElement {
 }
 ```
 
-**You can create a computed value that depends on both stores**
+**You can create a computed value that depends on both signalss**
 
 ```html
 <!-- businessCard.html -->
@@ -282,8 +282,8 @@ export default class ContactInfoForm extends LightningElement {
 ```javascript
 // businessCard.js
 import { LightningElement } from "lwc";
-import { $computed } from "c/store";
-import { accountName, contactName } from "c/demoStores";
+import { $computed } from "c/signals";
+import { accountName, contactName } from "c/demoSignalss";
 
 export default class BusinessCard extends LightningElement {
   contactInfo = $computed(
@@ -305,23 +305,23 @@ export default class BusinessCard extends LightningElement {
 
 ### `$effect`
 
-You can also use the `$effect` function to create a side effect that depends on the store.
+You can also use the `$effect` function to create a side effect that depends on the signals.
 
-Let's say you want to keep a log of the changes in the `counter` store.
+Let's say you want to keep a log of the changes in the `counter` signals.
 
 ```javascript
-import { $store, $effect } from "c/store";
+import { $signals, $effect } from "c/signals";
 
-export const counter = $store(0);
+export const counter = $signals(0);
 
 $effect(() => console.log(counter.value));
 ```
 
-> ❗ DO NOT use `$effect` to update the store value, as it will create an infinite loop.
+> ❗ DO NOT use `$effect` to update the signals value, as it will create an infinite loop.
 
 ## Communicating with Apex data and other asynchronous operations
 
-You can also use the store framework to communicate with Apex data and other asynchronous operations.
+You can also use the signals framework to communicate with Apex data and other asynchronous operations.
 
 In a traditional LWC component, you would use the `@wire` service to fetch data from the server and update the UI,
 or you could declaratively call Apex methods by importing them and calling them directly.
@@ -329,20 +329,20 @@ or you could declaratively call Apex methods by importing them and calling them 
 If you only wish to fetch data once and hold that data within a component, you should still use the `@wire` service
 or imperative Apex calls within your own component.
 
-Where the Store framework comes in handy is when you wish for multiple components to share the same data to have a
+Where the Signals framework comes in handy is when you wish for multiple components to share the same data to have a
 single
 source of truth, and/or when you want to have a reactive system that updates the UI automatically when the data changes,
 no matter where the change comes from.
 
 ### $resource
 
-The `$resource` function is a helper function that allows you to create a store that fetches data asynchronously,
+The `$resource` function is a helper function that allows you to create a signals that fetches data asynchronously,
 which includes Apex methods imported through `@salesforce/apex/`.
 
 ---
 
 Let's first take a look at the simple example of fetching data from the server through a single source of truth
-(the resource store) and sharing it between components.
+(the resource signals) and sharing it between components.
 
 **Given the following Apex method**
 
@@ -356,19 +356,19 @@ public with sharing class ContactController {
 }
 ```
 
-**And the following store**
+**And the following signals**
 
 ```javascript
-// LWC Service: contact-store.js
-import { $resource } from "c/store";
+// LWC Service: contact-signals.js
+import { $resource } from "c/signals";
 import getContacts from "@salesforce/apex/ContactController.getContacts";
 
-// Notice that we have to destructure the data property from the resource store
+// Notice that we have to destructure the data property from the resource signals
 // We explain why below in the "refetching" section :)
 export const { data: fetchContacts } = $resource(getContacts);
 ```
 
-**You can use the store in any component**
+**You can use the signals in any component**
 
 ```html
 <!-- contactList.html -->
@@ -387,15 +387,15 @@ export const { data: fetchContacts } = $resource(getContacts);
 ```javascript
 // contactList.js
 import { LightningElement } from "lwc";
-import { $computed } from "c/store";
-import { fetchContacts } from "c/contact-store";
+import { $computed } from "c/signals";
+import { fetchContacts } from "c/contact-signals";
 
 export default class ContactList extends LightningElement {
   contacts = $computed(() => (this.contacts = fetchContacts.value)).value;
 }
 ```
 
-Data from a resource store comes in the following format:
+Data from a resource signals comes in the following format:
 
 ```typescript
 type AsyncData<T> = {
@@ -440,24 +440,24 @@ public with sharing class ResourceController {
 }
 ```
 
-We can have a store that keeps track of which Account Id has been selected, and a `resource` store that fetches the
+We can have a signals that keeps track of which Account Id has been selected, and a `resource` signals that fetches the
 details of the selected account.
 
 ```javascript
-import { $store, $resource, $effect } from "c/store";
+import { $signals, $resource, $effect } from "c/signals";
 import getAccountDetails from "@salesforce/apex/ResourceController.getAccountDetails";
 
-export const selectedAccountId = $store(null);
+export const selectedAccountId = $signals(null);
 
 export const { data: getAccount } = $resource(getAccountDetails, () => ({
   accountId: selectedAccountId.value
 }));
 ```
 
-Notice that the resource store takes a second optional argument, which in this case is a function that returns an
+Notice that the resource signals takes a second optional argument, which in this case is a function that returns an
 object with the parameters that the Apex method needs. Because this function is accessing a reactive
 value (`selectedAccountId`),
-the resource store will automatically refetch the data whenever the `selectedAccountId` changes!
+the resource signals will automatically refetch the data whenever the `selectedAccountId` changes!
 
 > 🍪 The value doesn't need to be a function unless you need the reactivity, it can also be a regular JS object in the
 > format expected by your Apex method (e.g. `{ accountId: "001200000XyZ1QAQ" }`).
@@ -483,7 +483,7 @@ Let's now create our picklist component that allows the user to select an accoun
 // accountPicker.js
 import { LightningElement, track, wire } from "lwc";
 import getAccounts from "@salesforce/apex/ResourceController.getAccounts";
-import { selectedAccountId } from "c/demoStores";
+import { selectedAccountId } from "c/demoSignalss";
 
 export default class AccountPicker extends LightningElement {
   @track accounts = [];
@@ -515,7 +515,7 @@ export default class AccountPicker extends LightningElement {
 
 Notice how we are using a `@wire` service to fetch the accounts from the server and populate the picklist. This is
 because in this case we don't care about sharing that data with other components, and we only need it once. Be
-pragmatic about when to use stores and when not to. Opt to use the base Salesforce services when you only need the data
+pragmatic about when to use signalss and when not to. Opt to use the base Salesforce services when you only need the data
 in a single component.
 
 Now, let's create the component that displays the details of the selected account.
@@ -546,8 +546,8 @@ Now, let's create the component that displays the details of the selected accoun
 ```javascript
 // accountDetails.js
 import { LightningElement } from "lwc";
-import { $computed } from "c/store";
-import { getAccount } from "c/demoStores";
+import { $computed } from "c/signals";
+import { getAccount } from "c/demoSignalss";
 
 export default class AccountDetails extends LightningElement {
   account = $computed(() => (this.account = getAccount.value)).value;
@@ -571,7 +571,7 @@ export default class AccountDetails extends LightningElement {
 You can provide a default value to an async resource by passing it as the third argument to the `$resource` function.
 
 ```javascript
-import { $resource } from "c/store";
+import { $resource } from "c/signals";
 
 const { data: resource } = $resource(asyncFunction, undefined, {
   initialValue: "initial"
@@ -580,14 +580,14 @@ const { data: resource } = $resource(asyncFunction, undefined, {
 
 ### Refetching data
 
-When you use the `$resource` function, the store will automatically refetch the data whenever the reactive values
+When you use the `$resource` function, the signals will automatically refetch the data whenever the reactive values
 change. This is useful when you want to refetch the data when the parameters change, but it can also be a problem when
-you want to keep the data in the store and only refetch it when you explicitly tell it to.
+you want to keep the data in the signals and only refetch it when you explicitly tell it to.
 
 To solve this problem, you can use the `refetch` function that is returned by the `$resource` function.
 
 ```javascript
-import { $store, $resource } from "c/store";
+import { $signals, $resource } from "c/signals";
 import getContacts from "@salesforce/apex/ContactController.getContacts";
 
 export const { data: fetchContacts, refetch: refetchContacts } =
@@ -599,8 +599,8 @@ You can then call the `refetch` function whenever you want to refetch the data.
 ```javascript
 // contactList.js
 import { LightningElement } from "lwc";
-import { $computed } from "c/store";
-import { fetchContacts, refetchContacts } from "c/contact-store";
+import { $computed } from "c/signals";
+import { fetchContacts, refetchContacts } from "c/contact-signals";
 
 export default class ContactList extends LightningElement {
   contacts = $computed(() => (this.contacts = fetchContacts.value)).value;

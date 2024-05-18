@@ -1,10 +1,10 @@
 {
-  "name": "lwc-store",
+  "name": "lwc-signals",
   "private": true,
   "version": "1.0.0",
   "scripts": {
     "test": "node --experimental-vm-modules node_modules/.bin/jest",
-    "create:scratch": "sf org create scratch --alias lwc-store --definition-file config/project-scratch-def.json --set-default",
+    "create:scratch": "sf org create scratch --alias lwc-signals --definition-file config/project-scratch-def.json --set-default",
     "dev:start": "npm run create:scratch && sf project deploy start",
     "lint": "eslint **/{aura,lwc}/**/*.js",
     "prettier": "prettier --write \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\"",
