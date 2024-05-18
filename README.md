@@ -4,7 +4,7 @@ A simple yet powerful reactive store for Lightning Web Components.
 
 ---
 
-Inspired by the Signals technology used by SolidJs, Preact, Svelte 5 Runes and the Vue 3 Composition API, LWC Store is a
+Inspired by the Signals technology behind SolidJs, Preact, Svelte 5 Runes and the Vue 3 Composition API, LWC Store is a
 reactive store for Lightning Web Components that allows you to create reactive data stores
 that can be used to share state between components.
 
@@ -39,7 +39,7 @@ without the need to broadcast messages or manage subscriptions and wires.
 > 👀 You can find the full working code for the following example in the `examples`
 > folder.
 
-A `store` is simply an object with a `.value` property that holds any value. Any store you create should be an LWC
+A `store` is simply an object with a `.value` property which holds a value. Any store you create should be an LWC
 Service that exports your store.
 
 ```javascript
@@ -68,6 +68,8 @@ clicked.
 </template>
 ```
 
+To update the counter, you can simply change the `counter.value` property directly.
+
 ```javascript
 // counter.js
 import { LightningElement } from "lwc";
@@ -86,10 +88,12 @@ export default class Counter extends LightningElement {
 
 ## Reacting to changes
 
-You can also use the store in other components to react to changes in the store. For this you need
-to use the `$computed` function to create a reactive value that depends on the store.
+### `$reactTo`
 
-Let's create another component that displays the counter value.
+To have your components automatically react to changes in the store, you can use the `$reactTo`
+function to create a reactive value that will update whenever the store changes.
+
+Let's create another component that displays the counter value and automatically updates when the counter changes.
 
 ```html
 <!-- display.html -->
@@ -101,25 +105,77 @@ Let's create another component that displays the counter value.
 ```javascript
 // display.js
 import { LightningElement } from "lwc";
-import { $computed } from "c/store";
+import { $reactTo } from "c/store";
 import { counter } from "c/counter-store";
 
 export default class Display extends LightningElement {
-  counter = $computed(() => (this.counter = counter.value));
+  get counter() {
+    return $reactTo(counter);
+  }
 }
 ```
 
-> ❗ Note that in the $computed callback we need to reassign the value to `this.counter`
-> to trigger the reactivity. This is because we need the value to be reassigned so that
-> LWC reactive system can detect the change and update the UI.
+> ❗`$reactTo` should be used inside a getter to make sure that the UI updates when the value changes.
+> Keep reading to see other ways to react to changes in the store.
 
 <div style="text-align: center;">
     <img src="./doc-assets/counter-example.gif" alt="Counter Example" />
 </div>
 
+---
+
+### `$computed`
+
+You can also use the `$computed` function to create a reactive value that depends on the store.
+The difference between `$reactTo` and `$computed` is that `$computed` allows you return a derived computed value
+instead of the exact value of the store.
+
+```javascript
+// display.js
+import { LightningElement } from "lwc";
+import { $computed } from "c/store";
+import { counter } from "c/counter-store";
+
+export default class Display extends LightningElement {
+  get counterMultiplied() {
+    return $computed(() => counter.value * 2);
+  }
+}
+```
+
+---
+
+Notice that in the examples we have been using getters to react to value changes. This is because LWC's reactive system
+can automatically detects changes in getters for simple values and updates the UI accordingly, which makes for a cleaner
+developer experience
+and easier to reason about the code.
+
+But there are cases where we need to use a property in case of a getter, for example when computing values into a
+complex object, in which case the LWC
+framework won't update the UI automatically. For cases like this, you can leverage
+`$computed` function to create a reactive property that will update whenever the store changes.
+
+> See the (Reacting to multiple stores)[#reacting-to-multiple-stores] section for an example where we need
+> to use a property instead of a getter.
+
+```javascript
+// display.js
+import { LightningElement } from "lwc";
+import { $computed } from "c/store";
+import { counter } from "c/counter-store";
+
+export default class Display extends LightningElement {
+  counter = $computed(counter, () => (this.counter = counter.value));
+}
+```
+
+> ❗ Note that in the callback function we **need** to reassign the value to `this.counter`
+> to trigger the reactivity. This is because we need the value to be reassigned so that
+> LWC reactive system can detect the change and update the UI.
+
 ## Reacting to multiple stores
 
-You can also use multiple stores in a single `computed` and react to changes in all of them.
+You can also use multiple stores in a single `computed` and react to changes in any of them.
 This gives you the ability to create complex reactive values that depend on multiple data sources
 without having to track each one independently.
 
@@ -159,12 +215,17 @@ export const contactName = $store("John Doe");
 ```javascript
 // contactInfoForm.js
 import { LightningElement } from "lwc";
-import { $computed } from "c/store";
+import { $reactTo } from "c/store";
 import { accountName, contactName } from "c/demoStores";
 
 export default class ContactInfoForm extends LightningElement {
-  accountName = $computed(() => (this.accountName = accountName.value));
-  contactName = $computed(() => (this.contactName = contactName.value));
+  get accountName() {
+    return $reactTo(accountName);
+  }
+
+  get contactName() {
+    return $reactTo(contactName);
+  }
 
   handleAccountNameChange(event) {
     accountName.value = event.target.value;
@@ -210,6 +271,25 @@ export default class BusinessCard extends LightningElement {
 <div style="text-align: center;">
     <img src="./doc-assets/business-card-example.gif" alt="Counter Example" />
 </div>
+
+> ❗ Notice that we are using a property instead of a getter in the `$computed` callback function, because
+> we need to reassign the value to `this.contactInfo` to trigger the reactivity, as it is a complex object.
+
+### `$effect`
+
+You can also use the `$effect` function to create a side effect that depends on the store.
+
+Let's say you want to keep a log of the changes in the `counter` store.
+
+```javascript
+import { $store, $effect } from "c/store";
+
+export const counter = $store(0);
+
+$effect(() => console.log(counter.value));
+```
+
+> ❗ DO NOT use `$effect` to update the store value, as it will create an infinite loop.
 
 # Contributing
 

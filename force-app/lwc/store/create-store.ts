@@ -1,9 +1,6 @@
-type ReadOnlyStore<T> = {
-  readonly value: T;
-};
-
-type Store<T> = ReadOnlyStore<T> & {
-  value: T;
+type Store<T> = {
+  get value(): T;
+  set value(newValue: T);
 };
 
 const context: VoidFunction[] = [];
@@ -38,20 +35,10 @@ function $computed<T>(fn: ComputedFunction<T>): T {
   return newValue;
 }
 
-// To be used for reactive LWC properties
-// This function subscribes to the store and returns the store's current value.
-function $rxProp<T>(store: Store<T>, fn: VoidFunction): T {
+function $reactTo<T>(store: Store<T>): T {
   $effect(() => {
-    fn();
-  });
-
-  return store.value;
-}
-
-function $rxProp2<T>(store: Store<T>): T {
-  $effect(() => {
-    // TODO: Find a way that it doesn't need to console log.
-    console.log(store.value);
+    // Simply access the store to subscribe to it
+    store.value;
   });
 
   return store.value;
@@ -78,4 +65,4 @@ function $store<T>(value: T): Store<T> {
   };
 }
 
-export { $store, $effect, $computed, $rxProp, $rxProp2 };
+export { $store, $effect, $computed, $reactTo };

@@ -1,21 +1,15 @@
 import { LightningElement } from "lwc";
-import { $effect, $computed, $rxProp, $rxProp2 } from "c/store";
+import { $computed, $reactTo } from "c/store";
 import { counter } from "c/demoStores";
 
 export default class CountTracker extends LightningElement {
-  currentCount = counter.value;
-
-  connectedCallback() {
-    $effect(() => (this.currentCount = counter.value));
+  get currentCount() {
+    return $reactTo(counter);
   }
 
-  another = $rxProp(counter, () => (this.another = counter.value));
+  reactiveProperty = $computed(() => (this.reactiveProperty = counter.value));
 
-  get asGetter() {
-    return $computed(() => counter.value);
-  }
-
-  get autoSubProp() {
-    return $rxProp2(counter);
+  get counterMultiplied() {
+    return $computed(() => counter.value * 2);
   }
 }

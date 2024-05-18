@@ -21,18 +21,10 @@ function $computed(fn) {
   });
   return newValue;
 }
-// To be used for reactive LWC properties
-// This function subscribes to the store and returns the store's current value.
-function $rxProp(store, fn) {
+function $reactTo(store) {
   $effect(() => {
-    fn();
-  });
-  return store.value;
-}
-function $rxProp2(store) {
-  $effect(() => {
-    // TODO: Find a way that it doesn't need to console log.
-    console.log(store.value);
+    // Simply access the store to subscribe to it
+    store.value;
   });
   return store.value;
 }
@@ -55,4 +47,4 @@ function $store(value) {
     }
   };
 }
-export { $store, $effect, $computed, $rxProp, $rxProp2 };
+export { $store, $effect, $computed, $reactTo };
