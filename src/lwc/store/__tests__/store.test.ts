@@ -96,7 +96,7 @@ describe("store", () => {
     };
 
     const resource = $resource(asyncFunction, undefined, {
-      initialData: "initial"
+      initialValue: "initial"
     });
 
     expect(resource.value).toEqual({

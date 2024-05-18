@@ -65,28 +65,37 @@ function $resource(fn, source, options) {
       error: null
     };
   }
-  let _value = options?.initialData ?? null;
-  const store = $store(loadingState(null));
+  let _isInitialLoad = true;
+  let _value = options?.initialValue ?? null;
+  let _previousParams;
+  const _store = $store(loadingState(_value));
   $effect(async () => {
-    store.value = loadingState(_value);
+    _store.value = loadingState(_value);
     const derivedSource = source instanceof Function ? source() : source;
+    if (!_isInitialLoad && derivedSource === _previousParams) {
+      // No need to fetch the data again if the params haven't changed
+      return;
+    }
     try {
       const data = await fn(derivedSource);
       // Keep track of the previous value
       _value = data;
-      store.value = {
+      _store.value = {
         data,
         loading: false,
         error: null
       };
     } catch (error) {
-      store.value = {
+      _store.value = {
         data: null,
         loading: false,
         error
       };
+    } finally {
+      _previousParams = derivedSource;
+      _isInitialLoad = false;
     }
   });
-  return store.readOnly;
+  return _store.readOnly;
 }
 export { $store, $effect, $computed, $reactTo, $resource };

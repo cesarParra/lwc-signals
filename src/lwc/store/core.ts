@@ -91,7 +91,7 @@ type AsyncData<T> = {
 type UnknownArgsMap = { [key: string]: unknown };
 
 type ResourceOptions<T> = {
-  initialData?: T;
+  initialValue?: T;
 };
 
 function $resource<T>(
@@ -107,34 +107,44 @@ function $resource<T>(
     };
   }
 
-  let _value: T | null = options?.initialData ?? null;
-  const store = $store<AsyncData<T>>(loadingState(null));
+  let _isInitialLoad = true;
+  let _value: T | null = options?.initialValue ?? null;
+  let _previousParams: UnknownArgsMap | undefined;
+  const _store = $store<AsyncData<T>>(loadingState(_value));
 
   $effect(async () => {
-    store.value = loadingState(_value);
+    _store.value = loadingState(_value);
 
     const derivedSource: UnknownArgsMap | undefined =
       source instanceof Function ? source() : source;
+
+    if (!_isInitialLoad && derivedSource === _previousParams) {
+      // No need to fetch the data again if the params haven't changed
+      return;
+    }
 
     try {
       const data = await fn(derivedSource);
       // Keep track of the previous value
       _value = data;
-      store.value = {
+      _store.value = {
         data,
         loading: false,
         error: null
       };
     } catch (error) {
-      store.value = {
+      _store.value = {
         data: null,
         loading: false,
         error
       };
+    } finally {
+      _previousParams = derivedSource;
+      _isInitialLoad = false;
     }
   });
 
-  return store.readOnly;
+  return _store.readOnly;
 }
 
 export { $store, $effect, $computed, $reactTo, $resource };
