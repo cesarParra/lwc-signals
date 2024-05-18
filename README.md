@@ -4,25 +4,27 @@ A simple yet powerful reactive state management solution for Lightning Web Compo
 
 ---
 
-Inspired by the Signals technology behind SolidJs, Preact, Svelte 5 Runes and the Vue 3 Composition API, LWC Signals is a
+Inspired by the Signals technology behind SolidJs, Preact, Svelte 5 Runes and the Vue 3 Composition API, LWC Signals is
+a
 reactive signals for Lightning Web Components that allows you to create reactive data signalss
 that can be used to share state between components.
 
 It features:
 
-- 🚀 **Reactivity** Based on SolidJs and Preact Signals it provides a fine-grained reactivity system that will automatically track dependencies and free them when not needed
+- 🚀 **Reactivity** Based on SolidJs and Preact Signals it provides a fine-grained reactivity system that will
+  automatically track dependencies and free them when not needed
 - 🦥 **Lazy Evaluation** Signals are lazy and will only compute values when read.
-- 🔬️ **Small Surface** The API does not offer more than what is needed, keeping the learning curve and bloat to a minimum
+- 🔬️ **Small Surface** The API does not offer more than what is needed, keeping the learning curve and bloat to a
+  minimum
 
 # Getting Started
 
 Copy the `force-app/lwc/signals` folder to your project.
 
 > ✏️ Note that the source code is written in Typescript and is located in the `src` folder. The `force-app/lwc/signals`
-> folder
-> contains the compiled code. If you wish to modify the source code you can either modify the resulting JS code, or you
-> can
-> grab the Typescript files from the `src` folder and set up your project to compile them.
+> folder contains the compiled code that you will be able to use in your Salesforce project. If you wish to modify the source
+> code you can either modify the resulting JS code, or you can grab the Typescript files from the `src` folder
+> and set up your project to compile them.
 
 # Usage
 
@@ -515,7 +517,8 @@ export default class AccountPicker extends LightningElement {
 
 Notice how we are using a `@wire` service to fetch the accounts from the server and populate the picklist. This is
 because in this case we don't care about sharing that data with other components, and we only need it once. Be
-pragmatic about when to use signalss and when not to. Opt to use the base Salesforce services when you only need the data
+pragmatic about when to use signalss and when not to. Opt to use the base Salesforce services when you only need the
+data
 in a single component.
 
 Now, let's create the component that displays the details of the selected account.
