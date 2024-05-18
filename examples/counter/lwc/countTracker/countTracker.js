@@ -12,7 +12,7 @@ export default class CountTracker extends LightningElement {
   another = $rxProp(counter, () => (this.another = counter.value));
 
   get asGetter() {
-    return $computed(() => counter.value).value;
+    return $computed(() => counter.value);
   }
 
   get autoSubProp() {

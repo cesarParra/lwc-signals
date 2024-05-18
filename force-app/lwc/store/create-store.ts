@@ -27,7 +27,7 @@ function $effect(fn: VoidFunction): void {
 
 type ComputedFunction<T> = () => T;
 
-function $computed<T>(fn: ComputedFunction<T>): ReadOnlyStore<T> {
+function $computed<T>(fn: ComputedFunction<T>): T {
   const computedStore: Store<T> = $store(fn());
   let newValue: T = computedStore.value;
 
@@ -35,11 +35,7 @@ function $computed<T>(fn: ComputedFunction<T>): ReadOnlyStore<T> {
     newValue = fn();
   });
 
-  return {
-    get value() {
-      return newValue;
-    }
-  };
+  return newValue;
 }
 
 // To be used for reactive LWC properties
@@ -54,6 +50,7 @@ function $rxProp<T>(store: Store<T>, fn: VoidFunction): T {
 
 function $rxProp2<T>(store: Store<T>): T {
   $effect(() => {
+    // TODO: Find a way that it doesn't need to console log.
     console.log(store.value);
   });
 
