@@ -51,7 +51,7 @@ describe("store", () => {
       return "done";
     };
 
-    const resource = $resource(asyncFunction);
+    const { data: resource } = $resource(asyncFunction);
 
     expect(resource.value).toEqual({
       data: null,
@@ -73,7 +73,7 @@ describe("store", () => {
       return params?.["source"];
     };
 
-    const resource = $resource(asyncFunction, { source: 1 });
+    const { data: resource } = $resource(asyncFunction, { source: 1 });
 
     expect(resource.value).toEqual({
       data: null,
@@ -95,7 +95,7 @@ describe("store", () => {
       return "done";
     };
 
-    const resource = $resource(asyncFunction, undefined, {
+    const { data: resource } = $resource(asyncFunction, undefined, {
       initialValue: "initial"
     });
 
@@ -120,7 +120,9 @@ describe("store", () => {
     };
 
     const source = $store(0);
-    const resource = $resource(asyncFunction, () => ({ source: source.value }));
+    const { data: resource } = $resource(asyncFunction, () => ({
+      source: source.value
+    }));
 
     expect(resource.value).toEqual({
       data: null,
@@ -137,6 +139,45 @@ describe("store", () => {
     });
 
     source.value = 1;
+
+    expect(resource.value).toEqual({
+      data: 0,
+      loading: true,
+      error: null
+    });
+
+    await new Promise(process.nextTick);
+
+    expect(resource.value).toEqual({
+      data: 1,
+      loading: false,
+      error: null
+    });
+  });
+
+  test("can force a refetch of a resource", async () => {
+    let counter = 0;
+    const asyncFunction = async () => {
+      return counter++;
+    };
+
+    const { data: resource, refetch } = $resource(asyncFunction);
+
+    expect(resource.value).toEqual({
+      data: null,
+      loading: true,
+      error: null
+    });
+
+    await new Promise(process.nextTick);
+
+    expect(resource.value).toEqual({
+      data: 0,
+      loading: false,
+      error: null
+    });
+
+    refetch();
 
     expect(resource.value).toEqual({
       data: 0,
