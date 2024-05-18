@@ -1,0 +1,13 @@
+<!-- Server Fetcher -->
+<template>
+  <template if:true={contacts.loading}>
+    Loading
+  </template>
+  <template if:false={contacts.loading}>
+    <template for:each={contacts.data} for:item="contact">
+      <div key={contact.Id}>
+        <p>{contact.Name}</p>
+      </div>
+    </template>
+  </template>
+</template>

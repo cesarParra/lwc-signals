@@ -1,5 +1,4 @@
-
-public with sharing class ResourceController {
+public without sharing class ResourceController {
     @AuraEnabled(Cacheable=true)
     public static List<Account> getAccounts() {
         return [SELECT Id, Name FROM Account];
@@ -13,8 +12,8 @@ public with sharing class ResourceController {
         return [SELECT Id, Name, Phone, Website FROM Account WHERE Id = :accountId];
     }
 
-    @AuraEnabled
-    public static String getHelloWorld() {
-        return 'Hello World!';
+    @AuraEnabled(Cacheable=true)
+    public static List<Contact> getContacts() {
+        return [SELECT Id, Name FROM Contact];
     }
 }

@@ -1,6 +1,6 @@
 # LWC Store
 
-A simple yet powerful reactive store for Lightning Web Components.
+A simple yet powerful reactive state management solution for Lightning Web Components.
 
 ---
 
@@ -12,8 +12,10 @@ that can be used to share state between components.
 
 Copy the `force-app/lwc/store` folder to your project.
 
-> ✏️ Note that the source code is written in Typescript and is located in the `src` folder. The `force-app/lwc/store` folder
-> contains the compiled code. If you wish to modify the source code you can either modify the resulting JS code, or you can
+> ✏️ Note that the source code is written in Typescript and is located in the `src` folder. The `force-app/lwc/store`
+> folder
+> contains the compiled code. If you wish to modify the source code you can either modify the resulting JS code, or you
+> can
 > grab the Typescript files from the `src` folder and set up your project to compile them.
 
 # Usage
@@ -310,6 +312,246 @@ $effect(() => console.log(counter.value));
 ```
 
 > ❗ DO NOT use `$effect` to update the store value, as it will create an infinite loop.
+
+## Communicating with Apex data and other asynchronous operations
+
+You can also use the store framework to communicate with Apex data and other asynchronous operations.
+
+In a traditional LWC component, you would use the `@wire` service to fetch data from the server and update the UI,
+or you could declaratively call Apex methods by importing them and calling them directly.
+
+If you only wish to fetch data once and hold that data within a component, you should still use the `@wire` service
+or imperative Apex calls within your own component.
+
+Where the Store framework comes in handy is when you wish for multiple components to share the same data to have a
+single
+source of truth, and/or when you want to have a reactive system that updates the UI automatically when the data changes,
+no matter where the change comes from.
+
+### $resource
+
+The `$resource` function is a helper function that allows you to create a store that fetches data asynchronously,
+which includes Apex methods imported through `@salesforce/apex/`.
+
+---
+
+Let's first take a look at the simple example of fetching data from the server through a single source of truth
+(the resource store) and sharing it between components.
+
+**Given the following Apex method**
+
+```apex
+// Apex Class: ContactController.cls
+public with sharing class ContactController {
+    @AuraEnabled(cacheable=true)
+    public static List<Contact> getContacts() {
+        return [SELECT Id, Name FROM Contact];
+    }
+}
+```
+
+**And the following store**
+
+```javascript
+// LWC Service: contact-store.js
+import { $resource } from "c/store";
+import getContacts from "@salesforce/apex/ContactController.getContacts";
+
+// Notice that we have to destructure the data property from the resource store
+// We explain why below in the "refetching" section :)
+export const { data: fetchContacts } = $resource(getContacts);
+```
+
+**You can use the store in any component**
+
+```html
+<!-- contactList.html -->
+<template>
+  <template if:true={contacts.loading}>
+    Loading
+  </template>
+  <template if:false={contacts.loading}>
+    <template for:each={contacts.data} for:item="contact">
+      <div key={contact.Id}>
+        <p>{contact.Name}</p>
+      </div>
+    </template>
+  </template>
+</template>
+```
+
+```javascript
+// contactList.js
+import { LightningElement } from "lwc";
+import { $computed } from "c/store";
+import { fetchContacts } from "c/contact-store";
+
+export default class ContactList extends LightningElement {
+  contacts = $computed(() => this.contacts = fetchContacts.value).value;
+}
+```
+
+Data from a resource store comes in the following format:
+
+```typescript
+type AsyncData<T> = {
+  data: T | null; // The data fetched from the server. It is null until the data is fetched
+  loading: boolean; // A boolean that indicates if the data is being fetched
+  error: unknown | null; // An error object that is populated if the fetch fails
+};
+```
+
+> 🍪 One benefit of using the `$resource` over declarative Apex or `@wire` is that it keeps track of the loading
+> state for you, which saves you the effort of having to calculate it yourself.
+
+<div style="text-align: center;">
+    <img src="./doc-assets/apex-fetch.gif" alt="Fetching From Apex" />
+</div>
+
+---
+
+Let's now take a look at the more complex example of fetching data from the server through a method that takes
+parameters, and having it react once those parameters change.
+
+Imagine we have 2 components, one that displays a list of accounts and another that displays the details of a single
+selected account. We want the details component to update whenever the selected account changes. Let's see how we can
+achieve this with.
+
+**Given the following Apex controller**
+
+```apex
+public with sharing class ResourceController {
+    @AuraEnabled(Cacheable=true)
+    public static List<Account> getAccounts() {
+        return [SELECT Id, Name FROM Account];
+    }
+
+    @AuraEnabled
+    public static Account getAccountDetails(Id accountId) {
+        if (accountId == null) {
+            return null;
+        }
+        return [SELECT Id, Name, Phone, Website FROM Account WHERE Id = :accountId];
+    }
+}
+```
+
+We can have a store that keeps track of which Account Id has been selected, and a `resource` store that fetches the
+details of the selected account.
+
+```javascript
+import { $store, $resource, $effect } from "c/store";
+import getAccountDetails from "@salesforce/apex/ResourceController.getAccountDetails";
+
+export const selectedAccountId = $store(null);
+
+export const { data: getAccount } = $resource(getAccountDetails, () => ({
+  accountId: selectedAccountId.value
+}));
+```
+
+Notice that the resource store takes a second optional argument, which in this case is a function that returns an
+object with the parameters that the Apex method needs. Because this function is accessing a reactive value (`selectedAccountId`),
+the resource store will automatically refetch the data whenever the `selectedAccountId` changes!
+
+This works no matter how many reactive values you use in the function, and it will automatically refetch the data
+whenever any of the reactive values change.
+
+Let's now create our picklist component that allows the user to select an account.
+
+```html
+<!-- accountPicker.html -->
+<template>
+  <lightning-select
+    label="Select Account"
+    value={currentAccountId}
+    options={accounts}
+    onchange={handleAccountChange}
+  ></lightning-select>
+</template>
+```
+
+```javascript
+// accountPicker.js
+import { LightningElement, track, wire } from "lwc";
+import getAccounts from "@salesforce/apex/ResourceController.getAccounts";
+import { selectedAccountId } from "c/demoStores";
+
+export default class AccountPicker extends LightningElement {
+  @track accounts = [];
+
+  @wire(getAccounts)
+  getAccounts({ error, data }) {
+    if (data) {
+      this.accounts = data.map((account) => ({
+        label: account.Name,
+        value: account.Id
+      }));
+
+      if (this.accounts.length > 0) {
+        selectedAccountId.value = this.accounts[0].value;
+      }
+    } else if (error) {
+      console.error(error);
+    }
+  }
+
+  get currentAccountId() {
+    return selectedAccountId.value;
+  }
+
+  handleAccountChange(event) {
+    selectedAccountId.value = event.detail.value;
+  }
+}
+```
+
+Notice how we are using a `@wire` service to fetch the accounts from the server and populate the picklist. This is
+because in this case we don't care about sharing that data with other components, and we only need it once. Be
+pragmatic about when to use stores and when not to. Opt to use the base Salesforce services when you only need the data
+in a single component.
+
+Now, let's create the component that displays the details of the selected account.
+
+```html
+<!-- accountDetails.html -->
+<template>
+  <div>
+    <h1>Selected Account</h1>
+    <template if:true={account.loading}>
+      <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+    </template>
+
+    <template if:false={account.loading}>
+      <template if:true={account.data}>
+        <p>Account Name: {account.data.Name}</p>
+        <p>Phone: {account.data.Phone}</p>
+        <p>Website: {account.data.Website}</p>
+      </template>
+    </template>
+  </div>
+</template>
+```
+
+```javascript
+// accountDetails.js
+import { LightningElement } from "lwc";
+import { $computed } from "c/store";
+import { getAccount } from "c/demoStores";
+
+export default class AccountDetails extends LightningElement {
+  account = $computed(() => (this.account = getAccount.value)).value;
+}
+```
+
+<div style="text-align: center;">
+    <img src="./doc-assets/account-picker.gif" alt="Account Picker Example" /> 
+</div>
+
+---
+TODO: Remember refetching
+TODO: Benefits, allows you to keep the old value while the new values are being loaded
+---
 
 # Contributing
 
