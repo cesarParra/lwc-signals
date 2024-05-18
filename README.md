@@ -12,6 +12,10 @@ that can be used to share state between components.
 
 Copy the `force-app/lwc/store` folder to your project.
 
+> ✏️ Note that the source code is written in Typescript and is located in the `src` folder. The `force-app/lwc/store` folder
+> contains the compiled code. If you wish to modify the source code you can either modify the resulting JS code, or you can
+> grab the Typescript files from the `src` folder and set up your project to compile them.
+
 # Usage
 
 ## Introduction
