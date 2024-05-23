@@ -60,9 +60,9 @@ Service that exports your signals.
 
 ```javascript
 // LWC Service: counter-signals.js
-import { $signals } from "c/signals";
+import { $signal } from "c/signals";
 
-const counter = $signals(0);
+const counter = $signal(0);
 
 export { counter };
 ```
@@ -195,9 +195,9 @@ export default class Display extends LightningElement {
 You can also stack computed values to create more complex reactive values that derive from each other
 
 ```javascript
-import { $signals, $computed } from "c/signals";
+import { $signal, $computed } from "c/signals";
 
-export const counter = $signals(0);
+export const counter = $signal(0);
 
 export const counterPlusOne = $computed(() => counter.value + 1);
 export const counterPlusTwo = $computed(() => counterPlusOne.value + 1);
@@ -219,11 +219,11 @@ without having to track each one independently.
 ```javascript
 // LWC Service: contact-info.js
 
-import { $signals } from "c/signals";
+import { $signal } from "c/signals";
 
-export const accountName = $signals("ACME");
+export const accountName = $signal("ACME");
 
-export const contactName = $signals("John Doe");
+export const contactName = $signal("John Doe");
 ```
 
 **And given a component that updates both signals**
@@ -314,9 +314,9 @@ You can also use the `$effect` function to create a side effect that depends on 
 Let's say you want to keep a log of the changes in the `counter` signals.
 
 ```javascript
-import { $signals, $effect } from "c/signals";
+import { $signal, $effect } from "c/signals";
 
-export const counter = $signals(0);
+export const counter = $signal(0);
 
 $effect(() => console.log(counter.value));
 ```
@@ -448,10 +448,10 @@ We can have a signals that keeps track of which Account Id has been selected, an
 details of the selected account.
 
 ```javascript
-import { $signals, $resource, $effect } from "c/signals";
+import { $signal, $resource, $effect } from "c/signals";
 import getAccountDetails from "@salesforce/apex/ResourceController.getAccountDetails";
 
-export const selectedAccountId = $signals(null);
+export const selectedAccountId = $signal(null);
 
 export const { data: getAccount } = $resource(getAccountDetails, () => ({
   accountId: selectedAccountId.value
@@ -592,7 +592,7 @@ you want to keep the data in the signals and only refetch it when you explicitly
 To solve this problem, you can use the `refetch` function that is returned by the `$resource` function.
 
 ```javascript
-import { $signals, $resource } from "c/signals";
+import { $signal, $resource } from "c/signals";
 import getContacts from "@salesforce/apex/ContactController.getContacts";
 
 export const { data: fetchContacts, refetch: refetchContacts } =
