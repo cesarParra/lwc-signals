@@ -14,7 +14,7 @@ function _getCurrentObserver(): VoidFunction | undefined {
   return context[context.length - 1];
 }
 
-function $effect(fn: VoidFunction): void {121
+function $effect(fn: VoidFunction): void {
   const execute = () => {
     context.push(execute);
     try {
