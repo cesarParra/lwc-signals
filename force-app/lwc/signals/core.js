@@ -31,6 +31,9 @@ function $signal(value) {
     return _value;
   }
   function setter(newValue) {
+    if (newValue === _value) {
+      return;
+    }
     _value = newValue;
     for (const subscriber of subscribers) {
       subscriber();
