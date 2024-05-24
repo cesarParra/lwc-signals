@@ -52,6 +52,9 @@ function $signal<T>(value: T): Signal<T> {
   }
 
   function setter(newValue: T) {
+    if (newValue === _value) {
+      return;
+    }
     _value = newValue;
     for (const subscriber of subscribers) {
       subscriber();
