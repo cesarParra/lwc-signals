@@ -39,15 +39,6 @@ function $computed<T>(fn: ComputedFunction<T>): ReadOnlySignal<T> {
   return computedSignal.readOnly;
 }
 
-function $reactTo<T>(signal: Signal<T>): T {
-  let _value: T = signal.value;
-  $effect(() => {
-    _value = signal.value;
-  });
-
-  return _value;
-}
-
 function $signal<T>(value: T): Signal<T> {
   let _value: T = value;
   const subscribers: Set<VoidFunction> = new Set();
@@ -162,4 +153,4 @@ function $resource<T>(
   };
 }
 
-export { $signal, $effect, $computed, $reactTo, $resource };
+export { $signal, $effect, $computed, $resource };
