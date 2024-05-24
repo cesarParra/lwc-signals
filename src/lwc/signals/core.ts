@@ -14,7 +14,7 @@ function _getCurrentObserver(): VoidFunction | undefined {
   return context[context.length - 1];
 }
 
-function $effect(fn: VoidFunction): void {
+function $effect(fn: VoidFunction): void {121
   const execute = () => {
     context.push(execute);
     try {
@@ -37,15 +37,6 @@ function $computed<T>(fn: ComputedFunction<T>): ReadOnlySignal<T> {
   });
 
   return computedSignal.readOnly;
-}
-
-function $reactTo<T>(signal: Signal<T>): T {
-  let _value: T = signal.value;
-  $effect(() => {
-    _value = signal.value;
-  });
-
-  return _value;
 }
 
 function $signal<T>(value: T): Signal<T> {
@@ -162,4 +153,4 @@ function $resource<T>(
   };
 }
 
-export { $signal, $effect, $computed, $reactTo, $resource };
+export { $signal, $effect, $computed, $resource };

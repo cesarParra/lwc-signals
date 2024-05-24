@@ -44,10 +44,10 @@ This can be cumbersome when you have a lot of components that need to share stat
 - You have to make sure manage subscriptions and unsubscriptions to events
 
 An alternative is to use the `wire` service to get the data from the server and let the framework handle the caching
-for you, but this only works for data that is signalsd in the server, and still forces you to implement a lot of
+for you, but this only works for data that is stored in the server, and still forces you to implement a lot of
 boilerplate code to manage each wire adapter for each component.
 
-`LWC Signals` provides a simple way to create reactive data signalss that can be used to share state between components
+`LWC Signals` provides a simple way to create reactive data signals that can be used to share state between components
 without the need to broadcast messages or manage subscriptions and wires.
 
 ## Creating a signals
@@ -104,76 +104,9 @@ export default class Counter extends LightningElement {
 
 ## Reacting to changes
 
-### `$reactTo`
-
-To have your components automatically react to changes in the signals, you can use the `$reactTo`
-function to create a reactive value that will update whenever the signals changes.
-
-Let's create another component that displays the counter value and automatically updates when the counter changes.
-
-```html
-<!-- display.html -->
-<template>
-  <p>The current count is: {counter.value}</p>
-</template>
-```
-
-```javascript
-// display.js
-import { LightningElement } from "lwc";
-import { $reactTo } from "c/signals";
-import { counter } from "c/counter-signals";
-
-export default class Display extends LightningElement {
-  get counter() {
-    return $reactTo(counter);
-  }
-}
-```
-
-> ❗`$reactTo` should be used inside a getter to make sure that the UI updates when the value changes.
-> Keep reading to see other ways to react to changes in the signals.
-
-<div style="text-align: center;">
-    <img src="./doc-assets/counter-example.gif" alt="Counter Example" />
-</div>
-
----
-
 ### `$computed`
 
-You can also use the `$computed` function to create a reactive value that depends on the signals.
-The difference between `$reactTo` and `$computed` is that `$computed` allows you return a derived computed signals (with
-the difference of it being read only)
-from the original, or multiple signals.
-
-```javascript
-// display.js
-import { LightningElement } from "lwc";
-import { $computed } from "c/signals";
-import { counter } from "c/counter-signals";
-
-export default class Display extends LightningElement {
-  get counterMultiplied() {
-    return $computed(() => counter.value * 2).value;
-  }
-}
-```
-
----
-
-Notice that in the examples we have been using getters to react to value changes. This is because LWC's reactive system
-can automatically detect changes in getters for simple values and updates the UI accordingly, which makes for a cleaner
-developer experience
-and easier to reason about the code.
-
-But there are cases where we need to use a property in case of a getter, for example when computing values into a
-complex object, in which case the LWC
-framework won't update the UI automatically. For cases like this, you can leverage the
-`$computed` function to create a reactive property that will update whenever the signals changes.
-
-> See the (Reacting to multiple signals)[#reacting-to-multiple-signals] section for an example where we need
-> to use a property instead of a getter.
+You the `$computed` function to create a reactive value that depends on the signals.
 
 ```javascript
 // display.js
@@ -247,17 +180,13 @@ export const contactName = $signal("John Doe");
 ```javascript
 // contactInfoForm.js
 import { LightningElement } from "lwc";
-import { $reactTo } from "c/signals";
+import { $computed } from "c/signals";
 import { accountName, contactName } from "c/demoSignalss";
 
 export default class ContactInfoForm extends LightningElement {
-  get accountName() {
-    return $reactTo(accountName);
-  }
+  accountName = $computed(() => (this.accountName = accountName.value)).value;
 
-  get contactName() {
-    return $reactTo(contactName);
-  }
+  contactName = $computed(() => (this.contactName = contactName.value)).value;
 
   handleAccountNameChange(event) {
     accountName.value = event.target.value;
@@ -519,7 +448,7 @@ export default class AccountPicker extends LightningElement {
 
 Notice how we are using a `@wire` service to fetch the accounts from the server and populate the picklist. This is
 because in this case we don't care about sharing that data with other components, and we only need it once. Be
-pragmatic about when to use signalss and when not to. Opt to use the base Salesforce services when you only need the
+pragmatic about when to use signals and when not to. Opt to use the base Salesforce services when you only need the
 data
 in a single component.
 

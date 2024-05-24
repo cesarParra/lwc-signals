@@ -1,15 +1,10 @@
 import { LightningElement } from "lwc";
-import { $reactTo } from "c/signals";
+import { $computed } from "c/signals";
 import { accountName, contactName } from "c/demoSignals";
 
 export default class ContactInfoForm extends LightningElement {
-  get accountName() {
-    return $reactTo(accountName);
-  }
-
-  get contactName() {
-    return $reactTo(contactName);
-  }
+  accountName = $computed(() => (this.accountName = accountName.value)).value;
+  contactName = $computed(() => (this.contactName = contactName.value)).value;
 
   handleAccountNameChange(event) {
     accountName.value = event.target.value;
