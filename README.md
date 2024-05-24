@@ -123,6 +123,10 @@ export default class Display extends LightningElement {
 > to trigger the reactivity. This is because we need the value to be reassigned so that
 > LWC reactive system can detect the change and update the UI.
 
+<div style="text-align: center;">
+    <img src="./doc-assets/counter-example.gif" alt="Counter Example" />
+</div>
+
 ### Stacking computed values
 
 You can also stack computed values to create more complex reactive values that derive from each other
