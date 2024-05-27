@@ -2,7 +2,11 @@
   "packageDirectories": [
     {
       "path": "force-app",
-      "default": false
+      "default": false,
+      "package": "LWC Signals",
+      "versionName": "ver 0.1",
+      "versionNumber": "0.1.0.NEXT",
+      "versionDescription": ""
     },
     {
       "path": "examples",
@@ -10,7 +14,10 @@
     }
   ],
   "name": "lwc-signals",
-  "namespace": "",
+  "namespace": "signal",
   "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "60.0"
+  "sourceApiVersion": "60.0",
+  "packageAliases": {
+    "LWC Signals": "0HoRb000000004rKAA"
+  }
 }
