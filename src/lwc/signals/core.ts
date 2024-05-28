@@ -1,8 +1,10 @@
+import { useInMemoryStorage, State } from "./use";
+
 type ReadOnlySignal<T> = {
   readonly value: T;
 };
 
-type Signal<T> = {
+export type Signal<T> = {
   get value(): T;
   set value(newValue: T);
   readOnly: ReadOnlySignal<T>;
@@ -39,8 +41,16 @@ function $computed<T>(fn: ComputedFunction<T>): ReadOnlySignal<T> {
   return computedSignal.readOnly;
 }
 
-function $signal<T>(value: T): Signal<T> {
-  let _value: T = value;
+type StorageFn<T> = (value: T) => State<T> & { [key: string]: unknown };
+
+type SignalOptions<T> = {
+  storage: StorageFn<T>
+};
+
+function $signal<T>(value: T, options: SignalOptions<T> = {
+  storage: useInMemoryStorage
+}): Signal<T> & Omit<ReturnType<StorageFn<T>>, 'get' | 'set'> {
+  const _storageOption: State<T> = options.storage(value);
   const subscribers: Set<VoidFunction> = new Set();
 
   function getter() {
@@ -48,20 +58,21 @@ function $signal<T>(value: T): Signal<T> {
     if (current) {
       subscribers.add(current);
     }
-    return _value;
+    return _storageOption.get();
   }
 
   function setter(newValue: T) {
-    if (newValue === _value) {
+    if (newValue === _storageOption) {
       return;
     }
-    _value = newValue;
+    _storageOption.set(newValue);
     for (const subscriber of subscribers) {
       subscriber();
     }
   }
 
-  return {
+  const returnValue: Signal<T> & Omit<ReturnType<StorageFn<T>>, 'get' | 'set'> = {
+    ..._storageOption,
     get value() {
       return getter();
     },
@@ -74,6 +85,13 @@ function $signal<T>(value: T): Signal<T> {
       }
     }
   };
+
+  // We don't want to expose the `get` and `set` methods, so
+  // remove before returning
+  delete returnValue.get;
+  delete returnValue.set;
+
+  return returnValue;
 }
 
 // $resource

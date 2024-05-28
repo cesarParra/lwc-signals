@@ -1,6 +1,19 @@
-import { $signal, $effect, $computed } from "c/signals";
+import { $signal, $effect, $computed, useLocalStorage } from "c/signals";
 
-export const counter = $signal(0);
+// EXAMPLE OF COUNTER USING COOKIES
+
+// let tomorrow = new Date();
+// tomorrow.setDate(tomorrow.getDate() + 1);
+
+// export const counter = $signal(0, {
+//   storage: useCookies("counter", tomorrow)
+// });
+
+// EXAMPLE OF COUNTER USING LOCAL STORAGE
+
+export const counter = $signal(0, {
+  storage: useLocalStorage("counter")
+});
 
 $effect(() => console.log(counter.value));
 

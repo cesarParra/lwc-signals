@@ -24,7 +24,8 @@ It features:
 Copy the `force-app/lwc/signals` folder to your project.
 
 > ✏️ Note that the source code is written in Typescript and is located in the `src` folder. The `force-app/lwc/signals`
-> folder contains the compiled code that you will be able to use in your Salesforce project. If you wish to modify the source
+> folder contains the compiled code that you will be able to use in your Salesforce project. If you wish to modify the
+> source
 > code you can either modify the resulting JS code, or you can grab the Typescript files from the `src` folder
 > and set up your project to compile them.
 
@@ -548,6 +549,89 @@ export default class ContactList extends LightningElement {
   }
 }
 ```
+
+## Storage
+
+By default, any created signal is stored in memory and will be lost when the component is destroyed. This behavior
+can be modified by passing a `storage` option to the `$signal` function. For example, if you wish for
+the signal to be stored in the `localStorage`, you can use `useLocalStorage` helper function.
+
+```javascript
+import { $signal, useLocalStorage } from "c/signals";
+
+const counter = $signal(0, { storage: useLocalStorage("my-key-name") });
+```
+
+The following storage helpers are available by default:
+
+- `useLocalStorage(key: string)`: Stores the signal in the `localStorage` with the given key
+- `useCookies(key: string, expires?: Date)`: Stores the signal in a cookie with the given key. You can also pass an
+  optional `expires` parameter to set the expiration date of the cookie
+
+### Creating custom storage
+
+The `storage` option receives a function that defines the behavior for where the data should be stored.
+This means you can create your own custom storage solution by passing a function with the following
+signature:
+
+```typescript
+// Note that we are using a Typescript signature for clarity,
+// but you can use the same signature in Javascript. The example below is in Javascript.
+type StorageFn<T> = (value: T) => {
+  get: () => T;
+  set: (newValue: T) => void;
+};
+```
+
+To make things easier, we provide a helper function that creates a storage solution for you: `createStorage`.
+
+For example, let's say you want to create a storage solution that allows you to undo to the previous value of a signal
+as many times as you want.
+
+```javascript
+import { $signal, createStorage } from "c/signals";
+
+const useUndo = (value) => {
+  const _valueStack = [];
+
+  // add the initial value to the stack
+  _valueStack.push(value);
+
+  function undo() {
+    _valueStack.pop();
+  }
+
+  const customStorage = createStorage(
+    () => {
+      // Get value at the top of the stack
+      return _valueStack[_valueStack.length - 1];
+    },
+    (newValue) => {
+      _valueStack.push(newValue);
+    }
+  );
+
+  return {
+    ...customStorage,
+    undo
+  };
+};
+
+const counter = $signal(0, { storage: useUndo });
+
+counter.value = 1;
+counter.value = 2;
+counter.value = 3;
+counter.undo(); // counter.value is now 2
+counter.undo(); // counter.value is now 1
+counter.undo(); // counter.value is now 0
+```
+
+`createStorage` receives two functions: a getter and a setter. The getter should return the value stored in the
+storage, and the setter should set the value in the storage.
+
+Notice that any additional properties you add to the object returned by `createStorage` will be available in the
+returned object. That is how we can add the `undo` function to the `counter` signal and use it to undo the changes.
 
 # Contributing
 
