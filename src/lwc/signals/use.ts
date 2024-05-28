@@ -23,3 +23,30 @@ export function useInMemoryStorage<T>(value: T): ValueStorage<T> {
 
   return createStorage(getter, setter);
 }
+
+function useLocalStorageCreator<T>(key: string, value: T): ValueStorage<T> {
+  function getter() {
+    const item = localStorage.getItem(key);
+    if (item) {
+      return JSON.parse(item);
+    }
+    return value;
+  }
+
+  function setter(newValue: T) {
+    localStorage.setItem(key, JSON.stringify(newValue));
+  }
+
+  // Set initial value if not set
+  if (!localStorage.getItem(key)) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+
+  return createStorage(getter, setter);
+}
+
+export function useLocalStorage(key: string) {
+  return function <T>(value: T) {
+    return useLocalStorageCreator(key, value);
+  };
+}

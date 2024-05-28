@@ -11,3 +11,25 @@ export function useInMemoryStorage(value) {
   }
   return createStorage(getter, setter);
 }
+function useLocalStorageCreator(key, value) {
+  function getter() {
+    const item = localStorage.getItem(key);
+    if (item) {
+      return JSON.parse(item);
+    }
+    return value;
+  }
+  function setter(newValue) {
+    localStorage.setItem(key, JSON.stringify(newValue));
+  }
+  // Set initial value if not set
+  if (!localStorage.getItem(key)) {
+    localStorage.setItem(key, JSON.stringify(value));
+  }
+  return createStorage(getter, setter);
+}
+export function useLocalStorage(key) {
+  return function (value) {
+    return useLocalStorageCreator(key, value);
+  };
+}
