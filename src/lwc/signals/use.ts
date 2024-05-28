@@ -1,4 +1,4 @@
-export type ValueStorage<T> = {
+export type State<T> = {
   get: () => T;
   set: (newValue: T) => void;
 }
@@ -6,11 +6,11 @@ export type ValueStorage<T> = {
 export function createStorage<T>(
   get: () => T,
   set: (newValue: T) => void
-): ValueStorage<T> {
+): State<T> {
   return { get, set };
 }
 
-export function useInMemoryStorage<T>(value: T): ValueStorage<T> {
+export function useInMemoryStorage<T>(value: T): State<T> {
   let _value: T = value;
 
   function getter() {
@@ -24,7 +24,7 @@ export function useInMemoryStorage<T>(value: T): ValueStorage<T> {
   return createStorage(getter, setter);
 }
 
-function useLocalStorageCreator<T>(key: string, value: T): ValueStorage<T> {
+function useLocalStorageCreator<T>(key: string, value: T): State<T> {
   function getter() {
     const item = localStorage.getItem(key);
     if (item) {

@@ -45,7 +45,8 @@ function $signal(
       subscriber();
     }
   }
-  return {
+  const returnValue = {
+    ..._storageOption,
     get value() {
       return getter();
     },
@@ -58,6 +59,11 @@ function $signal(
       }
     }
   };
+  // We don't want to expose the `get` and `set` methods, so
+  // remove before returning
+  delete returnValue.get;
+  delete returnValue.set;
+  return returnValue;
 }
 function $resource(fn, source, options) {
   function loadingState(data) {

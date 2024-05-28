@@ -1,5 +1,5 @@
-import { $signal, $computed, $effect, $resource } from "../core";
-import { useCookies, useLocalStorage } from "../use";
+import { $signal, $computed, $effect, $resource, Signal } from "../core";
+import { createStorage, useCookies, useLocalStorage } from "../use";
 
 describe("signals", () => {
   describe("core functionality", () => {
@@ -195,6 +195,52 @@ describe("signals", () => {
         error: null
       });
     });
+
+    test("can create custom storages", () => {
+      const useUndo = <T>(value: T) => {
+        const _valueStack: T[] = [];
+
+        // add the initial value to the stack
+        _valueStack.push(value);
+
+        function undo() {
+          _valueStack.pop();
+        }
+
+        const customStorage = createStorage(
+          () => {
+            // Get value at the top of the stack
+            return _valueStack[_valueStack.length - 1];
+          },
+          (newValue) => {
+            _valueStack.push(newValue);
+          },
+        );
+
+        return {
+          ...customStorage,
+          undo
+        };
+      };
+
+      const signal = $signal(0, {
+        storage: useUndo
+      }) as unknown as Signal<number> & { undo: () => void };
+
+      expect(signal.value).toBe(0);
+
+      signal.value = 1;
+      expect(signal.value).toBe(1);
+
+      signal.value = 2;
+      expect(signal.value).toBe(2);
+
+      signal.undo();
+      expect(signal.value).toBe(1);
+
+      signal.undo();
+      expect(signal.value).toBe(0);
+    });
   });
 
   describe("storing values in local storage", () => {
@@ -212,17 +258,17 @@ describe("signals", () => {
     });
   });
 
-  describe('storing values in cookies', () => {
-    test('should have a default value', () => {
+  describe("storing values in cookies", () => {
+    test("should have a default value", () => {
       const signal = $signal(0, {
-        storage: useCookies('test')
+        storage: useCookies("test")
       });
       expect(signal.value).toBe(0);
     });
 
-    test('should update the value', () => {
+    test("should update the value", () => {
       const signal = $signal(0, {
-        storage: useCookies('test')
+        storage: useCookies("test")
       });
       signal.value = 1;
       expect(signal.value).toBe(1);
