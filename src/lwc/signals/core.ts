@@ -1,3 +1,5 @@
+import { useInMemoryStorage, ValueStorage } from "./use";
+
 type ReadOnlySignal<T> = {
   readonly value: T;
 };
@@ -39,8 +41,14 @@ function $computed<T>(fn: ComputedFunction<T>): ReadOnlySignal<T> {
   return computedSignal.readOnly;
 }
 
-function $signal<T>(value: T): Signal<T> {
-  let _value: T = value;
+type SignalOptions<T> = {
+  storage: (value: T) => ValueStorage<T>;
+};
+
+function $signal<T>(value: T, options: SignalOptions<T> = {
+  storage: useInMemoryStorage
+}): Signal<T> {
+  const _storageOption: ValueStorage<T> = options.storage(value);
   const subscribers: Set<VoidFunction> = new Set();
 
   function getter() {
@@ -48,14 +56,14 @@ function $signal<T>(value: T): Signal<T> {
     if (current) {
       subscribers.add(current);
     }
-    return _value;
+    return _storageOption.get();
   }
 
   function setter(newValue: T) {
-    if (newValue === _value) {
+    if (newValue === _storageOption) {
       return;
     }
-    _value = newValue;
+    _storageOption.set(newValue);
     for (const subscriber of subscribers) {
       subscriber();
     }
