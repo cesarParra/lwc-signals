@@ -1,6 +1,11 @@
-import { $signal, $effect, $computed } from "c/signals";
+import { $signal, $effect, $computed, useCookies } from "c/signals";
 
-export const counter = $signal(0);
+let tomorrow = new Date();
+tomorrow.setDate(tomorrow.getDate() + 1);
+
+export const counter = $signal(0, {
+  storage: useCookies("counter", tomorrow)
+});
 
 $effect(() => console.log(counter.value));
 

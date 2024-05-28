@@ -33,3 +33,20 @@ export function useLocalStorage(key) {
     return useLocalStorageCreator(key, value);
   };
 }
+export function useCookies(key, expires) {
+  return function (value) {
+    function getter() {
+      const cookie = document.cookie
+        .split("; ")
+        .find((row) => row.startsWith(key));
+      if (cookie) {
+        return JSON.parse(cookie.split("=")[1]);
+      }
+      return value;
+    }
+    function setter(newValue) {
+      document.cookie = `${key}=${JSON.stringify(newValue)}; expires=${expires?.toUTCString()}`;
+    }
+    return createStorage(getter, setter);
+  };
+}
