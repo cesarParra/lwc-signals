@@ -18,6 +18,10 @@
   "sfdcLoginUrl": "https://login.salesforce.com",
   "sourceApiVersion": "60.0",
   "packageAliases": {
-    "LWC Signals": "0HoRb000000004rKAA"
+    "LWC Signals": "0HoRb000000004rKAA",
+    "LWC Signals@0.1.0-1": "04tRb0000016sraIAA",
+    "LWC Signals@0.1.0-2": "04tRb0000016txJIAQ",
+    "LWC Signals@0.1.0-3": "04tRb0000016tyvIAA",
+    "LWC Signals@0.1.0-5": "04tRb0000016y2XIAQ"
   }
 }
