@@ -205,10 +205,10 @@ describe("signals", () => {
       expect(signal.value).toBe(0);
     });
 
-    // test("should update the value", () => {
-    //   const signal = $signal(0);
-    //   signal.value = 1;
-    //   expect(signal.value).toBe(1);
-    // });
+    test("should update the value", () => {
+      const signal = $signal(0);
+      signal.value = 1;
+      expect(signal.value).toBe(1);
+    });
   });
 });

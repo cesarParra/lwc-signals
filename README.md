@@ -549,6 +549,66 @@ export default class ContactList extends LightningElement {
 }
 ```
 
+## Storage
+
+By default, any created signal is stored in memory and will be lost when the component is destroyed. This behavior
+can be modified by passing a `storage` option to the `$signal` function. For example, if you wish for
+the signal to be stored in the `localStorage`, you can use `useLocalStorage` helper function.
+
+```javascript
+import { $signal, useLocalStorage } from "c/signals";
+
+const counter = $signal(0, { storage: useLocalStorage("my-key-name") });
+```
+
+The following storage helpers are available by default:
+
+- `useLocalStorage(key: string)`: Stores the signal in the `localStorage` with the given key
+
+### Creating custom storage
+
+The `storage` option receives a function that defines the behavior for where the data should be stored.
+This means you can create your own custom storage solution by passing a function with the following
+signature:
+
+```typescript
+// Note that we are using a Typescript signature for clarity,
+// but you can use the same signature in Javascript. The example below is in Javascript.
+type StorageFn<T> = (value: T) => {
+  get: () => T;
+  set: (newValue: T) => void;
+};
+```
+
+To make things easier, we provide a helper function that creates a storage solution for you: `createStorage`.
+
+Let's create a custom storage solution that stores the data in a cookie.
+
+```javascript
+import { $signal, createStorage } from "c/signals";
+
+const useCookieStorage = (key) => {
+  function cookieGetter() {
+    const value = document.cookie
+      .split("; ")
+      .find((row) => row.startsWith(`${key}=`))
+      ?.split("=")[1];
+    return value ? JSON.parse(value) : null;
+  }
+
+  function cookieSetter(newValue) {
+    document.cookie = `${key}=${JSON.stringify(newValue)}`;
+  }
+
+  return createStorage(cookieGetter, cookieSetter);
+};
+
+const counter = $signal(0, { storage: useCookieStorage("my-key-name") });
+```
+
+`createStorage` receives two functions: a getter and a setter. The getter should return the value stored in the
+storage, and the setter should set the value in the storage.
+
 # Contributing
 
 Contributions are welcome! Please read the [Contributing Guide](CONTRIBUTING.md) for more information.
