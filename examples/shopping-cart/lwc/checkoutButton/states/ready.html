@@ -1,0 +1,24 @@
+<template>
+    <div class="mx-auto max-w-4xl pb-16">
+        <div class="mt-10">
+            <button type="submit"
+                    disabled={isEmpty}
+                    class="w-full rounded-md border border-transparent bg-indigo-600 px-4 py-3
+                    text-base font-medium text-white shadow-sm hover:bg-indigo-700 focus:outline-none
+                    focus:ring-2 focus:ring-indigo-500 focus:ring-offset-2 focus:ring-offset-gray-50
+                    disabled:opacity-50 disabled:cursor-not-allowed">
+                Checkout
+            </button>
+        </div>
+
+        <div class="mt-6 text-center text-sm text-gray-500">
+            <p>
+                or &nbsp;
+                <a href="#" class="font-medium text-indigo-600 hover:text-indigo-500">
+                    Continue Shopping
+                    <span aria-hidden="true"> &rarr;</span>
+                </a>
+            </p>
+        </div>
+    </div>
+</template>
