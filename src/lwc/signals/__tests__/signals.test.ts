@@ -277,6 +277,50 @@ describe("signals", () => {
         error: null
       });
     });
+
+    test("when mutating a resource without optimistic update, waits for the callback to set the value", async () => {
+      const asyncFunction = async () => {
+        return "done";
+      };
+
+      const asyncReaction = async () => {
+      };
+
+      const { data: resource, mutate } = $resource(asyncFunction, undefined, {
+        optimistic: false,
+        onMutate: asyncReaction,
+        mutateOptions: {
+          onSuccess: (mutatorCallback) => {
+            mutatorCallback("post async success");
+          }
+        }
+      });
+
+      await new Promise(process.nextTick);
+
+      expect(resource.value).toEqual({
+        data: "done",
+        loading: false,
+        error: null
+      });
+
+      mutate("mutated");
+
+      // Should not change the value until the async operation is done
+      expect(resource.value).toEqual({
+        data: "done",
+        loading: false,
+        error: null
+      });
+
+      await new Promise(process.nextTick);
+
+      expect(resource.value).toEqual({
+        data: "post async success",
+        loading: false,
+        error: null
+      });
+    });
   });
 
   test("can force a refetch of a resource", async () => {
