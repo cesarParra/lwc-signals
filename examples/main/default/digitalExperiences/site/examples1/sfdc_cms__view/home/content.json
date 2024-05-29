@@ -16,10 +16,30 @@
           "children" : [ {
             "children" : [ {
               "attributes" : {
-                "richTextValue" : "<div style=\"display: flex; justify-content: center; align-items: center; margin: 50px 0; flex-direction: column; text-align: center;\"><div style=\"background-image: url(assets/img/desert.svg) !important; background-size: cover; background-position: center; height: 300px; width: 100%; max-width: 600px; min-width: 300px;\"></div><h1 class=\"slds-text-heading_medium slds-p-bottom_x-small\">Start Building Your Page</h1> <div>Drag and drop a component into the content slots.</div></div>"
+                "alignment" : "center",
+                "size" : "standard",
+                "stretch" : "standard",
+                "text" : "Checkout Demo",
+                "type" : "tertiary",
+                "url" : "{\"linkInfo\":{\"pageReference\":{\"type\":\"comm__namedPage\",\"attributes\":{\"name\":\"Checkout__c\"}}}}"
               },
-              "definition" : "community_builder:htmlEditor",
-              "id" : "c6e9e7f0-0dcf-46b9-985e-682e7a2b3fe0",
+              "definition" : "dxp_base:button",
+              "id" : "c4f0a4d8-6c9a-43dc-83fd-1ea9be17ef6a",
+              "type" : "component"
+            }, {
+              "attributes" : {
+                "backgroundColor" : "",
+                "isLinkable" : false,
+                "linkAssistiveText" : "",
+                "paddingHorizontal" : "none",
+                "paddingVertical" : "none",
+                "text" : "Demonstrates how to create a custom storage solution that implements Undo functionality.",
+                "textAlign" : "center",
+                "textDecoration" : "{}",
+                "textDisplayInfo" : "{}"
+              },
+              "definition" : "dxp_base:textBlock",
+              "id" : "5073049b-5c6f-42a8-a358-3232df2d813a",
               "type" : "component"
             } ],
             "id" : "142284b4-88b0-4d00-ad59-6d177998602a",
