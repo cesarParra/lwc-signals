@@ -157,7 +157,7 @@ describe("signals", () => {
       });
     });
 
-    test('can mutate a resource', async () => {
+    test("can mutate a resource", async () => {
       const asyncFunction = async () => {
         return "done";
       };
@@ -187,121 +187,170 @@ describe("signals", () => {
       });
     });
 
-    test("can force a refetch of a resource", async () => {
-      let counter = 0;
+    test("does not mutate a resource if optimistic updating is not turned on and no onMutate is provided", async () => {
       const asyncFunction = async () => {
-        return counter++;
+        return "done";
       };
 
-      const { data: resource, refetch } = $resource(asyncFunction);
-
-      expect(resource.value).toEqual({
-        data: null,
-        loading: true,
-        error: null
+      const { data: resource, mutate } = $resource(asyncFunction, undefined, {
+        optimistic: false
       });
 
       await new Promise(process.nextTick);
 
       expect(resource.value).toEqual({
-        data: 0,
+        data: "done",
         loading: false,
         error: null
       });
 
-      refetch();
+      mutate("mutated");
 
       expect(resource.value).toEqual({
-        data: 0,
-        loading: true,
-        error: null
-      });
-
-      await new Promise(process.nextTick);
-
-      expect(resource.value).toEqual({
-        data: 1,
+        data: "done",
         loading: false,
         error: null
       });
     });
 
-    test("can create custom storages", () => {
-      const useUndo = <T>(value: T) => {
-        const _valueStack: T[] = [];
+    test("can react to a mutation", async () => {
+      const asyncFunction = async () => {
+        return "done";
+      };
 
-        // add the initial value to the stack
-        _valueStack.push(value);
+      let hasReacted = false;
+      const reactionFunction = () => {
+        hasReacted = true;
+      };
 
-        function undo() {
-          _valueStack.pop();
+      const { mutate } = $resource(asyncFunction, undefined, {
+        onMutate: reactionFunction
+      });
+
+      await new Promise(process.nextTick);
+
+      mutate("mutated");
+
+      await new Promise(process.nextTick);
+
+      expect(hasReacted).toBe(true);
+    });
+  });
+
+  test("can force a refetch of a resource", async () => {
+    let counter = 0;
+    const asyncFunction = async () => {
+      return counter++;
+    };
+
+    const { data: resource, refetch } = $resource(asyncFunction);
+
+    expect(resource.value).toEqual({
+      data: null,
+      loading: true,
+      error: null
+    });
+
+    await new Promise(process.nextTick);
+
+    expect(resource.value).toEqual({
+      data: 0,
+      loading: false,
+      error: null
+    });
+
+    refetch();
+
+    expect(resource.value).toEqual({
+      data: 0,
+      loading: true,
+      error: null
+    });
+
+    await new Promise(process.nextTick);
+
+    expect(resource.value).toEqual({
+      data: 1,
+      loading: false,
+      error: null
+    });
+  });
+
+  test("can create custom storages", () => {
+    const useUndo = <T>(value: T) => {
+      const _valueStack: T[] = [];
+
+      // add the initial value to the stack
+      _valueStack.push(value);
+
+      function undo() {
+        _valueStack.pop();
+      }
+
+      const customStorage = createStorage(
+        () => {
+          // Get value at the top of the stack
+          return _valueStack[_valueStack.length - 1];
+        },
+        (newValue) => {
+          _valueStack.push(newValue);
         }
+      );
 
-        const customStorage = createStorage(
-          () => {
-            // Get value at the top of the stack
-            return _valueStack[_valueStack.length - 1];
-          },
-          (newValue) => {
-            _valueStack.push(newValue);
-          },
-        );
-
-        return {
-          ...customStorage,
-          undo
-        };
+      return {
+        ...customStorage,
+        undo
       };
+    };
 
-      const signal = $signal(0, {
-        storage: useUndo
-      }) as unknown as Signal<number> & { undo: () => void };
+    const signal = $signal(0, {
+      storage: useUndo
+    }) as unknown as Signal<number> & { undo: () => void };
 
-      expect(signal.value).toBe(0);
+    expect(signal.value).toBe(0);
 
-      signal.value = 1;
-      expect(signal.value).toBe(1);
+    signal.value = 1;
+    expect(signal.value).toBe(1);
 
-      signal.value = 2;
-      expect(signal.value).toBe(2);
+    signal.value = 2;
+    expect(signal.value).toBe(2);
 
-      signal.undo();
-      expect(signal.value).toBe(1);
+    signal.undo();
+    expect(signal.value).toBe(1);
 
-      signal.undo();
-      expect(signal.value).toBe(0);
+    signal.undo();
+    expect(signal.value).toBe(0);
+  });
+});
+
+describe("storing values in local storage", () => {
+  test("should have a default value", () => {
+    const signal = $signal(0, {
+      storage: useLocalStorage("test")
     });
+    expect(signal.value).toBe(0);
   });
 
-  describe("storing values in local storage", () => {
-    test("should have a default value", () => {
-      const signal = $signal(0, {
-        storage: useLocalStorage("test")
-      });
-      expect(signal.value).toBe(0);
-    });
+  test("should update the value", () => {
+    const signal = $signal(0);
+    signal.value = 1;
+    expect(signal.value).toBe(1);
+  });
+});
 
-    test("should update the value", () => {
-      const signal = $signal(0);
-      signal.value = 1;
-      expect(signal.value).toBe(1);
+describe("storing values in cookies", () => {
+  test("should have a default value", () => {
+    const signal = $signal(0, {
+      storage: useCookies("test")
     });
+    expect(signal.value).toBe(0);
   });
 
-  describe("storing values in cookies", () => {
-    test("should have a default value", () => {
-      const signal = $signal(0, {
-        storage: useCookies("test")
-      });
-      expect(signal.value).toBe(0);
+  test("should update the value", () => {
+    const signal = $signal(0, {
+      storage: useCookies("test")
     });
-
-    test("should update the value", () => {
-      const signal = $signal(0, {
-        storage: useCookies("test")
-      });
-      signal.value = 1;
-      expect(signal.value).toBe(1);
-    });
+    signal.value = 1;
+    expect(signal.value).toBe(1);
   });
 });

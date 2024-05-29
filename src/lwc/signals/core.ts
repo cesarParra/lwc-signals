@@ -106,7 +106,7 @@ type SignalOptions<T> = {
  */
 function $signal<T>(value: T, options: SignalOptions<T> = {
   storage: useInMemoryStorage
-}): Signal<T> & Omit<ReturnType<StorageFn<T>>, 'get' | 'set'> {
+}): Signal<T> & Omit<ReturnType<StorageFn<T>>, "get" | "set"> {
   const _storageOption: State<T> = options.storage(value);
   const subscribers: Set<VoidFunction> = new Set();
 
@@ -128,7 +128,7 @@ function $signal<T>(value: T, options: SignalOptions<T> = {
     }
   }
 
-  const returnValue: Signal<T> & Omit<ReturnType<StorageFn<T>>, 'get' | 'set'> = {
+  const returnValue: Signal<T> & Omit<ReturnType<StorageFn<T>>, "get" | "set"> = {
     ..._storageOption,
     get value() {
       return getter();
@@ -167,8 +167,21 @@ type ResourceResponse<T> = {
 
 type UnknownArgsMap = { [key: string]: unknown };
 
+type MutatorCallback<T> = (value: T) => void;
+
+type MutateOptions<T> = {
+  onFinish: (callback: MutatorCallback<T>) => void;
+  onSuccess: (callback: MutatorCallback<T>) => void;
+  onError: (error: unknown, callback: MutatorCallback<T>) => void;
+};
+
+type OnMutate<T> = (newValue: T) => Promise<void> | void;
+
 type ResourceOptions<T> = {
   initialValue?: T;
+  optimistic?: boolean;
+  onMutate?: OnMutate<T>;
+  mutateOptions?: Partial<MutateOptions<T>>;
 };
 
 /**
@@ -236,6 +249,8 @@ function $resource<T>(
   let _value: T | null = options?.initialValue ?? null;
   let _previousParams: UnknownArgsMap | undefined;
   const _signal = $signal<AsyncData<T>>(loadingState(_value));
+  // Optimistic updates are enabled by default
+  const optimistic = options?.optimistic ?? true;
 
   const execute = async () => {
     _signal.value = loadingState(_value);
@@ -271,15 +286,44 @@ function $resource<T>(
 
   $effect(execute);
 
+  /**
+   * Callback function that updates the value of the resource.
+   * @param value The value we want to set the resource to.
+   */
+  function mutatorCallback(value: T): void {
+    _value = value;
+    _signal.value = {
+      data: value,
+      loading: false,
+      error: null
+    };
+  }
+
   return {
     data: _signal.readOnly,
     mutate: (newValue: T) => {
-      _value = newValue;
-      _signal.value = {
-        data: newValue,
-        loading: false,
-        error: null
-      };
+      if (optimistic) {
+        // If optimistic updates are enabled, update the value immediately
+        mutatorCallback(newValue);
+      }
+
+      if (options?.onMutate) {
+        options.onMutate(newValue)?.then(() => {
+          if (options.mutateOptions?.onSuccess) {
+            options.mutateOptions.onSuccess(
+              mutatorCallback
+            );
+          }
+        }).catch((error: unknown) => {
+          if (options.mutateOptions?.onError) {
+            options.mutateOptions.onError(error, mutatorCallback);
+          }
+        }).finally(() => {
+          if (options.mutateOptions?.onFinish) {
+            options.mutateOptions.onFinish(mutatorCallback);
+          }
+        });
+      }
     },
     refetch: async () => {
       _isInitialLoad = true;
