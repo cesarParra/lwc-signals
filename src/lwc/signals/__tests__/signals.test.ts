@@ -235,6 +235,48 @@ describe("signals", () => {
 
       expect(hasReacted).toBe(true);
     });
+
+    test("can mutate a resource and change the value on success when the async operation is done", async () => {
+      const asyncFunction = async () => {
+        return "done";
+      };
+
+      const asyncReaction = async () => {
+      };
+
+      const { data: resource, mutate } = $resource(asyncFunction, undefined, {
+        onMutate: asyncReaction,
+        mutateOptions: {
+          onSuccess: (mutatorCallback) => {
+            mutatorCallback("post async success");
+          }
+        }
+      });
+
+      await new Promise(process.nextTick);
+
+      expect(resource.value).toEqual({
+        data: "done",
+        loading: false,
+        error: null
+      });
+
+      mutate("mutated");
+
+      expect(resource.value).toEqual({
+        data: "mutated",
+        loading: false,
+        error: null
+      });
+
+      await new Promise(process.nextTick);
+
+      expect(resource.value).toEqual({
+        data: "post async success",
+        loading: false,
+        error: null
+      });
+    });
   });
 
   test("can force a refetch of a resource", async () => {

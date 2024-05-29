@@ -215,13 +215,14 @@ function $resource(fn, source, options) {
   /**
    * Callback function that updates the value of the resource.
    * @param value The value we want to set the resource to.
+   * @param error An optional error object.
    */
-  function mutatorCallback(value) {
+  function mutatorCallback(value, error) {
     _value = value;
     _signal.value = {
       data: value,
       loading: false,
-      error: null
+      error: error ?? null
     };
   }
   return {

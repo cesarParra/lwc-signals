@@ -167,7 +167,7 @@ type ResourceResponse<T> = {
 
 type UnknownArgsMap = { [key: string]: unknown };
 
-type MutatorCallback<T> = (value: T) => void;
+type MutatorCallback<T> = (value: T | null, error?: unknown) => void;
 
 type MutateOptions<T> = {
   onFinish: (callback: MutatorCallback<T>) => void;
@@ -289,13 +289,14 @@ function $resource<T>(
   /**
    * Callback function that updates the value of the resource.
    * @param value The value we want to set the resource to.
+   * @param error An optional error object.
    */
-  function mutatorCallback(value: T): void {
+  function mutatorCallback(value: T | null, error?: unknown): void {
     _value = value;
     _signal.value = {
       data: value,
       loading: false,
-      error: null
+      error: error ?? null
     };
   }
 
