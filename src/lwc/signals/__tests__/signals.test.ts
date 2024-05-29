@@ -157,6 +157,36 @@ describe("signals", () => {
       });
     });
 
+    test('can mutate a resource', async () => {
+      const asyncFunction = async () => {
+        return "done";
+      };
+
+      const { data: resource, mutate } = $resource(asyncFunction);
+
+      expect(resource.value).toEqual({
+        data: null,
+        loading: true,
+        error: null
+      });
+
+      await new Promise(process.nextTick);
+
+      expect(resource.value).toEqual({
+        data: "done",
+        loading: false,
+        error: null
+      });
+
+      mutate("mutated");
+
+      expect(resource.value).toEqual({
+        data: "mutated",
+        loading: false,
+        error: null
+      });
+    });
+
     test("can force a refetch of a resource", async () => {
       let counter = 0;
       const asyncFunction = async () => {

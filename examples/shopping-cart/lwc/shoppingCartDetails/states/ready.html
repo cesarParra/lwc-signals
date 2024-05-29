@@ -1,0 +1,61 @@
+<template>
+    <div class="mx-auto max-w-4xl px-4">
+        <h1 class="text-3xl font-bold tracking-tight text-gray-900">Shopping Cart</h1>
+        <div>
+            <h2 class="sr-only">Items in your shopping cart</h2>
+
+            <ul role="list" class="divide-y divide-gray-200 border-b border-t border-gray-200">
+                <template for:each={items} for:item="item">
+                    <li key={item.id} class="flex py-6 sm:py-10">
+                        <div class="flex-shrink-0">
+                            <img src={item.imgUrl} alt={item.name} class="h-24 w-24 rounded-lg object-cover object-center sm:h-32 sm:w-32">
+                        </div>
+                        <div class="relative ml-4 flex flex-1 flex-col justify-between sm:ml-6">
+                            <div>
+                                <div class="flex justify-between sm:grid sm:grid-cols-2">
+                                    <div class="pr-6">
+                                        <h3 class="text-sm">
+                                            <a href="#" class="font-medium text-gray-700 hover:text-gray-800">{item.name}</a>
+                                        </h3>
+                                        <template for:each={item.properties} for:item="property">
+                                            <p key={property} class="mt-1 text-sm text-gray-500">{property}</p>
+                                        </template>
+                                    </div>
+                                    <p class="text-right text-sm font-medium text-gray-900">
+                                        <lightning-formatted-number value={item.total} format-style="currency" currency-code="USD"></lightning-formatted-number>
+                                    </p>
+                                </div>
+
+                                <div class="mt-4 flex items-center sm:absolute sm:left-1/2 sm:top-0 sm:mt-0 sm:block">
+                                    <lightning-select
+                                            data-item={item.id}
+                                            name="tickets"
+                                            label="How many tickets?"
+                                            value={item.quantity}
+                                            options={quantityOptions}
+                                            onchange={handleQuantityChange}
+                                            required ></lightning-select>
+                                    <lightning-button
+                                            variant="base"
+                                            data-item={item.id}
+                                            onclick={removeItem}
+                                            type="button"
+                                            class="ml-4 text-sm font-medium text-indigo-600 hover:text-indigo-500 sm:ml-0 sm:mt-3"
+                                            label="Remove">
+                                    </lightning-button>
+                                </div>
+                            </div>
+
+                            <p class="mt-4 flex space-x-2 text-sm text-gray-700">
+                                <svg class="h-5 w-5 flex-shrink-0 text-green-500" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
+                                    <path fill-rule="evenodd" d="M16.704 4.153a.75.75 0 01.143 1.052l-8 10.5a.75.75 0 01-1.127.075l-4.5-4.5a.75.75 0 011.06-1.06l3.894 3.893 7.48-9.817a.75.75 0 011.05-.143z" clip-rule="evenodd" />
+                                </svg>
+                                <span>In stock</span>
+                            </p>
+                        </div>
+                    </li>
+                </template>
+            </ul>
+        </div>
+    </div>
+</template>

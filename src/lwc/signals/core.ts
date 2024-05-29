@@ -161,6 +161,7 @@ type AsyncData<T> = {
 
 type ResourceResponse<T> = {
   data: ReadOnlySignal<AsyncData<T>>;
+  mutate: (newValue: T) => void;
   refetch: () => void;
 };
 
@@ -272,6 +273,14 @@ function $resource<T>(
 
   return {
     data: _signal.readOnly,
+    mutate: (newValue: T) => {
+      _value = newValue;
+      _signal.value = {
+        data: newValue,
+        loading: false,
+        error: null
+      };
+    },
     refetch: async () => {
       _isInitialLoad = true;
       await execute();

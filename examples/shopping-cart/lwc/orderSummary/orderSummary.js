@@ -11,7 +11,7 @@ export default class OrderSummary extends TwElement {
   itemData = $computed(() => (this.itemData = shoppingCart.value)).value;
 
   render() {
-    return this.itemData.isLoading
+    return this.itemData.loading
       ? loading
       : this.items.length > 0
         ? ready
@@ -19,7 +19,7 @@ export default class OrderSummary extends TwElement {
   }
 
   get items() {
-    return this.itemData?.data?.items ?? [];
+    return this.itemData.data.items;
   }
 
   get subtotal() {
