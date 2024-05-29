@@ -12,8 +12,11 @@ package.xml
 **/__tests__/signals.test.ts
 
 appMenus/
-dashboards/
-reports/
-reportTypes/
+# Reports and Report Types
+**/reports/**
+**/reportTypes/**
+
+# Dashboards
+**/dashboards/**
 
 **/tw/input.css
