@@ -3,6 +3,25 @@ const context = [];
 function _getCurrentObserver() {
   return context[context.length - 1];
 }
+/**
+ * Creates a new effect that will be executed immediately and whenever
+ * any of the signals it reads from change.
+ *
+ * Avoid changing $signal values inside an effect, as it can lead to
+ * infinite loops.
+ *
+ * ```javascript
+ * import { $signal, $effect } from 'c/signals';
+ *
+ * const count = $signal(0);
+ *
+ * $effect(() => {
+ *  console.log(count.value);
+ * });
+ * ```
+ *
+ * @param fn The function to execute
+ */
 function $effect(fn) {
   const execute = () => {
     context.push(execute);
@@ -14,6 +33,21 @@ function $effect(fn) {
   };
   execute();
 }
+/**
+ * Creates a new computed value that will be updated whenever the signals
+ * it reads from change. Returns a read-only signal that contains the
+ * computed value.
+ *
+ * ```javascript
+ * import { $signal, $computed } from 'c/signals';
+ *
+ * const count = $signal(0);
+ *
+ * const double = $computed(() => count.value * 2);
+ * ```
+ *
+ * @param fn The function that returns the computed value.
+ */
 function $computed(fn) {
   const computedSignal = $signal(fn());
   $effect(() => {
@@ -21,6 +55,29 @@ function $computed(fn) {
   });
   return computedSignal.readOnly;
 }
+/**
+ * Creates a new signal with the provided value. A signal is a reactive
+ * primitive that can be used to store and update values. Signals can be
+ * read and written to, and can be used to create computed values or
+ * can be read from within an effect.
+ *
+ * You can read the current value of a signal by accessing the `value` property.
+ *
+ * ```javascript
+ * import { $signal } from 'c/signals';
+ *
+ * const count = $signal(0);
+ *
+ * // Read the current value, logs 0
+ * console.log(count.value);
+ *
+ * // Update the value
+ * count.value = 1;
+ * ```
+ *
+ * @param value The initial value of the signal
+ * @param options Options to configure the signal
+ */
 function $signal(
   value,
   options = {
@@ -65,6 +122,54 @@ function $signal(
   delete returnValue.set;
   return returnValue;
 }
+/**
+ * Creates a new resource that fetches data from an async source. The resource
+ * will automatically fetch the data when the component is mounted.
+ *
+ * It receives a function that returns a promise, which will be called to fetch
+ * the data. Optionally, you can provide a source object or function that will
+ * be used as the parameters for the fetch function.
+ *
+ * If a function that contain $computed values is provided as the source, the
+ * resource will automatically refetch the data when the computed value changes.
+ *
+ * `$resource` returns an object with 2 properties:
+ * - `data`: a signal that contains the current state of the resource. It has
+ *  the following shape:
+ *  ```javascript
+ *  {
+ *  data: T | null;
+ *  loading: boolean;
+ *  error: unknown | null;
+ *  }
+ *  ```
+ *
+ * - `refetch`: a function that can be called to force refetch the data.
+ *
+ * ```javascript
+ * import { $signal, $resource } from 'c/signals';
+ * import getAccounts from '@salesforce/apex/AccountController.getAccounts';
+ *
+ * const accountId = $signal('00B5e00000Dv9ZCEAZ');
+ *
+ * // If the account Id value is changed, the resource will automatically refetch the data
+ * const { data: accounts, refetch } = $resource(getAccounts, () => ({ recordId: accountId.value }));
+ *
+ * export { accounts, refetch };
+ *
+ * // Usage from a component
+ * import { LightningElement } from 'lwc';
+ * import { $computed } from 'c/signals';
+ * import { accounts, refetch } from 'c/myResource';
+ *
+ * export default class MyComponent extends LightningElement {
+ *   accounts = $computed(() => this.accounts = accounts.value).value;
+ * }
+ *
+ * @param fn The function that will be called to fetch the data. Usually an Apex method but can be any async function.
+ * @param source The source object or function that will be used as the parameters for the fetch function
+ * @param options The options to configure the resource. Allows you to provide an initial value for the resource.
+ */
 function $resource(fn, source, options) {
   function loadingState(data) {
     return {
