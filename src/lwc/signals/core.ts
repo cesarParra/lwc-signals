@@ -66,13 +66,15 @@ type ComputedFunction<T> = () => T;
  * @param fn The function that returns the computed value.
  */
 function $computed<T>(fn: ComputedFunction<T>): ReadOnlySignal<T> {
-  const computedSignal: Signal<T> = $signal(fn());
+  // The initial value is undefined, as it will be computed
+  // when the effect runs for the first time
+  const computedSignal: Signal<T | undefined> = $signal(undefined);
 
   $effect(() => {
     computedSignal.value = fn();
   });
 
-  return computedSignal.readOnly;
+  return computedSignal.readOnly as ReadOnlySignal<T>;
 }
 
 type StorageFn<T> = (value: T) => State<T> & { [key: string]: unknown };
@@ -119,7 +121,7 @@ function $signal<T>(value: T, options: SignalOptions<T> = {
   }
 
   function setter(newValue: T) {
-    if (newValue === _storageOption) {
+    if (newValue === _storageOption.get()) {
       return;
     }
     _storageOption.set(newValue);
@@ -154,10 +156,15 @@ function $signal<T>(value: T, options: SignalOptions<T> = {
 // $resource
 
 type AsyncData<T> = {
+  __typename: "AsyncData";
   data: T | null;
   loading: boolean;
   error: unknown | null;
 };
+
+function isAsyncData<T>(data: unknown): data is AsyncData<T> {
+  return typeof data === "object" && data !== null && "__typename" in data && (data).__typename === "AsyncData";
+}
 
 type ResourceResponse<T> = {
   data: ReadOnlySignal<AsyncData<T>>;
@@ -169,18 +176,13 @@ type UnknownArgsMap = { [key: string]: unknown };
 
 type MutatorCallback<T> = (value: T | null, error?: unknown) => void;
 
-type MutateOptions<T> = {
-  onFinish: (callback: MutatorCallback<T>) => void;
-  onError: (error: unknown, callback: MutatorCallback<T>) => void;
-};
-
 type OnMutate<T> = (newValue: T, oldValue: T | null, mutate: MutatorCallback<T>) => Promise<void> | void;
 
 type ResourceOptions<T> = {
   initialValue?: T;
   optimisticMutate?: boolean;
   onMutate?: OnMutate<T>;
-  mutateOptions?: Partial<MutateOptions<T>>; // TODO: We can get rid of this
+  storage?: StorageFn<T>;
 };
 
 /**
@@ -238,6 +240,7 @@ function $resource<T>(
 ): ResourceResponse<T> {
   function loadingState(data: T | null): AsyncData<T> {
     return {
+      __typename: "AsyncData",
       data: data,
       loading: true,
       error: null
@@ -267,12 +270,14 @@ function $resource<T>(
       // Keep track of the previous value
       _value = data;
       _signal.value = {
+        __typename: "AsyncData",
         data,
         loading: false,
         error: null
       };
     } catch (error) {
       _signal.value = {
+        __typename: "AsyncData",
         data: null,
         loading: false,
         error
@@ -293,6 +298,7 @@ function $resource<T>(
   function mutatorCallback(value: T | null, error?: unknown): void {
     _value = value;
     _signal.value = {
+      __typename: "AsyncData",
       data: value,
       loading: false,
       error: error ?? null

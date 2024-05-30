@@ -22,6 +22,29 @@ describe("signals", () => {
       expect(computed.value).toBe(2);
     });
 
+    test("does not recompute when the same value is set", () => {
+      const signal = $signal(0);
+
+      let timesComputed = 0;
+      const computed = $computed(() => {
+        timesComputed++;
+        return signal.value * 2;
+      });
+
+      expect(computed.value).toBe(0);
+      expect(timesComputed).toBe(1);
+
+      signal.value = 1;
+
+      expect(computed.value).toBe(2);
+      expect(timesComputed).toBe(2);
+
+      signal.value = 1;
+
+      expect(computed.value).toBe(2);
+      expect(timesComputed).toBe(2);
+    });
+
     test("can derive a computed value from another computed value", () => {
       const signal = $signal(0);
       const computed = $computed(() => signal.value * 2);
@@ -56,6 +79,7 @@ describe("signals", () => {
       const { data: resource } = $resource(asyncFunction);
 
       expect(resource.value).toEqual({
+        __typename: "AsyncData",
         data: null,
         loading: true,
         error: null
@@ -64,6 +88,7 @@ describe("signals", () => {
       await new Promise(process.nextTick);
 
       expect(resource.value).toEqual({
+        __typename: "AsyncData",
         data: "done",
         loading: false,
         error: null
@@ -78,6 +103,7 @@ describe("signals", () => {
       const { data: resource } = $resource(asyncFunction, { source: 1 });
 
       expect(resource.value).toEqual({
+        __typename: "AsyncData",
         data: null,
         loading: true,
         error: null
@@ -86,6 +112,7 @@ describe("signals", () => {
       await new Promise(process.nextTick);
 
       expect(resource.value).toEqual({
+        __typename: "AsyncData",
         data: 1,
         loading: false,
         error: null
@@ -102,6 +129,7 @@ describe("signals", () => {
       });
 
       expect(resource.value).toEqual({
+        __typename: "AsyncData",
         data: "initial",
         loading: true,
         error: null
@@ -110,6 +138,7 @@ describe("signals", () => {
       await new Promise(process.nextTick);
 
       expect(resource.value).toEqual({
+        __typename: "AsyncData",
         data: "done",
         loading: false,
         error: null
@@ -127,6 +156,7 @@ describe("signals", () => {
       }));
 
       expect(resource.value).toEqual({
+        __typename: "AsyncData",
         data: null,
         loading: true,
         error: null
@@ -135,6 +165,7 @@ describe("signals", () => {
       await new Promise(process.nextTick);
 
       expect(resource.value).toEqual({
+        __typename: "AsyncData",
         data: 0,
         loading: false,
         error: null
@@ -143,6 +174,7 @@ describe("signals", () => {
       source.value = 1;
 
       expect(resource.value).toEqual({
+        __typename: "AsyncData",
         data: 0,
         loading: true,
         error: null
@@ -151,6 +183,7 @@ describe("signals", () => {
       await new Promise(process.nextTick);
 
       expect(resource.value).toEqual({
+        __typename: "AsyncData",
         data: 1,
         loading: false,
         error: null
@@ -165,6 +198,7 @@ describe("signals", () => {
       const { data: resource, mutate } = $resource(asyncFunction);
 
       expect(resource.value).toEqual({
+        __typename: "AsyncData",
         data: null,
         loading: true,
         error: null
@@ -173,6 +207,7 @@ describe("signals", () => {
       await new Promise(process.nextTick);
 
       expect(resource.value).toEqual({
+        __typename: "AsyncData",
         data: "done",
         loading: false,
         error: null
@@ -181,6 +216,7 @@ describe("signals", () => {
       mutate("mutated");
 
       expect(resource.value).toEqual({
+        __typename: "AsyncData",
         data: "mutated",
         loading: false,
         error: null
@@ -199,6 +235,7 @@ describe("signals", () => {
       await new Promise(process.nextTick);
 
       expect(resource.value).toEqual({
+        __typename: "AsyncData",
         data: "done",
         loading: false,
         error: null
@@ -207,6 +244,7 @@ describe("signals", () => {
       mutate("mutated");
 
       expect(resource.value).toEqual({
+        __typename: "AsyncData",
         data: "done",
         loading: false,
         error: null
@@ -252,6 +290,7 @@ describe("signals", () => {
       await new Promise(process.nextTick);
 
       expect(resource.value).toEqual({
+        __typename: "AsyncData",
         data: "done",
         loading: false,
         error: null
@@ -260,6 +299,7 @@ describe("signals", () => {
       mutate("mutated");
 
       expect(resource.value).toEqual({
+        __typename: "AsyncData",
         data: "mutated - post async success",
         loading: false,
         error: null
@@ -282,6 +322,7 @@ describe("signals", () => {
       await new Promise(process.nextTick);
 
       expect(resource.value).toEqual({
+        __typename: "AsyncData",
         data: 'done',
         loading: false,
         error: null
@@ -290,6 +331,7 @@ describe("signals", () => {
       mutate('mutated');
 
       expect(resource.value).toEqual({
+        __typename: "AsyncData",
         data: null,
         loading: false,
         error: 'An error occurred'
@@ -306,6 +348,7 @@ describe("signals", () => {
     const { data: resource, refetch } = $resource(asyncFunction);
 
     expect(resource.value).toEqual({
+      __typename: "AsyncData",
       data: null,
       loading: true,
       error: null
@@ -314,6 +357,7 @@ describe("signals", () => {
     await new Promise(process.nextTick);
 
     expect(resource.value).toEqual({
+      __typename: "AsyncData",
       data: 0,
       loading: false,
       error: null
@@ -322,6 +366,7 @@ describe("signals", () => {
     refetch();
 
     expect(resource.value).toEqual({
+      __typename: "AsyncData",
       data: 0,
       loading: true,
       error: null
@@ -330,6 +375,7 @@ describe("signals", () => {
     await new Promise(process.nextTick);
 
     expect(resource.value).toEqual({
+      __typename: "AsyncData",
       data: 1,
       loading: false,
       error: null
