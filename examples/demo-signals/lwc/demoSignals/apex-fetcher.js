@@ -6,7 +6,7 @@ export const { data: fetchContacts } = $resource(getContacts);
 
 export const selectedAccountId = $signal(null);
 
-$effect(() => console.log(selectedAccountId.value));
+$effect(() => console.log('selected Account Id', selectedAccountId.value));
 
 export const { data: getAccount } = $resource(getAccountDetails, () => ({
   accountId: selectedAccountId.value

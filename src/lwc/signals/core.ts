@@ -175,13 +175,13 @@ type MutateOptions<T> = {
   onError: (error: unknown, callback: MutatorCallback<T>) => void;
 };
 
-type OnMutate<T> = (newValue: T) => Promise<void> | void;
+type OnMutate<T> = (newValue: T, oldValue: T | null, mutate: MutatorCallback<T>) => Promise<void> | void;
 
 type ResourceOptions<T> = {
   initialValue?: T;
   optimistic?: boolean;
   onMutate?: OnMutate<T>;
-  mutateOptions?: Partial<MutateOptions<T>>;
+  mutateOptions?: Partial<MutateOptions<T>>; // TODO: We can get rid of this
 };
 
 /**
@@ -303,13 +303,14 @@ function $resource<T>(
   return {
     data: _signal.readOnly,
     mutate: (newValue: T) => {
+      const previousValue = _value;
       if (optimistic) {
         // If optimistic updates are enabled, update the value immediately
         mutatorCallback(newValue);
       }
 
       if (options?.onMutate) {
-        options.onMutate(newValue)?.then(() => {
+        options.onMutate(newValue, previousValue, mutatorCallback)?.then(() => {
           if (options.mutateOptions?.onSuccess) {
             options.mutateOptions.onSuccess(
               mutatorCallback

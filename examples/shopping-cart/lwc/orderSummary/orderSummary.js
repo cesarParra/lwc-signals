@@ -30,7 +30,10 @@ export default class OrderSummary extends TwElement {
   }
 
   get tax() {
-    return this.subtotal * 0.08;
+    return this.items.reduce(
+      (acc, item) => acc + item.taxAmount,
+      0
+    );
   }
 
   get shipping() {

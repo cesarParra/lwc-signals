@@ -1,7 +1,7 @@
 import { useInMemoryStorage } from "./use";
 const context = [];
 function _getCurrentObserver() {
-  return context[context.length - 1];
+    return context[context.length - 1];
 }
 /**
  * Creates a new effect that will be executed immediately and whenever
@@ -23,15 +23,16 @@ function _getCurrentObserver() {
  * @param fn The function to execute
  */
 function $effect(fn) {
-  const execute = () => {
-    context.push(execute);
-    try {
-      fn();
-    } finally {
-      context.pop();
-    }
-  };
-  execute();
+    const execute = () => {
+        context.push(execute);
+        try {
+            fn();
+        }
+        finally {
+            context.pop();
+        }
+    };
+    execute();
 }
 /**
  * Creates a new computed value that will be updated whenever the signals
@@ -49,11 +50,11 @@ function $effect(fn) {
  * @param fn The function that returns the computed value.
  */
 function $computed(fn) {
-  const computedSignal = $signal(fn());
-  $effect(() => {
-    computedSignal.value = fn();
-  });
-  return computedSignal.readOnly;
+    const computedSignal = $signal(fn());
+    $effect(() => {
+        computedSignal.value = fn();
+    });
+    return computedSignal.readOnly;
 }
 /**
  * Creates a new signal with the provided value. A signal is a reactive
@@ -78,49 +79,46 @@ function $computed(fn) {
  * @param value The initial value of the signal
  * @param options Options to configure the signal
  */
-function $signal(
-  value,
-  options = {
+function $signal(value, options = {
     storage: useInMemoryStorage
-  }
-) {
-  const _storageOption = options.storage(value);
-  const subscribers = new Set();
-  function getter() {
-    const current = _getCurrentObserver();
-    if (current) {
-      subscribers.add(current);
+}) {
+    const _storageOption = options.storage(value);
+    const subscribers = new Set();
+    function getter() {
+        const current = _getCurrentObserver();
+        if (current) {
+            subscribers.add(current);
+        }
+        return _storageOption.get();
     }
-    return _storageOption.get();
-  }
-  function setter(newValue) {
-    if (newValue === _storageOption) {
-      return;
+    function setter(newValue) {
+        if (newValue === _storageOption) {
+            return;
+        }
+        _storageOption.set(newValue);
+        for (const subscriber of subscribers) {
+            subscriber();
+        }
     }
-    _storageOption.set(newValue);
-    for (const subscriber of subscribers) {
-      subscriber();
-    }
-  }
-  const returnValue = {
-    ..._storageOption,
-    get value() {
-      return getter();
-    },
-    set value(newValue) {
-      setter(newValue);
-    },
-    readOnly: {
-      get value() {
-        return getter();
-      }
-    }
-  };
-  // We don't want to expose the `get` and `set` methods, so
-  // remove before returning
-  delete returnValue.get;
-  delete returnValue.set;
-  return returnValue;
+    const returnValue = {
+        ..._storageOption,
+        get value() {
+            return getter();
+        },
+        set value(newValue) {
+            setter(newValue);
+        },
+        readOnly: {
+            get value() {
+                return getter();
+            }
+        }
+    };
+    // We don't want to expose the `get` and `set` methods, so
+    // remove before returning
+    delete returnValue.get;
+    delete returnValue.set;
+    return returnValue;
 }
 /**
  * Creates a new resource that fetches data from an async source. The resource
@@ -171,91 +169,90 @@ function $signal(
  * @param options The options to configure the resource. Allows you to provide an initial value for the resource.
  */
 function $resource(fn, source, options) {
-  function loadingState(data) {
+    function loadingState(data) {
+        return {
+            data: data,
+            loading: true,
+            error: null
+        };
+    }
+    let _isInitialLoad = true;
+    let _value = options?.initialValue ?? null;
+    let _previousParams;
+    const _signal = $signal(loadingState(_value));
+    // Optimistic updates are enabled by default
+    const optimistic = options?.optimistic ?? true;
+    const execute = async () => {
+        _signal.value = loadingState(_value);
+        const derivedSource = source instanceof Function ? source() : source;
+        if (!_isInitialLoad && derivedSource === _previousParams) {
+            // No need to fetch the data again if the params haven't changed
+            return;
+        }
+        try {
+            const data = await fn(derivedSource);
+            // Keep track of the previous value
+            _value = data;
+            _signal.value = {
+                data,
+                loading: false,
+                error: null
+            };
+        }
+        catch (error) {
+            _signal.value = {
+                data: null,
+                loading: false,
+                error
+            };
+        }
+        finally {
+            _previousParams = derivedSource;
+            _isInitialLoad = false;
+        }
+    };
+    $effect(execute);
+    /**
+     * Callback function that updates the value of the resource.
+     * @param value The value we want to set the resource to.
+     * @param error An optional error object.
+     */
+    function mutatorCallback(value, error) {
+        _value = value;
+        _signal.value = {
+            data: value,
+            loading: false,
+            error: error ?? null
+        };
+    }
     return {
-      data: data,
-      loading: true,
-      error: null
+        data: _signal.readOnly,
+        mutate: (newValue) => {
+            const previousValue = _value;
+            if (optimistic) {
+                // If optimistic updates are enabled, update the value immediately
+                mutatorCallback(newValue);
+            }
+            if (options?.onMutate) {
+                options.onMutate(newValue, previousValue, mutatorCallback)?.then(() => {
+                    if (options.mutateOptions?.onSuccess) {
+                        options.mutateOptions.onSuccess(mutatorCallback);
+                    }
+                }).catch((error) => {
+                    if (options.mutateOptions?.onError) {
+                        options.mutateOptions.onError(error, mutatorCallback);
+                    }
+                }).finally(() => {
+                    if (options.mutateOptions?.onFinish) {
+                        options.mutateOptions.onFinish(mutatorCallback);
+                    }
+                });
+            }
+        },
+        refetch: async () => {
+            _isInitialLoad = true;
+            await execute();
+        }
     };
-  }
-  let _isInitialLoad = true;
-  let _value = options?.initialValue ?? null;
-  let _previousParams;
-  const _signal = $signal(loadingState(_value));
-  // Optimistic updates are enabled by default
-  const optimistic = options?.optimistic ?? true;
-  const execute = async () => {
-    _signal.value = loadingState(_value);
-    const derivedSource = source instanceof Function ? source() : source;
-    if (!_isInitialLoad && derivedSource === _previousParams) {
-      // No need to fetch the data again if the params haven't changed
-      return;
-    }
-    try {
-      const data = await fn(derivedSource);
-      // Keep track of the previous value
-      _value = data;
-      _signal.value = {
-        data,
-        loading: false,
-        error: null
-      };
-    } catch (error) {
-      _signal.value = {
-        data: null,
-        loading: false,
-        error
-      };
-    } finally {
-      _previousParams = derivedSource;
-      _isInitialLoad = false;
-    }
-  };
-  $effect(execute);
-  /**
-   * Callback function that updates the value of the resource.
-   * @param value The value we want to set the resource to.
-   * @param error An optional error object.
-   */
-  function mutatorCallback(value, error) {
-    _value = value;
-    _signal.value = {
-      data: value,
-      loading: false,
-      error: error ?? null
-    };
-  }
-  return {
-    data: _signal.readOnly,
-    mutate: (newValue) => {
-      if (optimistic) {
-        // If optimistic updates are enabled, update the value immediately
-        mutatorCallback(newValue);
-      }
-      if (options?.onMutate) {
-        options
-          .onMutate(newValue)
-          ?.then(() => {
-            if (options.mutateOptions?.onSuccess) {
-              options.mutateOptions.onSuccess(mutatorCallback);
-            }
-          })
-          .catch((error) => {
-            if (options.mutateOptions?.onError) {
-              options.mutateOptions.onError(error, mutatorCallback);
-            }
-          })
-          .finally(() => {
-            if (options.mutateOptions?.onFinish) {
-              options.mutateOptions.onFinish(mutatorCallback);
-            }
-          });
-      }
-    },
-    refetch: async () => {
-      _isInitialLoad = true;
-      await execute();
-    }
-  };
 }
 export { $signal, $effect, $computed, $resource };

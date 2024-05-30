@@ -41,7 +41,6 @@ export default class ShoppingCartDetails extends TwElement {
       ...this.itemData,
       items: this.items.filter((item) => item.id !== itemId)
     });
-    //SharedState.setData({...this.itemData, items: this.items.filter((item) => item.id !== itemId)});
   }
 
   handleQuantityChange(event) {
