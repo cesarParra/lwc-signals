@@ -171,7 +171,6 @@ type MutatorCallback<T> = (value: T | null, error?: unknown) => void;
 
 type MutateOptions<T> = {
   onFinish: (callback: MutatorCallback<T>) => void;
-  onSuccess: (callback: MutatorCallback<T>) => void;
   onError: (error: unknown, callback: MutatorCallback<T>) => void;
 };
 
@@ -179,7 +178,7 @@ type OnMutate<T> = (newValue: T, oldValue: T | null, mutate: MutatorCallback<T>)
 
 type ResourceOptions<T> = {
   initialValue?: T;
-  optimistic?: boolean;
+  optimisticMutate?: boolean;
   onMutate?: OnMutate<T>;
   mutateOptions?: Partial<MutateOptions<T>>; // TODO: We can get rid of this
 };
@@ -250,7 +249,7 @@ function $resource<T>(
   let _previousParams: UnknownArgsMap | undefined;
   const _signal = $signal<AsyncData<T>>(loadingState(_value));
   // Optimistic updates are enabled by default
-  const optimistic = options?.optimistic ?? true;
+  const optimisticMutate = options?.optimisticMutate ?? true;
 
   const execute = async () => {
     _signal.value = loadingState(_value);
@@ -304,27 +303,13 @@ function $resource<T>(
     data: _signal.readOnly,
     mutate: (newValue: T) => {
       const previousValue = _value;
-      if (optimistic) {
+      if (optimisticMutate) {
         // If optimistic updates are enabled, update the value immediately
         mutatorCallback(newValue);
       }
 
       if (options?.onMutate) {
-        options.onMutate(newValue, previousValue, mutatorCallback)?.then(() => {
-          if (options.mutateOptions?.onSuccess) {
-            options.mutateOptions.onSuccess(
-              mutatorCallback
-            );
-          }
-        }).catch((error: unknown) => {
-          if (options.mutateOptions?.onError) {
-            options.mutateOptions.onError(error, mutatorCallback);
-          }
-        }).finally(() => {
-          if (options.mutateOptions?.onFinish) {
-            options.mutateOptions.onFinish(mutatorCallback);
-          }
-        });
+        options.onMutate(newValue, previousValue, mutatorCallback);
       }
     },
     refetch: async () => {

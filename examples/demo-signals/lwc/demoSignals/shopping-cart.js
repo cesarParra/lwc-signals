@@ -16,7 +16,8 @@ import updateShoppingCart from "@salesforce/apex/ShoppingCartController.updateSh
 /**
  * Updates the cart on the server
  * @param {Item[]} newCart
- * @param {Item[]} oldCart
+ * @param _
+ * @param mutate
  */
 async function updateCartOnTheServer(newCart, _, mutate) {
   // Quantities can be updated, so gather the Ids and quantities and check
@@ -27,11 +28,15 @@ async function updateCartOnTheServer(newCart, _, mutate) {
     const updatedShoppingCart = await updateShoppingCart({
       newItems: newCart.items
     });
-    mutate(updatedShoppingCart);
+    mutate(updatedShoppingCart); // <-- TODO: We need to allow for errors to be set as well. That is the escape hatch for optimistic updates that went wrong.
   } catch (error) {
     console.error("Error updating shopping cart", error);
   }
 }
+
+// TODO: When we document this, remember there are 2 options. We can either
+// do the update the same way we are doing it here (through onMutate) or
+// it can be done in the component and then `refetch` can be called.
 
 export const { data: shoppingCart, mutate: updateCart } = $resource(
   getShoppingCart,
