@@ -29,16 +29,17 @@ export default class ShoppingCartDetails extends TwElement {
   }
 
   get items() {
-    return this.itemData.data.items.map((item) => {
-      return { ...item, total: item.price * item.quantity };
-    });
+    return (
+      this.itemData.data.items?.map((item) => {
+        return { ...item, total: item.price * item.quantity };
+      }) ?? []
+    );
   }
 
   removeItem(event) {
     event.preventDefault();
     const itemId = event.target.dataset.item;
     updateCart({
-      ...this.itemData,
       items: this.items.filter((item) => item.id !== itemId)
     });
   }
@@ -52,6 +53,6 @@ export default class ShoppingCartDetails extends TwElement {
       }
       return item;
     });
-    updateCart({ ...this.itemData, items: newItems });
+    updateCart({ items: newItems });
   }
 }

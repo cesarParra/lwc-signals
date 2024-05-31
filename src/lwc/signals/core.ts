@@ -156,15 +156,10 @@ function $signal<T>(value: T, options: SignalOptions<T> = {
 // $resource
 
 type AsyncData<T> = {
-  __typename: "AsyncData";
   data: T | null;
   loading: boolean;
   error: unknown | null;
 };
-
-function isAsyncData<T>(data: unknown): data is AsyncData<T> {
-  return typeof data === "object" && data !== null && "__typename" in data && (data).__typename === "AsyncData";
-}
 
 type ResourceResponse<T> = {
   data: ReadOnlySignal<AsyncData<T>>;
@@ -240,7 +235,6 @@ function $resource<T>(
 ): ResourceResponse<T> {
   function loadingState(data: T | null): AsyncData<T> {
     return {
-      __typename: "AsyncData",
       data: data,
       loading: true,
       error: null
@@ -270,14 +264,12 @@ function $resource<T>(
       // Keep track of the previous value
       _value = data;
       _signal.value = {
-        __typename: "AsyncData",
         data,
         loading: false,
         error: null
       };
     } catch (error) {
       _signal.value = {
-        __typename: "AsyncData",
         data: null,
         loading: false,
         error
@@ -298,7 +290,6 @@ function $resource<T>(
   function mutatorCallback(value: T | null, error?: unknown): void {
     _value = value;
     _signal.value = {
-      __typename: "AsyncData",
       data: value,
       loading: false,
       error: error ?? null

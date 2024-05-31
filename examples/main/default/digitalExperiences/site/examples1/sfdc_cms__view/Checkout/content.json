@@ -16,17 +16,17 @@
           "children" : [ {
             "children" : [ {
               "attributes" : { },
-              "definition" : "signal:shoppingCartDetails",
+              "definition" : "c:shoppingCartDetails",
               "id" : "bf9c3261-d87f-47e6-b000-8b2597a51496",
               "type" : "component"
             }, {
               "attributes" : { },
-              "definition" : "signal:orderSummary",
+              "definition" : "c:orderSummary",
               "id" : "4c59e794-6e57-4802-81ef-d11f0c503241",
               "type" : "component"
             }, {
               "attributes" : { },
-              "definition" : "signal:checkoutButton",
+              "definition" : "c:checkoutButton",
               "id" : "3ddd65b5-d783-4ecb-9921-91709428a735",
               "type" : "component"
             } ],

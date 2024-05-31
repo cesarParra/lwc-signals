@@ -49,7 +49,9 @@ function $effect(fn) {
  * @param fn The function that returns the computed value.
  */
 function $computed(fn) {
-  const computedSignal = $signal(fn());
+  // The initial value is undefined, as it will be computed
+  // when the effect runs for the first time
+  const computedSignal = $signal(undefined);
   $effect(() => {
     computedSignal.value = fn();
   });
@@ -84,24 +86,7 @@ function $signal(
     storage: useInMemoryStorage
   }
 ) {
-  // Decorates the storage option so that it can handle AsyncData.
-  // If we are dealing with an AsyncData object, we want to store
-  // the data property instead of the whole object.
-  const _storageOptionDecorator = (storage) => {
-    return (value) => {
-      if (isAsyncData(value)) {
-        return {
-          ...storage(value.data),
-          get: () => value,
-          set: (newValue) => {
-            value.data = newValue;
-          }
-        };
-      }
-      return storage(value);
-    };
-  };
-  const _storageOption = _storageOptionDecorator(options.storage)(value);
+  const _storageOption = options.storage(value);
   const subscribers = new Set();
   function getter() {
     const current = _getCurrentObserver();
@@ -111,7 +96,7 @@ function $signal(
     return _storageOption.get();
   }
   function setter(newValue) {
-    if (newValue === _storageOption) {
+    if (newValue === _storageOption.get()) {
       return;
     }
     _storageOption.set(newValue);
@@ -138,14 +123,6 @@ function $signal(
   delete returnValue.get;
   delete returnValue.set;
   return returnValue;
-}
-function isAsyncData(data) {
-  return (
-    typeof data === "object" &&
-    data !== null &&
-    "__typename" in data &&
-    data.__typename === "AsyncData"
-  );
 }
 /**
  * Creates a new resource that fetches data from an async source. The resource
@@ -198,7 +175,6 @@ function isAsyncData(data) {
 function $resource(fn, source, options) {
   function loadingState(data) {
     return {
-      __typename: "AsyncData",
       data: data,
       loading: true,
       error: null
@@ -222,14 +198,12 @@ function $resource(fn, source, options) {
       // Keep track of the previous value
       _value = data;
       _signal.value = {
-        __typename: "AsyncData",
         data,
         loading: false,
         error: null
       };
     } catch (error) {
       _signal.value = {
-        __typename: "AsyncData",
         data: null,
         loading: false,
         error
@@ -248,7 +222,6 @@ function $resource(fn, source, options) {
   function mutatorCallback(value, error) {
     _value = value;
     _signal.value = {
-      __typename: "AsyncData",
       data: value,
       loading: false,
       error: error ?? null

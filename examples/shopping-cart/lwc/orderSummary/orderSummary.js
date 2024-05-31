@@ -19,7 +19,7 @@ export default class OrderSummary extends TwElement {
   }
 
   get items() {
-    return this.itemData.data.items;
+    return this.itemData.data?.items ?? [];
   }
 
   get subtotal() {
@@ -30,10 +30,7 @@ export default class OrderSummary extends TwElement {
   }
 
   get tax() {
-    return this.items.reduce(
-      (acc, item) => acc + item.taxAmount,
-      0
-    );
+    return this.items.reduce((acc, item) => acc + item.taxAmount, 0);
   }
 
   get shipping() {
