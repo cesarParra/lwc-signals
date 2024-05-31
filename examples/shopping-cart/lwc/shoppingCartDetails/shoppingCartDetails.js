@@ -1,6 +1,6 @@
 import TwElement from "c/twElement";
 import { $computed } from "c/signals";
-import { shoppingCart, updateCart } from "c/demoSignals";
+import { shoppingCart, updateCart, undoCartChange } from "c/demoSignals";
 
 // States
 import ready from "./states/ready.html";
@@ -54,5 +54,9 @@ export default class ShoppingCartDetails extends TwElement {
       return item;
     });
     updateCart({ items: newItems });
+  }
+
+  undo() {
+    undoCartChange();
   }
 }

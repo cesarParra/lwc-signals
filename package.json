@@ -8,7 +8,7 @@
     "test:coverage": "jest --coverage",
     "create:scratch": "sf org create scratch --alias lwc-signals --definition-file config/project-scratch-def.json --set-default",
     "dev:start": "npm run create:scratch && sf project deploy start",
-    "lint": "eslint **/{aura,lwc}/**/*.js",
+    "lint": "eslint ./{examples,force-app,src}/**/{lwc}/*.{js,ts} --no-error-on-unmatched-pattern",
     "prettier": "prettier --write \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\"",
     "prettier:verify": "prettier --check \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\"",
     "postinstall": "husky install",
@@ -33,7 +33,6 @@
     "jest-environment-jsdom": "^29.7.0",
     "lint-staged": "^15.1.0",
     "prettier": "^3.1.0",
-    "prettier-plugin-apex": "^2.0.1",
     "ts-jest": "^29.1.2",
     "ts-node": "^10.9.2",
     "typescript": "^5.4.5",
@@ -42,10 +41,10 @@
     "@tailwindcss/forms": "^0.5.7"
   },
   "lint-staged": {
-    "**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}": [
+    "**/*.{cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}": [
       "prettier --write"
     ],
-    "**/{aura,lwc}/**/*.js": [
+    "**/{lwc}/**/*.js": [
       "eslint"
     ]
   }

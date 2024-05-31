@@ -7,7 +7,6 @@ public with sharing class ShoppingCartController {
     @AuraEnabled
     public static ShoppingCartDto updateShoppingCart(List<ItemDto> newItems) {
         // This is just for example purpose, in a real-world scenario, you would update the shopping cart in the database
-        System.debug('New items: ' + newItems);
         return new ShoppingCartDto(newItems);
     }
 
@@ -25,7 +24,7 @@ public with sharing class ShoppingCartController {
         @AuraEnabled public List<String> properties { get; set; }
         @AuraEnabled public Integer quantity { get; set; }
         @AuraEnabled public Decimal price { get; set; }
-        @AuraEnabled public Decimal taxAmount { get { return (price * quantity) * TAX_RATE; } }
+        @AuraEnabled public Decimal taxAmount { get {return (price * quantity) * TAX_RATE;} }
         @AuraEnabled public String imgUrl { get; set; }
 
         // No arg constructor so it can be built from JSON
