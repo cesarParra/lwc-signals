@@ -1,4 +1,4 @@
-import { $signal, $resource } from "c/signals";
+import { $signal, $resource, $effect, useLocalStorage } from "c/signals";
 import getShoppingCart from "@salesforce/apex/ShoppingCartController.getShoppingCart";
 import updateShoppingCart from "@salesforce/apex/ShoppingCartController.updateShoppingCart";
 
@@ -62,10 +62,19 @@ async function updateCartOnTheServer(newCart, previousValue, mutate) {
   }
 }
 
+const cachedCart = $signal(null, {
+  storage: useLocalStorage("shoppingCart")
+});
+
 export const { data: shoppingCart, mutate: updateCart } = $resource(
   getShoppingCart,
   {},
   {
+    initialValue: cachedCart.value,
     onMutate: updateCartOnTheServer
   }
 );
+
+$effect(() => {
+  cachedCart.value = shoppingCart.value;
+});
