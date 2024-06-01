@@ -123,7 +123,7 @@ export default class Counter extends LightningElement {
 
 ### `$computed`
 
-You the `$computed` function to create a reactive value that depends on the signals.
+You can use the `$computed` function to create a reactive value that depends on the signals.
 
 ```javascript
 // display.js
