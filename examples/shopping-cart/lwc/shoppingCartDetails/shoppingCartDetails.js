@@ -1,6 +1,11 @@
 import TwElement from "c/twElement";
 import { $computed } from "c/signals";
-import { shoppingCart, updateCart, undoCartChange } from "c/demoSignals";
+import {
+  shoppingCart,
+  updateCart,
+  cartHistory,
+  undoCartChange
+} from "c/demoSignals";
 
 // States
 import ready from "./states/ready.html";
@@ -9,6 +14,13 @@ import empty from "./states/empty.html";
 
 export default class ShoppingCartDetails extends TwElement {
   itemData = $computed(() => (this.itemData = shoppingCart.value)).value;
+  cartHistoryLength = $computed(
+    () => (this.cartHistoryLength = cartHistory.value.length)
+  ).value;
+
+  connectedCallback() {
+    super.connectedCallback();
+  }
 
   render() {
     return this.itemData.loading
@@ -54,6 +66,10 @@ export default class ShoppingCartDetails extends TwElement {
       return item;
     });
     updateCart({ items: newItems });
+  }
+
+  get displayUndoPanel() {
+    return this.cartHistoryLength > 0;
   }
 
   undo() {

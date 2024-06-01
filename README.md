@@ -8,7 +8,7 @@ A simple yet powerful reactive state management solution for Lightning Web Compo
 
 Inspired by the Signals technology behind SolidJs, Preact, Svelte 5 Runes and the Vue 3 Composition API, LWC Signals is
 a
-reactive signals for Lightning Web Components that allows you to create reactive data signalss
+reactive signals for Lightning Web Components that allows you to create reactive data signals
 that can be used to share state between components.
 
 It features:
@@ -203,7 +203,7 @@ export default class ContactInfoForm extends LightningElement {
 }
 ```
 
-**You can create a computed value that depends on both signalss**
+**You can create a computed value that depends on both signals**
 
 ```html
 <!-- businessCard.html -->
@@ -221,7 +221,7 @@ export default class ContactInfoForm extends LightningElement {
 // businessCard.js
 import { LightningElement } from "lwc";
 import { $computed } from "c/signals";
-import { accountName, contactName } from "c/demoSignalss";
+import { accountName, contactName } from "c/demoSignals";
 
 export default class BusinessCard extends LightningElement {
   contactInfo = $computed(
@@ -421,7 +421,7 @@ Let's now create our picklist component that allows the user to select an accoun
 // accountPicker.js
 import { LightningElement, track, wire } from "lwc";
 import getAccounts from "@salesforce/apex/ResourceController.getAccounts";
-import { selectedAccountId } from "c/demoSignalss";
+import { selectedAccountId } from "c/demoSignals";
 
 export default class AccountPicker extends LightningElement {
   @track accounts = [];
@@ -486,7 +486,7 @@ Now, let's create the component that displays the details of the selected accoun
 // accountDetails.js
 import { LightningElement } from "lwc";
 import { $computed } from "c/signals";
-import { getAccount } from "c/demoSignalss";
+import { getAccount } from "c/demoSignals";
 
 export default class AccountDetails extends LightningElement {
   account = $computed(() => (this.account = getAccount.value)).value;
@@ -550,6 +550,93 @@ export default class ContactList extends LightningElement {
 }
 ```
 
+### Mutating `$resource` data
+
+Besides `refetch`, the `$resource` function also returns a `mutate` function that allows you to mutate the data.
+
+`mutate` is useful when you want to update the data without refetching it (and avoid a trip to the server).
+
+It receives a single value, which will be set as the new value of the data. The `resource` value will be updated
+immediately, the `.loading` property will be set to `false`, and the `.error` property will be set to `null`.
+
+```javascript
+import { $resource } from "c/signals";
+
+const { data, mutate } = $resource(asyncFunction);
+
+mutate("new value");
+```
+
+#### Reacting to mutated values
+
+When using the `mutate` function, you might want to react to the changes in the data. For example, you might now
+want to call an Apex function to save the new value to the server, and make sure the data is synced.
+
+For this, you can provide a function through the options object's `onMutate`.
+
+The function you provide can receive 3 arguments:
+
+- The new value
+- The old value
+- A `mutate` function that you can use the update the data again. This can be used for when you want to update the data
+  based on what was returned from the server, but you don't want to refetch the data. You SHOULD use this mutate
+  function over the one returned when creating the `$resource` because this will not trigger `onMutate` once again.
+
+```javascript
+import { $resource } from "c/signals";
+import getContacts from "@salesforce/apex/ContactController.getContacts";
+import saveContacts from "@salesforce/apex/ContactController.saveContacts";
+
+const { data, mutate } = $resource(
+  getContacts,
+  {},
+  {
+    onMutate: async (newValue, oldValue, mutate) => {
+      await saveContacts({ contacts: newValue });
+      mutate(newValue);
+    }
+  }
+);
+```
+
+In the case an error occurs on your server call, the `mutate` you can pass an error object as the second argument to
+the `mutate` function. This will set the `.error` property of the `resource` to the error object.
+
+```javascript
+import { $resource } from "c/signals";
+
+const { data, mutate } = $resource(asyncFunction);
+
+try {
+  await saveContacts({ contacts: newValue });
+  mutate(newValue);
+} catch (error) {
+  mutate(null, error);
+}
+```
+
+#### Optimistic updating
+
+When you mutate a `resource` as exemplified above, you can achieve the concept of optimistic updating. This is when you
+update the value immediately before the server responds, and then update the value again when the server responds.
+
+Optimistically updating the value can provide a better user experience by making the UI feel more responsive, but it
+can also lead to inconsistencies if the server responds with an error. So if you wish to turn this off, and
+manage updating the value yourself, either by `refetching` or by using an `onMutate` function, you can set the
+`optimisticMutate` option to `false`.
+
+```javascript
+import { $resource } from "c/signals";
+
+const { data, refetch, mutate } = $resource(
+  asyncFunction,
+  {},
+  {
+    optimisticMutate: false
+  }
+);
+```
+
 ## Storage
 
 By default, any created signal is stored in memory and will be lost when the component is destroyed. This behavior
@@ -568,7 +655,7 @@ The following storage helpers are available by default:
 - `useCookies(key: string, expires?: Date)`: Stores the signal in a cookie with the given key. You can also pass an
   optional `expires` parameter to set the expiration date of the cookie
 
-### Creating custom storage
+### Creating a custom storage
 
 The `storage` option receives a function that defines the behavior for where the data should be stored.
 This means you can create your own custom storage solution by passing a function with the following
