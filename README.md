@@ -750,9 +750,9 @@ It includes:
 - Undo functionality by storing the state history in a custom signal
 - Caching the data in the `localStorage` for a fast first load.
 
-<div style="text-align: center;">
+<p align="center">
     <img width="500" src="./doc-assets/kitchen-sink.gif" alt="Kitchen Sink Example" />
-</div>
+</p>
 
 # Contributing
 
