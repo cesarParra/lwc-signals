@@ -72,7 +72,7 @@ without the need to broadcast messages or manage subscriptions and wires.
 > 👀 You can find the full working code for the following example in the `examples`
 > folder.
 
-A `signals` is simply an object with a `.value` property which holds a value. Any signals you create should be an LWC
+A `signals` is simply an object with a `.value` property which holds a value. Any signal you create should be an LWC
 Service that exports your signals.
 
 ```javascript
@@ -84,9 +84,9 @@ const counter = $signal(0);
 export { counter };
 ```
 
-## Consuming the signals
+## Consuming the signal
 
-You can use the signals in any LWC component by importing the signals and using the `.value` property.
+You can use the signal in any LWC component by importing it and using the `.value` property.
 
 For example, let's create a simple counter component that increments and decrements the counter when a button is
 clicked.
@@ -123,7 +123,7 @@ export default class Counter extends LightningElement {
 
 ### `$computed`
 
-You can use the `$computed` function to create a reactive value that depends on the signals.
+You can use the `$computed` function to create a reactive value that depends on the signal.
 
 ```javascript
 // display.js
@@ -157,7 +157,7 @@ export const counterPlusOne = $computed(() => counter.value + 1);
 export const counterPlusTwo = $computed(() => counterPlusOne.value + 1);
 ```
 
-Because `$computed` values return a signals, you can use them as you would use any other signals.
+Because `$computed` values return a signal, you can use them as you would use any other signal.
 
 ## Reacting to multiple signals
 
@@ -259,9 +259,9 @@ export default class BusinessCard extends LightningElement {
 
 ### `$effect`
 
-You can also use the `$effect` function to create a side effect that depends on the signals.
+You can also use the `$effect` function to create a side effect that depends on a signal.
 
-Let's say you want to keep a log of the changes in the `counter` signals.
+Let's say you want to keep a log of the changes in the `counter` signal.
 
 ```javascript
 import { $signal, $effect } from "c/signals";
@@ -271,7 +271,7 @@ export const counter = $signal(0);
 $effect(() => console.log(counter.value));
 ```
 
-> ❗ DO NOT use `$effect` to update the signals value, as it will create an infinite loop.
+> ❗ DO NOT use `$effect` to update the signal value, as it will create an infinite loop.
 
 ## Communicating with Apex data and other asynchronous operations
 
@@ -290,13 +290,13 @@ no matter where the change comes from.
 
 ### $resource
 
-The `$resource` function is a helper function that allows you to create a signals that fetches data asynchronously,
+The `$resource` function is a helper function that allows you to create a signal that fetches data asynchronously,
 which includes Apex methods imported through `@salesforce/apex/`.
 
 ---
 
 Let's first take a look at the simple example of fetching data from the server through a single source of truth
-(the resource signals) and sharing it between components.
+(the resource signal) and sharing it between components.
 
 **Given the following Apex method**
 
@@ -310,19 +310,19 @@ public with sharing class ContactController {
 }
 ```
 
-**And the following signals**
+**And the following signal**
 
 ```javascript
 // LWC Service: contact-signals.js
 import { $resource } from "c/signals";
 import getContacts from "@salesforce/apex/ContactController.getContacts";
 
-// Notice that we have to destructure the data property from the resource signals
+// Notice that we have to destructure the data property from the resource signal
 // We explain why below in the "refetching" section :)
 export const { data: fetchContacts } = $resource(getContacts);
 ```
 
-**You can use the signals in any component**
+**You can use the signal in any component**
 
 ```html
 <!-- contactList.html -->
@@ -349,7 +349,7 @@ export default class ContactList extends LightningElement {
 }
 ```
 
-Data from a resource signals comes in the following format:
+Data from a resource signal comes in the following format:
 
 ```typescript
 type AsyncData<T> = {
@@ -394,7 +394,7 @@ public with sharing class ResourceController {
 }
 ```
 
-We can have a signals that keeps track of which Account Id has been selected, and a `resource` signals that fetches the
+We can have a signal that keeps track of which Account Id has been selected, and a `resource` signal that fetches the
 details of the selected account.
 
 ```javascript
@@ -408,10 +408,10 @@ export const { data: getAccount } = $resource(getAccountDetails, () => ({
 }));
 ```
 
-Notice that the resource signals takes a second optional argument, which in this case is a function that returns an
+Notice that the resource signal takes a second optional argument, which in this case is a function that returns an
 object with the parameters that the Apex method needs. Because this function is accessing a reactive
 value (`selectedAccountId`),
-the resource signals will automatically refetch the data whenever the `selectedAccountId` changes!
+the resource signal will automatically refetch the data whenever the `selectedAccountId` changes!
 
 > 🍪 The value doesn't need to be a function unless you need the reactivity, it can also be a regular JS object in the
 > format expected by your Apex method (e.g. `{ accountId: "001200000XyZ1QAQ" }`).
@@ -535,9 +535,9 @@ const { data: resource } = $resource(asyncFunction, undefined, {
 
 ### Refetching data
 
-When you use the `$resource` function, the signals will automatically refetch the data whenever the reactive values
+When you use the `$resource` function, the signal will automatically refetch the data whenever the reactive values
 change. This is useful when you want to refetch the data when the parameters change, but it can also be a problem when
-you want to keep the data in the signals and only refetch it when you explicitly tell it to.
+you want to keep the data in the signal and only refetch it when you explicitly tell it to.
 
 To solve this problem, you can use the `refetch` function that is returned by the `$resource` function.
 
