@@ -29,9 +29,9 @@ Easily implement:
 - Optimistic updates
 - Data caching through storage (localStorage, cookies, etc)
 
-<div style="text-align: center;">
+<p align="center">
     <img width="500" src="./doc-assets/full-example.gif" alt="Kitchen Sink Example" />
-</div>
+</p>
 
 > To see the code for the example above, check the `examples/shopping-cart` folder.
 
@@ -140,9 +140,9 @@ export default class Display extends LightningElement {
 > to trigger the reactivity. This is because we need the value to be reassigned so that
 > LWC reactive system can detect the change and update the UI.
 
-<div style="text-align: center;">
+<p align="center">
     <img src="./doc-assets/counter-example.gif" alt="Counter Example" />
-</div>
+</p>
 
 ### Stacking computed values
 
@@ -250,9 +250,9 @@ export default class BusinessCard extends LightningElement {
 }
 ```
 
-<div style="text-align: center;">
+<p align="center">
     <img src="./doc-assets/business-card-example.gif" alt="Counter Example" />
-</div>
+</p>
 
 > ❗ Notice that we are using a property instead of a getter in the `$computed` callback function, because
 > we need to reassign the value to `this.contactInfo` to trigger the reactivity, as it is a complex object.
@@ -362,9 +362,9 @@ type AsyncData<T> = {
 > 🍪 One benefit of using the `$resource` over declarative Apex or `@wire` is that it keeps track of the loading
 > state for you, which saves you the effort of having to calculate it yourself.
 
-<div style="text-align: center;">
+<p align="center">
     <img src="./doc-assets/apex-fetch.gif" alt="Fetching From Apex" />
-</div>
+</p>
 
 ---
 
@@ -509,9 +509,9 @@ export default class AccountDetails extends LightningElement {
 }
 ```
 
-<div style="text-align: center;">
+<p align="center">
     <img src="./doc-assets/account-picker.gif" alt="Account Picker Example" /> 
-</div>
+</p>
 
 > 🍪 One extra feature of the data returned by the `$resource` function is that when it is reloading the data, the
 > previous data is still available in the `data` property. This allows you to keep the old value while the new value is
