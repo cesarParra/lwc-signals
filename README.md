@@ -19,6 +19,22 @@ It features:
 - 🔬️ **Small Surface** The API does not offer more than what is needed, keeping the learning curve and bloat to a
   minimum
 
+The goal is to allow you to create beautiful and complex user experiences, while achieving clean code that
+separates concerns and is easy to maintain!
+
+Easily implement:
+
+- Reactive data stores
+- Undo
+- Optimistic updates
+- Data caching through storage (localStorage, cookies, etc)
+
+<div style="text-align: center;">
+    <img width="500" src="./doc-assets/full-example.gif" alt="Kitchen Sink Example" />
+</div>
+
+> To see the code for the example above, check the `examples/shopping-cart` folder.
+
 # Getting Started
 
 Copy the `force-app/lwc/signals` folder to your project.
@@ -719,6 +735,24 @@ storage, and the setter should set the value in the storage.
 
 Notice that any additional properties you add to the object returned by `createStorage` will be available in the
 returned object. That is how we can add the `undo` function to the `counter` signal and use it to undo the changes.
+
+## Examples
+
+You can find full working examples in the `examples` folder.
+
+For a full kitchen sink example that combines all the concepts, you can check the `shopping-cart` example.
+
+It includes:
+
+- Getting data from the server
+- Optimistic updates by updating the local value on change
+- Re-updating the value when the server responds
+- Undo functionality by storing the state history in a custom signal
+- Caching the data in the `localStorage` for a fast first load.
+
+<div style="text-align: center;">
+    <img width="500" src="./doc-assets/kitchen-sink.gif" alt="Kitchen Sink Example" />
+</div>
 
 # Contributing
 
