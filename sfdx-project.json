@@ -14,10 +14,6 @@
     }
   ],
   "name": "lwc-signals",
-  "namespace": "signal",
   "sfdcLoginUrl": "https://login.salesforce.com",
-  "sourceApiVersion": "60.0",
-  "packageAliases": {
-    "LWC Signals": "0HoRb000000004rKAA"
-  }
+  "sourceApiVersion": "60.0"
 }

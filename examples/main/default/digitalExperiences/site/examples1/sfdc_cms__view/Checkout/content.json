@@ -1,0 +1,71 @@
+{
+  "type" : "sfdc_cms__view",
+  "title" : "Checkout",
+  "contentBody" : {
+    "component" : {
+      "children" : [ {
+        "children" : [ {
+          "attributes" : {
+            "backgroundImageConfig" : "",
+            "backgroundImageOverlay" : "rgba(0,0,0,0)",
+            "componentSpacerSize" : "",
+            "maxContentWidth" : "",
+            "sectionColumnGutterWidth" : "",
+            "sectionConfig" : "{\"UUID\":\"0130a194-0b9d-4194-8e2c-47f627cafca8\",\"columns\":[{\"UUID\":\"2d6af6c8-95f7-4297-9ee9-6d33f0258647\",\"columnName\":\"Column 1\",\"columnKey\":\"col1\",\"columnWidth\":\"12\",\"seedComponents\":[]}]}"
+          },
+          "children" : [ {
+            "children" : [ {
+              "attributes" : { },
+              "definition" : "c:shoppingCartDetails",
+              "id" : "bf9c3261-d87f-47e6-b000-8b2597a51496",
+              "type" : "component"
+            }, {
+              "attributes" : { },
+              "definition" : "c:orderSummary",
+              "id" : "4c59e794-6e57-4802-81ef-d11f0c503241",
+              "type" : "component"
+            }, {
+              "attributes" : { },
+              "definition" : "c:checkoutButton",
+              "id" : "3ddd65b5-d783-4ecb-9921-91709428a735",
+              "type" : "component"
+            } ],
+            "id" : "2d6af6c8-95f7-4297-9ee9-6d33f0258647",
+            "name" : "col1",
+            "title" : "Column 1",
+            "type" : "region"
+          } ],
+          "definition" : "community_layout:section",
+          "id" : "0130a194-0b9d-4194-8e2c-47f627cafca8",
+          "type" : "component"
+        } ],
+        "id" : "20d6af3d-694c-465d-8498-c68b961a80d7",
+        "name" : "content",
+        "title" : "Content",
+        "type" : "region"
+      }, {
+        "children" : [ {
+          "attributes" : {
+            "customHeadTags" : "",
+            "description" : "",
+            "pageTitle" : "Checkout",
+            "recordId" : "{!recordId}"
+          },
+          "definition" : "community_builder:seoAssistant",
+          "id" : "1f185f02-ddd3-4137-8f99-4b3508ad79c5",
+          "type" : "component"
+        } ],
+        "id" : "87d27a2a-dc32-4142-b244-e5cd51ec16b8",
+        "name" : "sfdcHiddenRegion",
+        "title" : "sfdcHiddenRegion",
+        "type" : "region"
+      } ],
+      "definition" : "community_layout:sldsFlexibleLayout",
+      "id" : "c791f994-38f9-41dc-a433-2149ea0969aa",
+      "type" : "component"
+    },
+    "dataProviders" : [ ],
+    "themeLayoutType" : "Inner",
+    "viewType" : "custom-checkout"
+  }
+}
