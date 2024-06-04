@@ -684,6 +684,7 @@ const counter = $signal(0, { storage: useLocalStorage("my-key-name") });
 The following storage helpers are available by default:
 
 - `useLocalStorage(key: string)`: Stores the signal in the `localStorage` with the given key
+- `useSessionStorage(key: string)`: Stores the signal in the `sessionStorage` with the given key
 - `useCookies(key: string, expires?: Date)`: Stores the signal in a cookie with the given key. You can also pass an
   optional `expires` parameter to set the expiration date of the cookie
 
