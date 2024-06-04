@@ -90,11 +90,11 @@
     </classAccesses>
     <classAccesses>
         <apexClass>ResourceController</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>ShoppingCartController</apexClass>
-        <enabled>false</enabled>
+        <enabled>true</enabled>
     </classAccesses>
     <classAccesses>
         <apexClass>SiteLoginController</apexClass>
@@ -206,4 +206,8 @@
         <enabled>true</enabled>
     </pageAccesses>
     <userLicense>Guest User License</userLicense>
+    <userPermissions>
+        <enabled>true</enabled>
+        <name>ViewPrivateStaticResources</name>
+    </userPermissions>
 </Profile>
