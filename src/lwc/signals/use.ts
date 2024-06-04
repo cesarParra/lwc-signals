@@ -51,6 +51,33 @@ export function useLocalStorage(key: string) {
   };
 }
 
+function useSessionStorageCreator<T>(key: string, value: T): State<T> {
+  function getter() {
+    const item = sessionStorage.getItem(key);
+    if (item) {
+      return JSON.parse(item);
+    }
+    return value;
+  }
+
+  function setter(newValue: T) {
+    sessionStorage.setItem(key, JSON.stringify(newValue));
+  }
+
+  // Set initial value if not set
+  if (!sessionStorage.getItem(key)) {
+    sessionStorage.setItem(key, JSON.stringify(value));
+  }
+
+  return createStorage(getter, setter);
+}
+
+export function useSessionStorage(key: string) {
+  return function <T>(value: T) {
+    return useSessionStorageCreator(key, value);
+  };
+}
+
 export function useCookies<T>(key: string, expires?: Date) {
   return function (value: T) {
     function getter() {

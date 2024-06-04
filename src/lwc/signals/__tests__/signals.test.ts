@@ -1,5 +1,5 @@
 import { $signal, $computed, $effect, $resource, Signal } from "../core";
-import { createStorage, useCookies, useLocalStorage } from "../use";
+import { createStorage, useCookies, useLocalStorage, useSessionStorage } from "../use";
 
 describe("signals", () => {
   describe("core functionality", () => {
@@ -410,6 +410,21 @@ describe("storing values in local storage", () => {
   test("should have a default value", () => {
     const signal = $signal(0, {
       storage: useLocalStorage("test")
+    });
+    expect(signal.value).toBe(0);
+  });
+
+  test("should update the value", () => {
+    const signal = $signal(0);
+    signal.value = 1;
+    expect(signal.value).toBe(1);
+  });
+});
+
+describe("storing values in session storage", () => {
+  test("should have a default value", () => {
+    const signal = $signal(0, {
+      storage: useSessionStorage("test")
     });
     expect(signal.value).toBe(0);
   });
