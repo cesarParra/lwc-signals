@@ -19,9 +19,9 @@
                 "alignment" : "center",
                 "size" : "standard",
                 "stretch" : "standard",
-                "text" : "Checkout Demo",
+                "text" : "Count Tracker Demo",
                 "type" : "tertiary",
-                "url" : "{\"linkInfo\":{\"pageReference\":{\"type\":\"comm__namedPage\",\"attributes\":{\"name\":\"Checkout__c\"}}}}"
+                "url" : "{\"linkInfo\":{\"pageReference\":{\"type\":\"comm__namedPage\",\"attributes\":{\"name\":\"Count_Tracking__c\"}}}}"
               },
               "definition" : "dxp_base:button",
               "id" : "c4f0a4d8-6c9a-43dc-83fd-1ea9be17ef6a",
@@ -33,13 +33,94 @@
                 "linkAssistiveText" : "",
                 "paddingHorizontal" : "none",
                 "paddingVertical" : "none",
-                "text" : "Demonstrates how to create a custom storage solution that implements Undo functionality.",
+                "text" : "Simple demonstration of a component that increases a number and another that reacts to changes.",
                 "textAlign" : "center",
                 "textDecoration" : "{}",
                 "textDisplayInfo" : "{}"
               },
               "definition" : "dxp_base:textBlock",
               "id" : "5073049b-5c6f-42a8-a358-3232df2d813a",
+              "type" : "component"
+            }, {
+              "attributes" : {
+                "alignment" : "center",
+                "size" : "standard",
+                "stretch" : "standard",
+                "text" : "Form Demo",
+                "type" : "tertiary",
+                "url" : "{\"linkInfo\":{\"pageReference\":{\"type\":\"comm__namedPage\",\"attributes\":{\"name\":\"Form__c\"}}}}"
+              },
+              "definition" : "dxp_base:button",
+              "id" : "0f599959-b3d0-4784-98ea-9a0ba0302919",
+              "type" : "component"
+            }, {
+              "attributes" : {
+                "backgroundColor" : "",
+                "isLinkable" : false,
+                "linkAssistiveText" : "",
+                "paddingHorizontal" : "none",
+                "paddingVertical" : "none",
+                "text" : "Demonstrates the ability to track data being updated from a form in a different component",
+                "textAlign" : "center",
+                "textDecoration" : "{}",
+                "textDisplayInfo" : "{}"
+              },
+              "definition" : "dxp_base:textBlock",
+              "id" : "86b5d8e4-2fde-4544-8f4e-291781f4ce2a",
+              "type" : "component"
+            }, {
+              "attributes" : {
+                "alignment" : "center",
+                "size" : "standard",
+                "stretch" : "standard",
+                "text" : "Apex Resource",
+                "type" : "tertiary",
+                "url" : "{\"linkInfo\":{\"pageReference\":{\"type\":\"comm__namedPage\",\"attributes\":{\"name\":\"Apex_Resource__c\"}}}}"
+              },
+              "definition" : "dxp_base:button",
+              "id" : "fd84651a-3d96-4772-adfc-959ef932330c",
+              "type" : "component"
+            }, {
+              "attributes" : {
+                "backgroundColor" : "",
+                "isLinkable" : false,
+                "linkAssistiveText" : "",
+                "paddingHorizontal" : "none",
+                "paddingVertical" : "none",
+                "text" : "Demonstrates: getting data from apex, displaying the selected data in a picklist, and reacting to the currently selected value from a different component.",
+                "textAlign" : "center",
+                "textDecoration" : "{}",
+                "textDisplayInfo" : "{}"
+              },
+              "definition" : "dxp_base:textBlock",
+              "id" : "b953dd8b-3361-4665-9b1e-c2fe7d67d0c9",
+              "type" : "component"
+            }, {
+              "attributes" : {
+                "alignment" : "center",
+                "size" : "standard",
+                "stretch" : "standard",
+                "text" : "Checkout Demo (Kitchen Sink)",
+                "type" : "tertiary",
+                "url" : "{\"linkInfo\":{\"pageReference\":{\"type\":\"comm__namedPage\",\"attributes\":{\"name\":\"Checkout__c\"}}}}"
+              },
+              "definition" : "dxp_base:button",
+              "id" : "24b61e1c-10cd-4ab0-afa6-617ac2d5fd20",
+              "type" : "component"
+            }, {
+              "attributes" : {
+                "backgroundColor" : "",
+                "isLinkable" : false,
+                "linkAssistiveText" : "",
+                "paddingHorizontal" : "none",
+                "paddingVertical" : "none",
+                "text" : "Full solution demo that includes getting and modifying data from Apex, storing data in the local storage, and a custom storage implementation for undo functionality.",
+                "textAlign" : "center",
+                "textDecoration" : "{}",
+                "textDisplayInfo" : "{}"
+              },
+              "definition" : "dxp_base:textBlock",
+              "id" : "5a310b54-42a5-49f2-886e-f97f841f4a27",
               "type" : "component"
             } ],
             "id" : "142284b4-88b0-4d00-ad59-6d177998602a",

@@ -1,0 +1,5 @@
+{
+  "apiName" : "Apex_Resource",
+  "type" : "sfdc_cms__view",
+  "path" : "views"
+}

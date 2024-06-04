@@ -1,0 +1,11 @@
+{
+  "type" : "sfdc_cms__route",
+  "title" : "Apex Resource",
+  "contentBody" : {
+    "activeViewId" : "Apex_Resource",
+    "configurationTags" : [ ],
+    "pageAccess" : "UseParent",
+    "routeType" : "custom-apex-resource",
+    "urlPrefix" : "apex-resource"
+  }
+}

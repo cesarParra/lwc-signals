@@ -1,0 +1,66 @@
+{
+  "type" : "sfdc_cms__view",
+  "title" : "Count Tracking",
+  "contentBody" : {
+    "component" : {
+      "children" : [ {
+        "children" : [ {
+          "attributes" : {
+            "backgroundImageConfig" : "",
+            "backgroundImageOverlay" : "rgba(0,0,0,0)",
+            "componentSpacerSize" : "",
+            "maxContentWidth" : "",
+            "sectionColumnGutterWidth" : "",
+            "sectionConfig" : "{\"UUID\":\"9b7ae578-5e28-4319-8a6f-fa7cd8c1f4d8\",\"columns\":[{\"UUID\":\"2df6bc38-298b-4ff6-9156-78171c206e5e\",\"columnName\":\"Column 1\",\"columnKey\":\"col1\",\"columnWidth\":\"12\",\"seedComponents\":[]}]}"
+          },
+          "children" : [ {
+            "children" : [ {
+              "attributes" : { },
+              "definition" : "c:countChanger",
+              "id" : "b3dc33ba-e99b-4f29-99f6-891c2828b06a",
+              "type" : "component"
+            }, {
+              "attributes" : { },
+              "definition" : "c:countTracker",
+              "id" : "c2889059-3ba8-49c3-82a7-e5b21d40a139",
+              "type" : "component"
+            } ],
+            "id" : "2df6bc38-298b-4ff6-9156-78171c206e5e",
+            "name" : "col1",
+            "title" : "Column 1",
+            "type" : "region"
+          } ],
+          "definition" : "community_layout:section",
+          "id" : "9b7ae578-5e28-4319-8a6f-fa7cd8c1f4d8",
+          "type" : "component"
+        } ],
+        "id" : "e65e4212-e898-4d16-adf4-06b15f519d4d",
+        "name" : "content",
+        "title" : "Content",
+        "type" : "region"
+      }, {
+        "children" : [ {
+          "attributes" : {
+            "customHeadTags" : "",
+            "description" : "",
+            "pageTitle" : "Count Tracking",
+            "recordId" : "{!recordId}"
+          },
+          "definition" : "community_builder:seoAssistant",
+          "id" : "c7b74b85-2f00-45ca-9d81-887326f8c45c",
+          "type" : "component"
+        } ],
+        "id" : "29ca1fda-3e18-4f4b-8cff-860da879d90f",
+        "name" : "sfdcHiddenRegion",
+        "title" : "sfdcHiddenRegion",
+        "type" : "region"
+      } ],
+      "definition" : "community_layout:sldsFlexibleLayout",
+      "id" : "2770faec-6a2e-48f8-9422-23c789a9ff47",
+      "type" : "component"
+    },
+    "dataProviders" : [ ],
+    "themeLayoutType" : "Inner",
+    "viewType" : "custom-count-tracking"
+  }
+}

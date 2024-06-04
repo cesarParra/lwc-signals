@@ -1,0 +1,11 @@
+{
+  "type" : "sfdc_cms__route",
+  "title" : "Count Tracking",
+  "contentBody" : {
+    "activeViewId" : "Count_Tracking",
+    "configurationTags" : [ ],
+    "pageAccess" : "UseParent",
+    "routeType" : "custom-count-tracking",
+    "urlPrefix" : "count-tracking"
+  }
+}
