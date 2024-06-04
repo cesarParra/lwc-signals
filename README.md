@@ -45,6 +45,22 @@ Copy the `force-app/lwc/signals` folder to your project.
 > code you can either modify the resulting JS code, or you can grab the Typescript files from the `src` folder
 > and set up your project to compile them.
 
+## Examples
+
+To see a live example, clone this repository, create a scratch org and push the code to it.
+
+The org comes with a pre-built Experience Site that contains the examples.
+
+Go to:
+
+- Setup
+- All Sites
+- Locate the `examples` site
+- Click on `Builder`
+- Publish the site
+
+You can then access the examples by going to the URL of the site.
+
 # Usage
 
 ## Introduction
