@@ -669,6 +669,36 @@ const { data, refetch, mutate } = $resource(
 );
 ```
 
+#### Defining when to fetch and refetch data
+
+There are situations when you don't want to fetch the data immediately when the component is created, or when you
+don't want to refetch the data when the reactive values change.
+
+For example, you might have an initial null value for a reactive value, and you only want to fetch the data when the
+value is set to a non-null value. In this situation you don't want to waste a call to the server since you know the
+data is not going to be used or will come back as null.
+
+An additional option you can pass to the `$resource` function is `fetchWhen`. This is any function that returns
+a boolean. If the function returns `true`, the data will be fetched. If it returns `false`, the data will not be
+fetched.
+
+```javascript
+import { $signal, $resource, $effect } from "c/signals";
+import getAccountDetails from "@salesforce/apex/ResourceController.getAccountDetails";
+
+export const selectedAccountId = $signal(null);
+
+export const { data: getAccount } = $resource(
+  getAccountDetails,
+  () => ({
+    accountId: selectedAccountId.value
+  }),
+  {
+    fetchWhen: () => selectedAccountId.value !== null
+  }
+);
+```
+
 ## Storage
 
 By default, any created signal is stored in memory and will be lost when the component is destroyed. This behavior

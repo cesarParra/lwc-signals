@@ -289,13 +289,13 @@ describe("signals", () => {
       });
     });
 
-    test('the onMutate function can set an error', async () => {
+    test("the onMutate function can set an error", async () => {
       const asyncFunction = async () => {
-        return 'done';
+        return "done";
       };
 
       const asyncReaction = async (newValue: string, _: string | null, mutate: (value: string | null, error?: unknown) => void) => {
-        mutate(null, 'An error occurred');
+        mutate(null, "An error occurred");
       };
 
       const { data: resource, mutate } = $resource(asyncFunction, undefined, {
@@ -305,17 +305,17 @@ describe("signals", () => {
       await new Promise(process.nextTick);
 
       expect(resource.value).toEqual({
-        data: 'done',
+        data: "done",
         loading: false,
         error: null
       });
 
-      mutate('mutated');
+      mutate("mutated");
 
       expect(resource.value).toEqual({
         data: null,
         loading: false,
-        error: 'An error occurred'
+        error: "An error occurred"
       });
     });
   });
@@ -354,6 +354,110 @@ describe("signals", () => {
 
     expect(resource.value).toEqual({
       data: 1,
+      loading: false,
+      error: null
+    });
+  });
+
+  test("when the fetchWhen option is passed, it does not fetch when it evaluates to false", async () => {
+    const asyncFunction = async (params?: { [key: string]: unknown }) => {
+      return params?.["source"];
+    };
+
+    const source = $signal("changed");
+    const { data: resource } = $resource(asyncFunction, () => ({
+      source: source.value
+    }),
+      {
+        initialValue: "initial",
+        fetchWhen: () => false
+      });
+
+    expect(resource.value).toEqual({
+      data: "initial",
+      loading: false,
+      error: null
+    });
+
+    await new Promise(process.nextTick);
+
+    expect(resource.value).toEqual({
+      data: "initial",
+      loading: false,
+      error: null
+    });
+  });
+
+  test("when the fetchWhen option is passed, it fetches when it evaluates to true", async () => {
+    const asyncFunction = async (params?: { [key: string]: unknown }) => {
+      return params?.["source"];
+    };
+
+    const source = $signal("changed");
+    const { data: resource } = $resource(asyncFunction, () => ({
+        source: source.value
+      }),
+      {
+        initialValue: "initial",
+        fetchWhen: () => true
+      });
+
+    expect(resource.value).toEqual({
+      data: "initial",
+      loading: true,
+      error: null
+    });
+
+    await new Promise(process.nextTick);
+
+    expect(resource.value).toEqual({
+      data: "changed",
+      loading: false,
+      error: null
+    });
+  });
+
+  test("when the fetchWhen option is passed, it fetches when its value changes to true", async () => {
+    const asyncFunction = async (params?: { [key: string]: unknown }) => {
+      return params?.["source"];
+    };
+
+    const flagSignal = $signal(false);
+    const source = $signal("changed");
+    const { data: resource } = $resource(asyncFunction, () => ({
+        source: source.value
+      }),
+      {
+        initialValue: "initial",
+        fetchWhen: () => flagSignal.value
+      });
+
+    expect(resource.value).toEqual({
+      data: "initial",
+      loading: false,
+      error: null
+    });
+
+    await new Promise(process.nextTick);
+
+    expect(resource.value).toEqual({
+      data: "initial",
+      loading: false,
+      error: null
+    });
+
+    flagSignal.value = true;
+
+    expect(resource.value).toEqual({
+      data: "initial",
+      loading: true,
+      error: null
+    });
+
+    await new Promise(process.nextTick);
+
+    expect(resource.value).toEqual({
+      data: "changed",
       loading: false,
       error: null
     });

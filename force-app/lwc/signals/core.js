@@ -185,7 +185,8 @@ function $resource(fn, source, options) {
   let _previousParams;
   const _signal = $signal(loadingState(_value));
   // Optimistic updates are enabled by default
-  const optimisticMutate = options?.optimisticMutate ?? true;
+  const _optimisticMutate = options?.optimisticMutate ?? true;
+  const _fetchWhen = options?.fetchWhen ?? (() => true);
   const execute = async () => {
     _signal.value = loadingState(_value);
     const derivedSource = source instanceof Function ? source() : source;
@@ -194,7 +195,7 @@ function $resource(fn, source, options) {
       return;
     }
     try {
-      const data = await fn(derivedSource);
+      const data = _fetchWhen() ? await fn(derivedSource) : _value;
       // Keep track of the previous value
       _value = data;
       _signal.value = {
@@ -231,7 +232,7 @@ function $resource(fn, source, options) {
     data: _signal.readOnly,
     mutate: (newValue) => {
       const previousValue = _value;
-      if (optimisticMutate) {
+      if (_optimisticMutate) {
         // If optimistic updates are enabled, update the value immediately
         mutatorCallback(newValue);
       }
