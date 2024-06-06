@@ -417,6 +417,52 @@ describe("signals", () => {
     });
   });
 
+  test("when the fetchWhen option is passed, it fetches when its value changes to true", async () => {
+    const asyncFunction = async (params?: { [key: string]: unknown }) => {
+      return params?.["source"];
+    };
+
+    const flagSignal = $signal(false);
+    const source = $signal("changed");
+    const { data: resource } = $resource(asyncFunction, () => ({
+        source: source.value
+      }),
+      {
+        initialValue: "initial",
+        fetchWhen: () => flagSignal.value
+      });
+
+    expect(resource.value).toEqual({
+      data: "initial",
+      loading: false,
+      error: null
+    });
+
+    await new Promise(process.nextTick);
+
+    expect(resource.value).toEqual({
+      data: "initial",
+      loading: false,
+      error: null
+    });
+
+    flagSignal.value = true;
+
+    expect(resource.value).toEqual({
+      data: "initial",
+      loading: true,
+      error: null
+    });
+
+    await new Promise(process.nextTick);
+
+    expect(resource.value).toEqual({
+      data: "changed",
+      loading: false,
+      error: null
+    });
+  });
+
   test("can create custom storages", () => {
     const useUndo = <T>(value: T) => {
       const _valueStack: T[] = [];
