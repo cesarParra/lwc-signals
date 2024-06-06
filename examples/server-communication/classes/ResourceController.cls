@@ -6,6 +6,7 @@ public without sharing class ResourceController {
 
     @AuraEnabled
     public static Account getAccountDetails(Id accountId) {
+        System.debug('accountId: ' + accountId);
         if (accountId == null) {
             return null;
         }
@@ -14,7 +15,6 @@ public without sharing class ResourceController {
 
     @AuraEnabled(Cacheable=true)
     public static List<Contact> getContacts() {
-        System.debug('getContacts() called');
         return [SELECT Id, Name FROM Contact];
     }
 }

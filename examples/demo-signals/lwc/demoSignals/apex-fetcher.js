@@ -6,11 +6,17 @@ export const { data: fetchContacts } = $resource(getContacts);
 
 export const selectedAccountId = $signal(null);
 
-$effect(() => console.log('selected Account Id', selectedAccountId.value));
+$effect(() => console.log("selected Account Id", selectedAccountId.value));
 
-export const { data: getAccount } = $resource(getAccountDetails, () => ({
-  accountId: selectedAccountId.value
-}));
+export const { data: getAccount } = $resource(
+  getAccountDetails,
+  () => ({
+    accountId: selectedAccountId.value
+  }),
+  {
+    fetchWhen: () => selectedAccountId.value
+  }
+);
 
 $effect(() =>
   console.log("the account changed", JSON.stringify(getAccount.value, null, 2))
