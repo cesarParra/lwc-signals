@@ -173,11 +173,14 @@ type MutatorCallback<T> = (value: T | null, error?: unknown) => void;
 
 type OnMutate<T> = (newValue: T, oldValue: T | null, mutate: MutatorCallback<T>) => Promise<void> | void;
 
+type FetchWhenPredicate = () => boolean;
+
 type ResourceOptions<T> = {
-  initialValue?: T;
-  optimisticMutate?: boolean;
-  onMutate?: OnMutate<T>;
-  storage?: StorageFn<T>;
+  initialValue: T;
+  optimisticMutate: boolean;
+  onMutate: OnMutate<T>;
+  storage: StorageFn<T>;
+  fetchWhen: FetchWhenPredicate;
 };
 
 /**
@@ -231,7 +234,7 @@ type ResourceOptions<T> = {
 function $resource<T>(
   fn: (params?: { [key: string]: unknown }) => Promise<T>,
   source?: UnknownArgsMap | (() => UnknownArgsMap),
-  options?: ResourceOptions<T>
+  options?: Partial<ResourceOptions<T>>
 ): ResourceResponse<T> {
   function loadingState(data: T | null): AsyncData<T> {
     return {
@@ -246,7 +249,8 @@ function $resource<T>(
   let _previousParams: UnknownArgsMap | undefined;
   const _signal = $signal<AsyncData<T>>(loadingState(_value));
   // Optimistic updates are enabled by default
-  const optimisticMutate = options?.optimisticMutate ?? true;
+  const _optimisticMutate = options?.optimisticMutate ?? true;
+  const _fetchWhen = options?.fetchWhen ?? (() => true);
 
   const execute = async () => {
     _signal.value = loadingState(_value);
@@ -260,7 +264,7 @@ function $resource<T>(
     }
 
     try {
-      const data = await fn(derivedSource);
+      const data = _fetchWhen() ? await fn(derivedSource) : _value;
       // Keep track of the previous value
       _value = data;
       _signal.value = {
@@ -300,7 +304,7 @@ function $resource<T>(
     data: _signal.readOnly,
     mutate: (newValue: T) => {
       const previousValue = _value;
-      if (optimisticMutate) {
+      if (_optimisticMutate) {
         // If optimistic updates are enabled, update the value immediately
         mutatorCallback(newValue);
       }
