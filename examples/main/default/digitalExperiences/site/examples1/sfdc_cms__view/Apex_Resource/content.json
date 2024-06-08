@@ -15,14 +15,76 @@
           },
           "children" : [ {
             "children" : [ {
-              "attributes" : { },
-              "definition" : "c:listAccounts",
-              "id" : "9ab462db-15a0-487a-9366-b76e47f85256",
-              "type" : "component"
-            }, {
-              "attributes" : { },
-              "definition" : "c:displaySelectedAccount",
-              "id" : "cbce4af0-08f6-484f-ac5f-7a54675d8ee4",
+              "attributes" : {
+                "activeTabBorderHighlightWeight" : "2px",
+                "activeTabTextEmphasis" : "{\"bold\":true}",
+                "activeTabTextStyle" : "{\"textStyle\":\"paragraph1\",\"headingTag\":\"p\"}",
+                "borderColor" : "",
+                "borderRadius" : "0px",
+                "borderWeight" : "0px",
+                "enableOverflowMenu" : false,
+                "imageFit" : "cover",
+                "imagePosition" : "center center",
+                "overflowIconColor" : "rgb(116,116,116)",
+                "overflowIconStyle" : "down-arrow",
+                "overflowMenuLabel" : "More",
+                "tabAlignment" : "left",
+                "tabBorderColor" : "",
+                "tabBorderRadius" : "0px",
+                "tabBorderWeight" : "0px",
+                "tabHoverBorderHighlightWeight" : "1px",
+                "tabLayout" : "horizontal",
+                "tabPadding" : "12px",
+                "tabTextStyle" : "{\"textStyle\":\"paragraph1\",\"headingTag\":\"p\"}",
+                "tabsetConfig" : "{\"UUID\":\"80f68240-c77e-4aa5-95ca-41e2ec9396ab\",\"activeTab\":null,\"useOverflowMenu\":null,\"tabs\":[{\"UUID\":\"3d87a570-536f-4428-b7eb-31fdab87566b\",\"tabName\":\"Simple Fetch\",\"tabKey\":\"tab1\",\"locked\":false,\"allowGuestUser\":false},{\"UUID\":\"10b41e34-2107-48a8-a581-07540813af3b\",\"tabName\":\"Interactive\",\"tabKey\":\"tab2\",\"locked\":false,\"allowGuestUser\":false},{\"UUID\":\"20bdec1a-ef67-4ece-ba1f-677192e75568\",\"tabName\":\"Debounce\",\"tabKey\":\"fcdf1\",\"locked\":false,\"allowGuestUser\":false}]}",
+                "width" : "100%"
+              },
+              "children" : [ {
+                "children" : [ {
+                  "attributes" : { },
+                  "definition" : "c:serverFetcher",
+                  "id" : "23eb2e4e-dd98-4660-9ab4-11c8c50677e4",
+                  "type" : "component"
+                } ],
+                "id" : "3d87a570-536f-4428-b7eb-31fdab87566b",
+                "name" : "tab1",
+                "title" : "Simple Fetch",
+                "type" : "region"
+              }, {
+                "children" : [ {
+                  "attributes" : { },
+                  "definition" : "c:listAccounts",
+                  "id" : "9ab462db-15a0-487a-9366-b76e47f85256",
+                  "type" : "component"
+                }, {
+                  "attributes" : { },
+                  "definition" : "c:displaySelectedAccount",
+                  "id" : "cbce4af0-08f6-484f-ac5f-7a54675d8ee4",
+                  "type" : "component"
+                } ],
+                "id" : "10b41e34-2107-48a8-a581-07540813af3b",
+                "name" : "tab2",
+                "title" : "Interactive",
+                "type" : "region"
+              }, {
+                "children" : [ {
+                  "attributes" : { },
+                  "definition" : "c:accountSearchInput",
+                  "id" : "682c1930-a379-47c8-b185-bd80d488af02",
+                  "type" : "component"
+                }, {
+                  "attributes" : { },
+                  "definition" : "c:accountSearchResults",
+                  "id" : "851cb18b-4a6f-4f05-8bd3-2c47bdded4ce",
+                  "type" : "component"
+                } ],
+                "id" : "20bdec1a-ef67-4ece-ba1f-677192e75568",
+                "name" : "fcdf1",
+                "title" : "Debounce",
+                "type" : "region"
+              } ],
+              "definition" : "dxp_layout:tabs",
+              "id" : "80f68240-c77e-4aa5-95ca-41e2ec9396ab",
               "type" : "component"
             } ],
             "id" : "2a39bf1f-19f0-4e1d-b1cd-720683f337e6",
