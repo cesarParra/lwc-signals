@@ -1,4 +1,5 @@
 import { useInMemoryStorage } from "./use";
+import { debounce } from "./utils";
 const context = [];
 function _getCurrentObserver() {
   return context[context.length - 1];
@@ -80,13 +81,8 @@ function $computed(fn) {
  * @param value The initial value of the signal
  * @param options Options to configure the signal
  */
-function $signal(
-  value,
-  options = {
-    storage: useInMemoryStorage
-  }
-) {
-  const _storageOption = options.storage(value);
+function $signal(value, options) {
+  const _storageOption = options?.storage?.(value) ?? useInMemoryStorage(value);
   const subscribers = new Set();
   function getter() {
     const current = _getCurrentObserver();
@@ -104,13 +100,21 @@ function $signal(
       subscriber();
     }
   }
+  const debouncedSetter = debounce(
+    (newValue) => setter(newValue),
+    options?.debounce ?? 0
+  );
   const returnValue = {
     ..._storageOption,
     get value() {
       return getter();
     },
     set value(newValue) {
-      setter(newValue);
+      if (options?.debounce) {
+        debouncedSetter(newValue);
+      } else {
+        setter(newValue);
+      }
     },
     readOnly: {
       get value() {

@@ -783,6 +783,19 @@ storage, and the setter should set the value in the storage.
 Notice that any additional properties you add to the object returned by `createStorage` will be available in the
 returned object. That is how we can add the `undo` function to the `counter` signal and use it to undo the changes.
 
+## Debouncing
+
+You can debounce the changes to a signal by passing a `debounce` option to the `$signal` function. This
+is specially helpful when you have a `$resource` that re-fetches based on a reactive value that changes frequently.
+
+```javascript
+import { $signal } from "c/signals";
+
+const counter = $signal(0, { debounce: 500 });
+```
+
+When you debounce a signal, the value will only be updated after the specified time has passed since the last change.
+
 ## Examples
 
 You can find full working examples in the `examples` folder.
