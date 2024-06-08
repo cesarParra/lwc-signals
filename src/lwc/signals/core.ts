@@ -130,6 +130,7 @@ function $signal<T>(value: T, options?: Partial<SignalOptions<T>>): Signal<T> & 
     }
   }
 
+  const debouncedSetter = debounce((newValue) => setter(newValue as T), options?.debounce ?? 0);
   const returnValue: Signal<T> & Omit<ReturnType<StorageFn<T>>, "get" | "set"> = {
     ..._storageOption,
     get value() {
@@ -137,7 +138,7 @@ function $signal<T>(value: T, options?: Partial<SignalOptions<T>>): Signal<T> & 
     },
     set value(newValue: T) {
       if (options?.debounce) {
-        debounce(() => setter(newValue), options.debounce)();
+        debouncedSetter(newValue);
       } else {
         setter(newValue);
       }

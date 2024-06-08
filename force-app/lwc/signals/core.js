@@ -100,6 +100,10 @@ function $signal(value, options) {
       subscriber();
     }
   }
+  const debouncedSetter = debounce(
+    (newValue) => setter(newValue),
+    options?.debounce ?? 0
+  );
   const returnValue = {
     ..._storageOption,
     get value() {
@@ -107,7 +111,7 @@ function $signal(value, options) {
     },
     set value(newValue) {
       if (options?.debounce) {
-        debounce(() => setter(newValue), options.debounce)();
+        debouncedSetter(newValue);
       } else {
         setter(newValue);
       }

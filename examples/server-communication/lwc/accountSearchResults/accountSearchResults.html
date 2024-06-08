@@ -1,0 +1,11 @@
+<!-- Account Search Results -->
+<template>
+  <template if:true={accounts.loading}> Loading </template>
+  <template if:false={accounts.loading}>
+    <template for:each={accounts.data} for:item="contact">
+      <div key={contact.Id}>
+        <p>{contact.Name}</p>
+      </div>
+    </template>
+  </template>
+</template>

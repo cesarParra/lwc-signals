@@ -1,12 +1,15 @@
 import { $signal, $resource, $effect } from "c/signals";
 import getContacts from "@salesforce/apex/ResourceController.getContacts";
 import getAccountDetails from "@salesforce/apex/ResourceController.getAccountDetails";
+import searchAccounts from "@salesforce/apex/ResourceController.searchAccounts";
 
+// serves the serverFetcher LWC
 export const { data: fetchContacts } = $resource(getContacts);
 
-export const selectedAccountId = $signal(null, {
-  debounce: 1000
-});
+// ---------------------------------------------------------
+
+// serve the displaySelectedAccount and listAccounts LWCs
+export const selectedAccountId = $signal(null);
 
 $effect(() => console.log("selected Account Id", selectedAccountId.value));
 
@@ -22,4 +25,21 @@ export const { data: getAccount } = $resource(
 
 $effect(() =>
   console.log("the account changed", JSON.stringify(getAccount.value, null, 2))
+);
+
+// ---------------------------------------------------------
+
+// Serves accountSearchInput and accountSearchResults LWCS
+export const searchQuery = $signal("", {
+  debounce: 1000
+});
+
+$effect(() => console.log("search query changed", searchQuery.value));
+
+export const { data: searchAccs } = $resource(searchAccounts, () => ({
+  searchKey: searchQuery.value
+}));
+
+$effect(() =>
+  console.log("search results", JSON.stringify(searchAccs.value, null, 2))
 );
