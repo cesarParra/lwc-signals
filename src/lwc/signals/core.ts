@@ -1,4 +1,5 @@
 import { useInMemoryStorage, State } from "./use";
+import { debounce } from "./utils";
 
 type ReadOnlySignal<T> = {
   readonly value: T;
@@ -81,6 +82,7 @@ type StorageFn<T> = (value: T) => State<T> & { [key: string]: unknown };
 
 type SignalOptions<T> = {
   storage: StorageFn<T>
+  debounce?: number
 };
 
 /**
@@ -106,10 +108,8 @@ type SignalOptions<T> = {
  * @param value The initial value of the signal
  * @param options Options to configure the signal
  */
-function $signal<T>(value: T, options: SignalOptions<T> = {
-  storage: useInMemoryStorage
-}): Signal<T> & Omit<ReturnType<StorageFn<T>>, "get" | "set"> {
-  const _storageOption: State<T> = options.storage(value);
+function $signal<T>(value: T, options?: Partial<SignalOptions<T>>): Signal<T> & Omit<ReturnType<StorageFn<T>>, "get" | "set"> {
+  const _storageOption: State<T> = options?.storage?.(value) ?? useInMemoryStorage(value);
   const subscribers: Set<VoidFunction> = new Set();
 
   function getter() {
@@ -136,7 +136,11 @@ function $signal<T>(value: T, options: SignalOptions<T> = {
       return getter();
     },
     set value(newValue: T) {
-      setter(newValue);
+      if (options?.debounce) {
+        debounce(() => setter(newValue), options.debounce)();
+      } else {
+        setter(newValue);
+      }
     },
     readOnly: {
       get value() {

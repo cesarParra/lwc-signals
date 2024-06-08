@@ -14,6 +14,20 @@ describe("signals", () => {
       expect(signal.value).toBe(1);
     });
 
+    test('can debounce setting a signal value', async () => {
+      const debouncedSignal = $signal(0, {
+        debounce: 100
+      });
+
+      debouncedSignal.value = 1;
+
+      expect(debouncedSignal.value).toBe(0);
+
+      await new Promise(resolve => setTimeout(resolve, 100));
+
+      expect(debouncedSignal.value).toBe(1);
+    });
+
     test("can derive a computed value", () => {
       const signal = $signal(0);
       const computed = $computed(() => signal.value * 2);

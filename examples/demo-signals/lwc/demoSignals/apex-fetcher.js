@@ -4,7 +4,9 @@ import getAccountDetails from "@salesforce/apex/ResourceController.getAccountDet
 
 export const { data: fetchContacts } = $resource(getContacts);
 
-export const selectedAccountId = $signal(null);
+export const selectedAccountId = $signal(null, {
+  debounce: 1000
+});
 
 $effect(() => console.log("selected Account Id", selectedAccountId.value));
 
