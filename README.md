@@ -717,6 +717,42 @@ The following storage helpers are available by default:
 - `useSessionStorage(key: string)`: Stores the signal in the `sessionStorage` with the given key
 - `useCookies(key: string, expires?: Date)`: Stores the signal in a cookie with the given key. You can also pass an
   optional `expires` parameter to set the expiration date of the cookie
+- `useEventListener(eventName: string)`: Dispatches a CustomEvent to the `window` object with the given event name
+  whenever the signal changes. It also listens for events with the given name and updates the signal when the event is
+  received. This is useful for when you want to communicate changes to components that for some reason don't
+  have access to the signal (for example, a component that cannot import the signal because it lives in a different namespace).
+
+  The event sent and expected to be received has the following format:
+
+  ```
+   {
+     detail: {
+       data: T;
+   };
+  ```
+
+  Where `T` is the type of the signal.
+
+  ```javascript
+  import { $signal, useEventListener } from "c/signals";
+
+  const counter = $signal(0, { storage: useEventListener("counter-change") });
+  ```
+
+  and from another component
+
+  ```javascript
+  ...
+  connectedCallback() {
+    window.addEventListener("counter-change", (event) => {
+    console.log(event.detail.data);
+    });
+  }
+  ...
+  handleSomeChange() {
+    window.dispatchEvent(new CustomEvent("counter-change", { detail: { data: 1 } }));
+  }
+  ```
 
 ### Creating a custom storage
 
