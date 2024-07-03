@@ -1,5 +1,5 @@
-export function createStorage(get, set) {
-  return { get, set };
+export function createStorage(get, set, registerOnChange) {
+  return { get, set, registerOnChange };
 }
 export function useInMemoryStorage(value) {
   let _value = value;
@@ -70,5 +70,36 @@ export function useCookies(key, expires) {
       document.cookie = `${key}=${JSON.stringify(newValue)}; expires=${expires?.toUTCString()}`;
     }
     return createStorage(getter, setter);
+  };
+}
+export function useEventListener(type) {
+  return function (value) {
+    let _value = value;
+    let _onChange;
+    window.addEventListener(type, (event) => {
+      const e = event;
+      _value = e.detail.data;
+      if (e.detail.sender !== "__internal__") {
+        _onChange?.();
+      }
+    });
+    function getter() {
+      return _value;
+    }
+    function setter(newValue) {
+      _value = newValue;
+      window.dispatchEvent(
+        new CustomEvent(type, {
+          detail: {
+            data: newValue,
+            sender: "__internal__"
+          }
+        })
+      );
+    }
+    function registerOnChange(onChange) {
+      _onChange = onChange;
+    }
+    return createStorage(getter, setter, registerOnChange);
   };
 }
