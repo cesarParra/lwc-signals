@@ -1,13 +1,15 @@
 export type State<T> = {
   get: () => T;
   set: (newValue: T) => void;
+  registerOnChange?: (f: VoidFunction) => void;
 }
 
 export function createStorage<T>(
   get: () => T,
-  set: (newValue: T) => void
+  set: (newValue: T) => void,
+  registerOnChange?: (f: VoidFunction) => void
 ): State<T> {
-  return { get, set };
+  return { get, set, registerOnChange };
 }
 
 export function useInMemoryStorage<T>(value: T): State<T> {
@@ -79,7 +81,7 @@ export function useSessionStorage(key: string) {
 }
 
 export function useCookies<T>(key: string, expires?: Date) {
-  return function (value: T) {
+  return function(value: T) {
     function getter() {
       const cookie = document.cookie
         .split("; ")
@@ -95,5 +97,43 @@ export function useCookies<T>(key: string, expires?: Date) {
     }
 
     return createStorage(getter, setter);
+  };
+}
+
+type UseEventListenerEvent<T> = CustomEvent<{ data: T, sender?: string }>;
+
+export function useEventListener<T, K extends keyof DocumentEventMap>(
+  type: K
+) {
+  return function(value: T) {
+    let _value: T = value;
+    let _onChange: VoidFunction | undefined;
+
+    window.addEventListener(type, (event) => {
+      const e = event as UseEventListenerEvent<T>;
+      _value = e.detail.data;
+      if (e.detail.sender !== "__internal__") {
+        _onChange?.();
+      }
+    });
+
+    function getter() {
+      return _value;
+    }
+
+    function setter(newValue: T) {
+      window.dispatchEvent(new CustomEvent(type, {
+        detail: {
+          data: newValue,
+          sender: "__internal__"
+        }
+      }));
+    }
+
+    function registerOnChange(onChange: VoidFunction) {
+      _onChange = onChange;
+    }
+
+    return createStorage(getter, setter, registerOnChange);
   };
 }

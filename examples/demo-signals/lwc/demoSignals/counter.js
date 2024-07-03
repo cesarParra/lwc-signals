@@ -1,4 +1,4 @@
-import { $signal, $effect, $computed, useLocalStorage } from "c/signals";
+import { $signal, $effect, $computed, useLocalStorage, useEventListener } from "c/signals";
 
 // EXAMPLE OF DEFAULT COUNTER
 
@@ -6,9 +6,9 @@ import { $signal, $effect, $computed, useLocalStorage } from "c/signals";
 
 // EXAMPLE OF COUNTER USING LOCAL STORAGE
 
-export const counter = $signal(0, {
-  storage: useLocalStorage("counter")
-});
+// export const counter = $signal(0, {
+//   storage: useLocalStorage("counter")
+// });
 
 // EXAMPLE OF COUNTER USING COOKIES
 
@@ -18,6 +18,12 @@ export const counter = $signal(0, {
 // export const counter = $signal(0, {
 //   storage: useCookies("counter", tomorrow)
 // });
+
+// EXAMPLE OF COUNTER USING EVENT LISTENER
+
+export const counter = $signal(0, {
+  storage: useEventListener("counterChanged")
+});
 
 $effect(() => console.log(counter.value));
 

@@ -125,10 +125,16 @@ function $signal<T>(value: T, options?: Partial<SignalOptions<T>>): Signal<T> & 
       return;
     }
     _storageOption.set(newValue);
+    notifySubscribers();
+  }
+
+  function notifySubscribers() {
     for (const subscriber of subscribers) {
       subscriber();
     }
   }
+
+  _storageOption.registerOnChange?.(notifySubscribers);
 
   const debouncedSetter = debounce((newValue) => setter(newValue as T), options?.debounce ?? 0);
   const returnValue: Signal<T> & Omit<ReturnType<StorageFn<T>>, "get" | "set"> = {
