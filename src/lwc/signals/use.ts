@@ -122,6 +122,7 @@ export function useEventListener<T, K extends keyof DocumentEventMap>(
     }
 
     function setter(newValue: T) {
+      _value = newValue;
       window.dispatchEvent(new CustomEvent(type, {
         detail: {
           data: newValue,
