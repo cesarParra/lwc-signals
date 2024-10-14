@@ -62,7 +62,8 @@ export function useCookies(key, expires) {
         .split("; ")
         .find((row) => row.startsWith(key));
       if (cookie) {
-        return JSON.parse(cookie.split("=")[1]);
+        const value = cookie.replace(`${key}=`, "");
+        return JSON.parse(value);
       }
       return value;
     }

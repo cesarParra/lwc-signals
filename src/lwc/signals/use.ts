@@ -87,7 +87,8 @@ export function useCookies<T>(key: string, expires?: Date) {
         .split("; ")
         .find((row) => row.startsWith(key));
       if (cookie) {
-        return JSON.parse(cookie.split("=")[1]);
+        const value = cookie.replace(`${key}=`, "");
+        return JSON.parse(value);
       }
       return value;
     }
