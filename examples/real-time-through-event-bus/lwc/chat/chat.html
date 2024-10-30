@@ -1,0 +1,42 @@
+<template>
+  <div class="slds-p-around_medium lgc-bg">
+    <lightning-input
+      type="text"
+      label="Your name"
+      value={sender}
+      onchange={handleNameChange}
+    ></lightning-input>
+  </div>
+  <section role="log" class="slds-chat">
+    <ul class="slds-chat-list">
+      <template for:each={formattedMessages} for:item="message">
+        <li key={message.message} class={message.listClasses}>
+          <div class="slds-chat-message">
+            <div class="slds-chat-message__body">
+              <div class={message.messageClasses}>
+                <span>{message.message}</span>
+              </div>
+              <div class="slds-chat-message__meta" aria-label="the message">
+                {message.sender} • {message.time}
+              </div>
+            </div>
+          </div>
+        </li>
+      </template>
+    </ul>
+  </section>
+  <div class="slds-p-around_medium lgc-bg">
+    <lightning-input
+      type="text"
+      label="Enter your message"
+      onchange={handleMessageChange}
+      disabled={isMessageBoxDisabled}
+    ></lightning-input>
+    <lightning-button
+      label="Send"
+      onclick={sendMessage}
+      disabled={isSendDisabled}
+      stretch="true"
+    ></lightning-button>
+  </div>
+</template>

@@ -1,13 +1,10 @@
 <?xml version="1.0" encoding="UTF-8" ?>
 <LightningComponentBundle xmlns="http://soap.sforce.com/2006/04/metadata">
     <apiVersion>60.0</apiVersion>
-    <description>Count Changer</description>
+    <description>Chat</description>
     <isExposed>true</isExposed>
-    <masterLabel>Count Changer</masterLabel>
+    <masterLabel>Chat</masterLabel>
     <targets>
-        <target>lightningCommunity__Default</target>
-        <target>lightningCommunity__Page</target>
-        <target>lightning__HomePage</target>
         <target>lightning__RecordPage</target>
     </targets>
 </LightningComponentBundle>

@@ -1,3 +1,4 @@
+import { subscribe } from "lightning/empApi";
 export function createStorage(get, set, registerOnChange) {
   return { get, set, registerOnChange };
 }
@@ -97,6 +98,28 @@ export function useEventListener(type) {
           }
         })
       );
+    }
+    function registerOnChange(onChange) {
+      _onChange = onChange;
+    }
+    return createStorage(getter, setter, registerOnChange);
+  };
+}
+// TODO: How to unsubscribe
+export function useEventBus(channel, toValue) {
+  return function (value) {
+    let _value = value;
+    let _onChange;
+    subscribe(channel, -2, (response) => {
+      console.log("Received message", response);
+      _value = toValue(response?.data.payload);
+      _onChange?.();
+    });
+    function getter() {
+      return _value;
+    }
+    function setter(newValue) {
+      _value = newValue;
     }
     function registerOnChange(onChange) {
       _onChange = onChange;

@@ -1,4 +1,4 @@
-import { $signal, $effect, $computed, useLocalStorage, useEventListener } from "c/signals";
+import { $signal, $effect, $computed, useEventListener } from "c/signals";
 
 // EXAMPLE OF DEFAULT COUNTER
 

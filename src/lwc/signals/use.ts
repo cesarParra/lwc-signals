@@ -1,3 +1,5 @@
+import { subscribe, type Message } from "lightning/empApi";
+
 export type State<T> = {
   get: () => T;
   set: (newValue: T) => void;
@@ -138,4 +140,32 @@ export function useEventListener<T, K extends keyof DocumentEventMap>(
 
     return createStorage(getter, setter, registerOnChange);
   };
+}
+
+// TODO: How to unsubscribe
+export function useEventBus<T>(channel: string, toValue: (response?: unknown) => T) {
+  return function(value: T) {
+    let _value: T = value;
+    let _onChange: VoidFunction | undefined;
+
+    subscribe(channel, -2, (response) => {
+      console.log("Received message", response);
+      _value = toValue(response?.data.payload);
+      _onChange?.();
+    });
+
+    function getter() {
+      return _value;
+    }
+
+    function setter(newValue: T) {
+      _value = newValue;
+    }
+
+    function registerOnChange(onChange: VoidFunction) {
+      _onChange = onChange;
+    }
+
+    return createStorage(getter, setter, registerOnChange);
+  }
 }
