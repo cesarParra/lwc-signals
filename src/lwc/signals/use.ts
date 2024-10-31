@@ -151,7 +151,6 @@ export function useEventListener<T, K extends keyof DocumentEventMap>(
   };
 }
 
-// TODO: Document in README
 /**
  * Subscribes to the event bus channel (e.g. platform event, change data capture, etc.).
  * Usage:

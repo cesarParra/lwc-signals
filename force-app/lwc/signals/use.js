@@ -110,7 +110,6 @@ export function useEventListener(type) {
     return createStorage(getter, setter, registerOnChange);
   };
 }
-// TODO: Document in README
 /**
  * Subscribes to the event bus channel (e.g. platform event, change data capture, etc.).
  * Usage:
