@@ -796,6 +796,26 @@ The following storage helpers are available by default:
     - `onError` A callback function called when an error response is received from the server for
       handshake, connect, subscribe, and unsubscribe meta channels.
 
+  **Unsubscribing from the event bus**
+
+  When using the `useEventBus` storage, the signal will hold a special function called `unsubscribe` that you can call
+  to unsubscribe from the event bus.
+
+  ```javascript
+  import { $signal, useEventBus } from "c/signals";
+
+  const receivedEvent = $signal(undefined, {
+    storage: useEventBus("/event/PlatEvent__e", ({ data }) => ({
+      message: data.payload.Message__c,
+      sender: data.payload.Sender__c,
+      time: data.payload.Time__c
+    }))
+  });
+
+  // Unsubscribe from the event bus
+  receivedEvent.unsubscribe();
+  ```
+
 ### Creating a custom storage
 
 The `storage` option receives a function that defines the behavior for where the data should be stored.
