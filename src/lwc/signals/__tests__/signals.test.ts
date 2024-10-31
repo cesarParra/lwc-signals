@@ -1,5 +1,6 @@
 import { $signal, $computed, $effect, $resource, Signal } from "../core";
-import { createStorage, useCookies, useLocalStorage, useSessionStorage } from "../use";
+import { createStorage, useCookies, useEventBus, useLocalStorage, useSessionStorage } from "../use";
+import { jestMockPublish } from "../../../__mocks__/lightning/empApi";
 
 describe("signals", () => {
   describe("core functionality", () => {
@@ -14,7 +15,7 @@ describe("signals", () => {
       expect(signal.value).toBe(1);
     });
 
-    test('can debounce setting a signal value', async () => {
+    test("can debounce setting a signal value", async () => {
       const debouncedSignal = $signal(0, {
         debounce: 100
       });
@@ -380,8 +381,8 @@ describe("signals", () => {
 
     const source = $signal("changed");
     const { data: resource } = $resource(asyncFunction, () => ({
-      source: source.value
-    }),
+        source: source.value
+      }),
       {
         initialValue: "initial",
         fetchWhen: () => false
@@ -568,5 +569,33 @@ describe("storing values in cookies", () => {
     });
     signal.value = 1;
     expect(signal.value).toBe(1);
+  });
+});
+
+describe("when receiving a value from the empApi", () => {
+  it("should update the signal when the message is received", async () => {
+    function handleEvent(event?: { data: { payload: Record<string, unknown> } }) {
+      return event?.data.payload.Message__c ?? "";
+    }
+
+    const signal = $signal("", {
+      storage: useEventBus("/event/TestChannel__e", handleEvent)
+    });
+
+    await new Promise(process.nextTick);
+
+    expect(signal.value).toBe("");
+
+    await jestMockPublish("/event/TestChannel__e", {
+      data: {
+        payload: {
+          Message__c: "Hello World!"
+        }
+      }
+    });
+
+    await new Promise(process.nextTick);
+
+    expect(signal.value).toBe("Hello World!");
   });
 });
