@@ -186,7 +186,7 @@ export function useEventBus(channel, toValue, options) {
       _onChange = onChange;
     }
     function unsubscribe(callback) {
-      empApiUnsubscribe(subscription, callback);
+      return empApiUnsubscribe(subscription, callback);
     }
     return createStorage(getter, setter, registerOnChange, unsubscribe);
   };

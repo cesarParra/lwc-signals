@@ -237,7 +237,7 @@ export function useEventBus<T>(channel: string, toValue: (response?: Message) =>
     }
 
     function unsubscribe(callback?: (response?: UnsubscribeResponse) => void) {
-      empApiUnsubscribe(subscription, callback);
+      return empApiUnsubscribe(subscription, callback);
     }
 
     return createStorage(getter, setter, registerOnChange, unsubscribe);
