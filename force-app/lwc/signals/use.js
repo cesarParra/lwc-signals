@@ -1,6 +1,6 @@
-import { subscribe } from "lightning/empApi";
-export function createStorage(get, set, registerOnChange) {
-  return { get, set, registerOnChange };
+import { subscribe, unsubscribe as empApiUnsubscribe } from "lightning/empApi";
+export function createStorage(get, set, registerOnChange, unsubscribe) {
+  return { get, set, registerOnChange, unsubscribe };
 }
 export function useInMemoryStorage(value) {
   let _value = value;
@@ -105,15 +105,21 @@ export function useEventListener(type) {
     return createStorage(getter, setter, registerOnChange);
   };
 }
-// TODO: How to unsubscribe
-export function useEventBus(channel, toValue) {
+// TODO: Document through JSDocs
+// TODO: Document in README
+// TODO: Pass a subscription callback
+export function useEventBus(channel, toValue, replayId = -1) {
   return function (value) {
     let _value = value;
     let _onChange;
-    subscribe(channel, -2, (response) => {
-      console.log("Received message", response);
-      _value = toValue(response?.data.payload);
+    let subscription = {};
+    // TODO: Check if the empApi is available
+    subscribe(channel, replayId, (response) => {
+      _value = toValue(response);
       _onChange?.();
+    }).then((sub) => {
+      subscription = sub;
+      console.log(subscription);
     });
     function getter() {
       return _value;
@@ -124,6 +130,9 @@ export function useEventBus(channel, toValue) {
     function registerOnChange(onChange) {
       _onChange = onChange;
     }
-    return createStorage(getter, setter, registerOnChange);
+    function unsubscribe(callback) {
+      empApiUnsubscribe(subscription, callback);
+    }
+    return createStorage(getter, setter, registerOnChange, unsubscribe);
   };
 }

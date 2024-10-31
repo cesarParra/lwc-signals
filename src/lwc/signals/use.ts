@@ -1,17 +1,19 @@
-import { subscribe, type Message } from "lightning/empApi";
+import { Message, subscribe, unsubscribe as empApiUnsubscribe, UnsubscribeResponse } from "lightning/empApi";
 
 export type State<T> = {
   get: () => T;
   set: (newValue: T) => void;
   registerOnChange?: (f: VoidFunction) => void;
+  unsubscribe?: () => void;
 }
 
 export function createStorage<T>(
   get: () => T,
   set: (newValue: T) => void,
-  registerOnChange?: (f: VoidFunction) => void
+  registerOnChange?: (f: VoidFunction) => void,
+  unsubscribe?: () => void
 ): State<T> {
-  return { get, set, registerOnChange };
+  return { get, set, registerOnChange, unsubscribe };
 }
 
 export function useInMemoryStorage<T>(value: T): State<T> {
@@ -142,16 +144,22 @@ export function useEventListener<T, K extends keyof DocumentEventMap>(
   };
 }
 
-// TODO: How to unsubscribe
-export function useEventBus<T>(channel: string, toValue: (response?: unknown) => T) {
+// TODO: Document through JSDocs
+// TODO: Document in README
+// TODO: Pass a subscription callback
+export function useEventBus<T>(channel: string, toValue: (response?: Message) => T, replayId: number = -1) {
   return function(value: T) {
     let _value: T = value;
     let _onChange: VoidFunction | undefined;
+    let subscription = {};
 
-    subscribe(channel, -2, (response) => {
-      console.log("Received message", response);
-      _value = toValue(response?.data.payload);
+    // TODO: Check if the empApi is available
+    subscribe(channel, replayId, (response?: Message) => {
+      _value = toValue(response);
       _onChange?.();
+    }).then((sub) => {
+      subscription = sub;
+      console.log(subscription);
     });
 
     function getter() {
@@ -166,6 +174,10 @@ export function useEventBus<T>(channel: string, toValue: (response?: unknown) =>
       _onChange = onChange;
     }
 
-    return createStorage(getter, setter, registerOnChange);
+    function unsubscribe(callback?: (response?: UnsubscribeResponse) => void) {
+      empApiUnsubscribe(subscription, callback);
+    }
+
+    return createStorage(getter, setter, registerOnChange, unsubscribe);
   }
 }

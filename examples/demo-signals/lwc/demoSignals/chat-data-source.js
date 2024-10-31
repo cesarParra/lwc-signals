@@ -1,9 +1,13 @@
 import { $signal, useEventBus } from "c/signals";
 
 export const messageEvent = $signal(undefined, {
-  storage: useEventBus("/event/ChatMessage__e", (response) => ({
-    message: response.Message__c,
-    sender: response.Sender__c,
-    time: response.Time__c
-  }))
+  storage: useEventBus(
+    "/event/ChatMessage__e",
+    ({ data }) => ({
+      message: data.payload.Message__c,
+      sender: data.payload.Sender__c,
+      time: data.payload.Time__c
+    }),
+    -2
+  )
 });

@@ -1,28 +1,20 @@
 declare module "lightning/empApi" {
-  /** Response to a "subscribe" call. */
   export interface SubscribeResponse {
-    /** The value MUST be /meta/unsubscribe */
     channel: string;
-    /** A boolean indicating the success or failure of the subscribe */
     successful: boolean;
-    /** A channel name or a channel pattern or an array of channel names and channel patterns. */
     subscription: string;
-    /** A string with the description of the reason for the failure */
     error: string;
-    /** The client ID returned in the handshake response */
     clientId: string;
-    /** The same value as the request message ID */
     id: string;
   }
 
-  export interface Message<T extends Record<string, unknown>> {
+  export interface Message {
     channel: string;
     data: {
       event: {
         replayId: number;
       },
-      payload: T & { CreatedById: string; CreatedDate: string },
-      schema: string;
+      payload: Record<string, unknown> & { CreatedById: string; CreatedDate: string },
     };
   }
 
@@ -36,19 +28,13 @@ declare module "lightning/empApi" {
    * new events after that ID.
    * @param onMessageCallback A callback function that's invoked for every event received.
    */
-  export function subscribe<T extends Record<string, unknown>>(channel: string, replayId: number, onMessageCallback: (response?: Message<T>) => void): Promise<SubscribeResponse>;
+  export function subscribe(channel: string, replayId: number, onMessageCallback: (response?: Message) => void): Promise<SubscribeResponse>;
 
-  /** Response to an "unsubscribe" call. */
   export interface UnsubscribeResponse {
-    /** The value MUST be /meta/unsubscribe */
     channel: string;
-    /** A boolean indicating the success or failure of the unsubscribe operation */
     successful: boolean;
-    /** A string with the description of the reason for the failure */
     error: string;
-    /** The client ID returned in the handshake response */
     clientId: string;
-    /** The same value as the request message ID */
     id: string;
   }
 
@@ -61,7 +47,7 @@ declare module "lightning/empApi" {
    * @param subscription Subscription object that the subscribe call returned.
    * @param callback A callback function that's called with a server response for the unsubscribe call.
    */
-  export function unsubscribe(subscription: object, callback?: (response?: unknown) => void): Promise<UnsubscribeResponse>;
+  export function unsubscribe(subscription: object, callback?: (response?: UnsubscribeResponse) => void): Promise<UnsubscribeResponse>;
 
   /**
    * Registers a listener to errors that the server returns.

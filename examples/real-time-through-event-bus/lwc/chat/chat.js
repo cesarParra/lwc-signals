@@ -56,4 +56,10 @@ export default class Chat extends LightningElement {
       sender: this.sender
     });
   }
+
+  unsub() {
+    messageEvent.unsubscribe((res) =>
+      console.log("Unsubscribed from message channel", res)
+    );
+  }
 }
