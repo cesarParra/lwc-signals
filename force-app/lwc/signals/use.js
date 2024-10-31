@@ -1,4 +1,8 @@
-import { subscribe, unsubscribe as empApiUnsubscribe } from "lightning/empApi";
+import {
+  subscribe,
+  unsubscribe as empApiUnsubscribe,
+  isEmpEnabled
+} from "lightning/empApi";
 export function createStorage(get, set, registerOnChange, unsubscribe) {
   return { get, set, registerOnChange, unsubscribe };
 }
@@ -107,19 +111,26 @@ export function useEventListener(type) {
 }
 // TODO: Document through JSDocs
 // TODO: Document in README
-// TODO: Pass a subscription callback
-export function useEventBus(channel, toValue, replayId = -1) {
+export function useEventBus(channel, toValue, options) {
   return function (value) {
     let _value = value;
     let _onChange;
     let subscription = {};
-    // TODO: Check if the empApi is available
-    subscribe(channel, replayId, (response) => {
-      _value = toValue(response);
-      _onChange?.();
-    }).then((sub) => {
-      subscription = sub;
-      console.log(subscription);
+    const replayId = options?.replayId ?? -1;
+    isEmpEnabled().then((enabled) => {
+      if (!enabled) {
+        console.error(
+          `EMP API is not enabled, cannot subscribe to channel ${channel}`
+        );
+        return;
+      }
+      subscribe(channel, replayId, (response) => {
+        _value = toValue(response);
+        _onChange?.();
+      }).then((sub) => {
+        subscription = sub;
+        options?.onSubscribe?.(sub);
+      });
     });
     function getter() {
       return _value;

@@ -8,6 +8,9 @@ export const messageEvent = $signal(undefined, {
       sender: data.payload.Sender__c,
       time: data.payload.Time__c
     }),
-    -2
+    {
+      replayId: -2,
+      onSubscribe: (message) => console.log("Subscribed to message", message)
+    }
   )
 });
