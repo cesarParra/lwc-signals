@@ -9,5 +9,5 @@
     "forceConsistentCasingInFileNames": true,
     "moduleResolution": "Bundler"
   },
-  "exclude": ["node_modules", "./*.ts", "src/**/*.test.ts"]
+  "exclude": ["node_modules", "./*.ts", "src/**/*.test.ts", "**/__mocks__/*"]
 }

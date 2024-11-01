@@ -12,7 +12,8 @@ const config: JestConfigWithTsJest = {
   },
   extensionsToTreatAsEsm: [".ts"],
   moduleNameMapper: {
-    "^(\\.{1,2}/.*)\\.js$": "$1"
+    "^(\\.{1,2}/.*)\\.js$": "$1",
+    "lightning/empApi": "<rootDir>/src/__mocks__/lightning/empApi.ts",
   },
   testEnvironment: "jsdom",
 };

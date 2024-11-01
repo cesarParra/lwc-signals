@@ -720,7 +720,8 @@ The following storage helpers are available by default:
 - `useEventListener(eventName: string)`: Dispatches a CustomEvent to the `window` object with the given event name
   whenever the signal changes. It also listens for events with the given name and updates the signal when the event is
   received. This is useful for when you want to communicate changes to components that for some reason don't
-  have access to the signal (for example, a component that cannot import the signal because it lives in a different namespace).
+  have access to the signal (for example, a component that cannot import the signal because it lives in a different
+  namespace).
 
   The event sent and expected to be received has the following format:
 
@@ -752,6 +753,67 @@ The following storage helpers are available by default:
   handleSomeChange() {
     window.dispatchEvent(new CustomEvent("counter-change", { detail: { data: 1 } }));
   }
+  ```
+
+- `useEventBus(channel: string, toValue: (response?: object) => T, options: object)`: Subscribes to the event bus
+  channel (e.g. platform event, change data capture, etc.).
+
+  - The `channel` parameter is the event bus channel to subscribe to.
+  - The `toValue` function is used to convert the response from the event bus to the desired value.
+
+  ```javascript
+  import { $signal, useEventBus } from "c/signals";
+  export const receivedEvent = $signal(undefined, {
+    storage: useEventBus("/event/PlatEvent__e", ({ data }) => ({
+      message: data.payload.Message__c,
+      sender: data.payload.Sender__c,
+      time: data.payload.Time__c
+    }))
+  });
+  ```
+
+  The passed in argument will be the message received from the event bus, which
+  is of the following shape:
+
+  ```javascript
+  {
+      channel: string;
+      data: {
+        event: {
+          replayId: number;
+        },
+        payload: object,
+      };
+    }
+  ```
+
+  The `payload` key will contain the actual data of the event. For example,
+  if using a platform event, this will contain the fields of the platform event.
+
+  - The `options` (optional) parameter is an object that can contain the following properties (all of them optional):
+    - `replayId` The replay ID to start from, defaults to -1. When -2 is passed, it will replay from the last saved event.
+    - `onSubscribe` A callback function called when the subscription is successful.
+    - `onError` A callback function called when an error response is received from the server for
+      handshake, connect, subscribe, and unsubscribe meta channels.
+
+  **Unsubscribing from the event bus**
+
+  When using the `useEventBus` storage, the signal will hold a special function called `unsubscribe` that you can call
+  to unsubscribe from the event bus.
+
+  ```javascript
+  import { $signal, useEventBus } from "c/signals";
+
+  const receivedEvent = $signal(undefined, {
+    storage: useEventBus("/event/PlatEvent__e", ({ data }) => ({
+      message: data.payload.Message__c,
+      sender: data.payload.Sender__c,
+      time: data.payload.Time__c
+    }))
+  });
+
+  // Unsubscribe from the event bus
+  receivedEvent.unsubscribe();
   ```
 
 ### Creating a custom storage
