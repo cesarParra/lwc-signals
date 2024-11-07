@@ -83,7 +83,7 @@ boilerplate code to manage each wire adapter for each component.
 `LWC Signals` provides a simple way to create reactive data signals that can be used to share state between components
 without the need to broadcast messages or manage subscriptions and wires.
 
-## Creating a signals
+## Creating a signal
 
 > 👀 You can find the full working code for the following example in the `examples`
 > folder.
