@@ -148,7 +148,7 @@ import { $computed } from "c/signals";
 import { counter } from "c/counter-signals";
 
 export default class Display extends LightningElement {
-  counter = $computed(counter, () => (this.counter = counter.value)).value;
+  counter = $computed(() => (this.counter = counter.value)).value;
 }
 ```
 
