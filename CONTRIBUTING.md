@@ -72,7 +72,7 @@ git push --force-with-lease new-feature-or-fix
 A PR can only be merged into master by a maintainer if:
 
 - It is passing CI.
-- It has been approved by at least two maintainers. If it was a maintainer who opened the PR, only one extra approval is needed.
+- It has been approved by a maintainer
 - It has no requested changes.
 - It is up to date with current master.
 
