@@ -1,5 +1,6 @@
 import { useInMemoryStorage } from "./use";
 import { debounce } from "./utils";
+import { ObservableMembrane } from "./observable-membrane/main";
 const context = [];
 function _getCurrentObserver() {
     return context[context.length - 1];
@@ -83,7 +84,13 @@ function $computed(fn) {
  * @param options Options to configure the signal
  */
 function $signal(value, options) {
-    const _storageOption = options?.storage?.(value) ?? useInMemoryStorage(value);
+    const membrane = new ObservableMembrane({
+        valueMutated: () => {
+            console.log('value mutated');
+        }
+    });
+    const state = membrane.getProxy(value);
+    const _storageOption = options?.storage?.(state) ?? useInMemoryStorage(state);
     const subscribers = new Set();
     function getter() {
         const current = _getCurrentObserver();
@@ -96,7 +103,7 @@ function $signal(value, options) {
         if (newValue === _storageOption.get()) {
             return;
         }
-        _storageOption.set(newValue);
+        _storageOption.set(membrane.getProxy(newValue));
         notifySubscribers();
     }
     function notifySubscribers() {

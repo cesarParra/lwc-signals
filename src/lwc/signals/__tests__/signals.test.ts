@@ -15,6 +15,12 @@ describe("signals", () => {
       expect(signal.value).toBe(1);
     });
 
+    test('can update objects', () => {
+      const signal = $signal({ a: 1 });
+      signal.value.a = 2;
+      expect(signal.value.a).toBe(2);
+    });
+
     test("can debounce setting a signal value", async () => {
       const debouncedSignal = $signal(0, {
         debounce: 100

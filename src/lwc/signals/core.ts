@@ -1,5 +1,6 @@
 import { useInMemoryStorage, State } from "./use";
 import { debounce } from "./utils";
+import { ObservableMembrane } from "./observable-membrane/main";
 
 type ReadOnlySignal<T> = {
   readonly value: T;
@@ -109,7 +110,14 @@ type SignalOptions<T> = {
  * @param options Options to configure the signal
  */
 function $signal<T>(value: T, options?: Partial<SignalOptions<T>>): Signal<T> & Omit<ReturnType<StorageFn<T>>, "get" | "set"> {
-  const _storageOption: State<T> = options?.storage?.(value) ?? useInMemoryStorage(value);
+  const membrane = new ObservableMembrane({
+    valueMutated: () => {
+      notifySubscribers();
+    }
+  });
+  const state = membrane.getProxy(value);
+
+  const _storageOption: State<T> = options?.storage?.(state) ?? useInMemoryStorage(state);
   const subscribers: Set<VoidFunction> = new Set();
 
   function getter() {
@@ -124,7 +132,7 @@ function $signal<T>(value: T, options?: Partial<SignalOptions<T>>): Signal<T> & 
     if (newValue === _storageOption.get()) {
       return;
     }
-    _storageOption.set(newValue);
+    _storageOption.set(membrane.getProxy(newValue));
     notifySubscribers();
   }
 
