@@ -17,8 +17,11 @@ describe("signals", () => {
 
     test('can update objects', () => {
       const signal = $signal({ a: 1 });
+      const computedFromSignal = $computed(() => signal.value.a);
+      expect(computedFromSignal.value).toBe(1);
+
       signal.value.a = 2;
-      expect(signal.value.a).toBe(2);
+      expect(computedFromSignal.value).toBe(2);
     });
 
     test("can debounce setting a signal value", async () => {
