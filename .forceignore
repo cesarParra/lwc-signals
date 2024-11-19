@@ -20,3 +20,10 @@ appMenus/
 **/dashboards/**
 
 **/tw/input.css
+
+# Added by Illuminated Cloud
+/.illuminatedCloud/
+**/*.ts
+**/tsconfig*.json
+**/*.tsbuildinfo
+**/eslint.config.mjs

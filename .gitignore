@@ -44,7 +44,14 @@ $RECYCLE.BIN/
 **/.venv/
 **/venv/
 
-IlluminatedCloud/
+
+
+# Added by Illuminated Cloud
 .idea/
-/.localdev/
 /.illuminatedCloud/
+.localdev/
+/IlluminatedCloud/
+/out/
+target/
+**/tsconfig*.json
+**/*.tsbuildinfo
