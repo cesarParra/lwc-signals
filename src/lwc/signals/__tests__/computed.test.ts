@@ -12,8 +12,8 @@ describe("computed values", () => {
     expect(computed.value).toBe(2);
   });
 
-  test("are recomputed when the source is an object and has changes", () => {
-    const signal = $signal({a: 0});
+  test("are recomputed when the source is an object and has changes when the signal is being tracked", () => {
+    const signal = $signal({ a: 0 }, { track: true });
     const computed = $computed(() => signal.value.a * 2);
     expect(computed.value).toBe(0);
 
@@ -22,14 +22,34 @@ describe("computed values", () => {
     expect(computed.value).toBe(2);
   });
 
-  test("are recomputed when the source is an array with gets a push", () => {
-    const signal = $signal([0]);
+  test("are not recomputed when the source is an object and has changes when the signal is not being tracked", () => {
+    const signal = $signal({ a: 0 });
+    const computed = $computed(() => signal.value.a * 2);
+    expect(computed.value).toBe(0);
+
+    signal.value.a = 1;
+
+    expect(computed.value).toBe(0);
+  });
+
+  test("are recomputed when the source is an array with gets a push when the signal is tracked", () => {
+    const signal = $signal([0], { track: true });
     const computed = $computed(() => signal.value.length);
     expect(computed.value).toBe(1);
 
     signal.value.push(1);
 
     expect(computed.value).toBe(2);
+  });
+
+  test("are not recomputed when the source is an array with gets a push when the signal is not tracked", () => {
+    const signal = $signal([0]);
+    const computed = $computed(() => signal.value.length);
+    expect(computed.value).toBe(1);
+
+    signal.value.push(1);
+
+    expect(computed.value).toBe(1);
   });
 
   test("do not recompute when the same value is set in the source signal", () => {

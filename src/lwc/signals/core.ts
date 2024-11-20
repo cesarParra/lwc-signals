@@ -84,7 +84,51 @@ type StorageFn<T> = (value: T) => State<T> & { [key: string]: unknown };
 type SignalOptions<T> = {
   storage: StorageFn<T>;
   debounce?: number;
+  track?: boolean;
 };
+
+interface TrackableState<T> {
+  get(): T;
+  set(value: T): void;
+}
+
+class UntrackedState<T> implements TrackableState<T> {
+  private _value: T;
+
+  constructor(value: T) {
+    this._value = value;
+  }
+
+  get() {
+    return this._value;
+  }
+
+  set(value: T) {
+    this._value = value;
+  }
+}
+
+class TrackedState<T> implements TrackableState<T> {
+  private _value: T;
+  private _membrane: ObservableMembrane;
+
+  constructor(value: T, onChangeCallback: VoidFunction) {
+    this._membrane = new ObservableMembrane({
+      valueMutated() {
+        onChangeCallback();
+      }
+    });
+    this._value = this._membrane.getProxy(value);
+  }
+
+  get() {
+    return this._value;
+  }
+
+  set(value: T) {
+    this._value = this._membrane.getProxy(value);
+  }
+}
 
 /**
  * Creates a new signal with the provided value. A signal is a reactive
@@ -113,15 +157,14 @@ function $signal<T>(
   value: T,
   options?: Partial<SignalOptions<T>>
 ): Signal<T> & Omit<ReturnType<StorageFn<T>>, "get" | "set"> {
-  const membrane = new ObservableMembrane({
-    valueMutated() {
-      notifySubscribers();
-    }
-  });
-  const state = membrane.getProxy(value);
+  // Defaults to not tracking changes through the Observable Membrane.
+  // The Observable Membrane proxies the passed in object to track changes
+  // to objects and arrays, but this introduces a performance overhead.
+  const shouldTrack = options?.track ?? false;
+  const trackableState: TrackableState<T> = shouldTrack ? new TrackedState(value, notifySubscribers) : new UntrackedState(value);
 
   const _storageOption: State<T> =
-    options?.storage?.(state) ?? useInMemoryStorage(state);
+    options?.storage?.(trackableState.get()) ?? useInMemoryStorage(trackableState.get());
   const subscribers: Set<VoidFunction> = new Set();
 
   function getter() {
@@ -136,7 +179,8 @@ function $signal<T>(
     if (newValue === _storageOption.get()) {
       return;
     }
-    _storageOption.set(membrane.getProxy(newValue));
+    trackableState.set(newValue);
+    _storageOption.set(trackableState.get());
     notifySubscribers();
   }
 
