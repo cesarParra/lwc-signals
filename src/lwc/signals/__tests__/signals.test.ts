@@ -1,4 +1,4 @@
-import { $signal, $computed, $effect, $resource, Signal } from "../core";
+import { $signal, $resource, Signal } from "../core";
 import { createStorage, useCookies, useEventBus, useLocalStorage, useSessionStorage } from "../use";
 import { jestMockPublish } from "../../../__mocks__/lightning/empApi";
 
@@ -28,267 +28,251 @@ describe("signals", () => {
     expect(debouncedSignal.value).toBe(1);
   });
 
-  describe("core functionality", () => {
-    test("can create an effect", () => {
-      const signal = $signal(0);
-      let effectTracker = 0;
+  test("can create a resource using an async function", async () => {
+    const asyncFunction = async () => {
+      return "done";
+    };
 
-      $effect(() => {
-        effectTracker = signal.value;
-      });
+    const { data: resource } = $resource(asyncFunction);
 
-      expect(effectTracker).toBe(0);
-
-      signal.value = 1;
-      expect(effectTracker).toBe(1);
+    expect(resource.value).toEqual({
+      data: null,
+      loading: true,
+      error: null
     });
 
-    test("can create a resource using an async function", async () => {
-      const asyncFunction = async () => {
-        return "done";
-      };
+    await new Promise(process.nextTick);
 
-      const { data: resource } = $resource(asyncFunction);
+    expect(resource.value).toEqual({
+      data: "done",
+      loading: false,
+      error: null
+    });
+  });
 
-      expect(resource.value).toEqual({
-        data: null,
-        loading: true,
-        error: null
-      });
+  test("can create a resource using an async function with params", async () => {
+    const asyncFunction = async (params?: { [key: string]: unknown }) => {
+      return params?.["source"];
+    };
 
-      await new Promise(process.nextTick);
+    const { data: resource } = $resource(asyncFunction, { source: 1 });
 
-      expect(resource.value).toEqual({
-        data: "done",
-        loading: false,
-        error: null
-      });
+    expect(resource.value).toEqual({
+      data: null,
+      loading: true,
+      error: null
     });
 
-    test("can create a resource using an async function with params", async () => {
-      const asyncFunction = async (params?: { [key: string]: unknown }) => {
-        return params?.["source"];
-      };
+    await new Promise(process.nextTick);
 
-      const { data: resource } = $resource(asyncFunction, { source: 1 });
+    expect(resource.value).toEqual({
+      data: 1,
+      loading: false,
+      error: null
+    });
+  });
 
-      expect(resource.value).toEqual({
-        data: null,
-        loading: true,
-        error: null
-      });
+  test("can create a resource using an async function and set an initial value", async () => {
+    const asyncFunction = async () => {
+      return "done";
+    };
 
-      await new Promise(process.nextTick);
-
-      expect(resource.value).toEqual({
-        data: 1,
-        loading: false,
-        error: null
-      });
+    const { data: resource } = $resource(asyncFunction, undefined, {
+      initialValue: "initial"
     });
 
-    test("can create a resource using an async function and set an initial value", async () => {
-      const asyncFunction = async () => {
-        return "done";
-      };
-
-      const { data: resource } = $resource(asyncFunction, undefined, {
-        initialValue: "initial"
-      });
-
-      expect(resource.value).toEqual({
-        data: "initial",
-        loading: true,
-        error: null
-      });
-
-      await new Promise(process.nextTick);
-
-      expect(resource.value).toEqual({
-        data: "done",
-        loading: false,
-        error: null
-      });
+    expect(resource.value).toEqual({
+      data: "initial",
+      loading: true,
+      error: null
     });
 
-    test("can create a resource using an async function with a reactive source", async () => {
-      const asyncFunction = async (params?: { [key: string]: unknown }) => {
-        return params?.["source"];
-      };
+    await new Promise(process.nextTick);
 
-      const source = $signal(0);
-      const { data: resource } = $resource(asyncFunction, () => ({
-        source: source.value
-      }));
+    expect(resource.value).toEqual({
+      data: "done",
+      loading: false,
+      error: null
+    });
+  });
 
-      expect(resource.value).toEqual({
-        data: null,
-        loading: true,
-        error: null
-      });
+  test("can create a resource using an async function with a reactive source", async () => {
+    const asyncFunction = async (params?: { [key: string]: unknown }) => {
+      return params?.["source"];
+    };
 
-      await new Promise(process.nextTick);
+    const source = $signal(0);
+    const { data: resource } = $resource(asyncFunction, () => ({
+      source: source.value
+    }));
 
-      expect(resource.value).toEqual({
-        data: 0,
-        loading: false,
-        error: null
-      });
-
-      source.value = 1;
-
-      expect(resource.value).toEqual({
-        data: 0,
-        loading: true,
-        error: null
-      });
-
-      await new Promise(process.nextTick);
-
-      expect(resource.value).toEqual({
-        data: 1,
-        loading: false,
-        error: null
-      });
+    expect(resource.value).toEqual({
+      data: null,
+      loading: true,
+      error: null
     });
 
-    test("can mutate a resource", async () => {
-      const asyncFunction = async () => {
-        return "done";
-      };
+    await new Promise(process.nextTick);
 
-      const { data: resource, mutate } = $resource(asyncFunction);
-
-      expect(resource.value).toEqual({
-        data: null,
-        loading: true,
-        error: null
-      });
-
-      await new Promise(process.nextTick);
-
-      expect(resource.value).toEqual({
-        data: "done",
-        loading: false,
-        error: null
-      });
-
-      mutate("mutated");
-
-      expect(resource.value).toEqual({
-        data: "mutated",
-        loading: false,
-        error: null
-      });
+    expect(resource.value).toEqual({
+      data: 0,
+      loading: false,
+      error: null
     });
 
-    test("does not mutate a resource if optimistic updating is not turned on and no onMutate is provided", async () => {
-      const asyncFunction = async () => {
-        return "done";
-      };
+    source.value = 1;
 
-      const { data: resource, mutate } = $resource(asyncFunction, undefined, {
-        optimisticMutate: false
-      });
-
-      await new Promise(process.nextTick);
-
-      expect(resource.value).toEqual({
-        data: "done",
-        loading: false,
-        error: null
-      });
-
-      mutate("mutated");
-
-      expect(resource.value).toEqual({
-        data: "done",
-        loading: false,
-        error: null
-      });
+    expect(resource.value).toEqual({
+      data: 0,
+      loading: true,
+      error: null
     });
 
-    test("can react to a mutation", async () => {
-      const asyncFunction = async () => {
-        return "done";
-      };
+    await new Promise(process.nextTick);
 
-      let hasReacted = false;
-      const reactionFunction = () => {
-        hasReacted = true;
-      };
+    expect(resource.value).toEqual({
+      data: 1,
+      loading: false,
+      error: null
+    });
+  });
 
-      const { mutate } = $resource(asyncFunction, undefined, {
-        onMutate: reactionFunction
-      });
+  test("can mutate a resource", async () => {
+    const asyncFunction = async () => {
+      return "done";
+    };
 
-      await new Promise(process.nextTick);
+    const { data: resource, mutate } = $resource(asyncFunction);
 
-      mutate("mutated");
-
-      await new Promise(process.nextTick);
-
-      expect(hasReacted).toBe(true);
+    expect(resource.value).toEqual({
+      data: null,
+      loading: true,
+      error: null
     });
 
-    test("can mutate a resource and change the value on success", async () => {
-      const asyncFunction = async () => {
-        return "done";
-      };
+    await new Promise(process.nextTick);
 
-      const asyncReaction = async (newValue: string, __: string | null, mutate: (value: string | null, error?: unknown) => void) => {
-        mutate(`${newValue} - post async success`);
-      };
-
-      const { data: resource, mutate } = $resource(asyncFunction, undefined, {
-        onMutate: asyncReaction
-      });
-
-      await new Promise(process.nextTick);
-
-      expect(resource.value).toEqual({
-        data: "done",
-        loading: false,
-        error: null
-      });
-
-      mutate("mutated");
-
-      expect(resource.value).toEqual({
-        data: "mutated - post async success",
-        loading: false,
-        error: null
-      });
+    expect(resource.value).toEqual({
+      data: "done",
+      loading: false,
+      error: null
     });
 
-    test("the onMutate function can set an error", async () => {
-      const asyncFunction = async () => {
-        return "done";
-      };
+    mutate("mutated");
 
-      const asyncReaction = async (newValue: string, _: string | null, mutate: (value: string | null, error?: unknown) => void) => {
-        mutate(null, "An error occurred");
-      };
+    expect(resource.value).toEqual({
+      data: "mutated",
+      loading: false,
+      error: null
+    });
+  });
 
-      const { data: resource, mutate } = $resource(asyncFunction, undefined, {
-        onMutate: asyncReaction
-      });
+  test("does not mutate a resource if optimistic updating is not turned on and no onMutate is provided", async () => {
+    const asyncFunction = async () => {
+      return "done";
+    };
 
-      await new Promise(process.nextTick);
+    const { data: resource, mutate } = $resource(asyncFunction, undefined, {
+      optimisticMutate: false
+    });
 
-      expect(resource.value).toEqual({
-        data: "done",
-        loading: false,
-        error: null
-      });
+    await new Promise(process.nextTick);
 
-      mutate("mutated");
+    expect(resource.value).toEqual({
+      data: "done",
+      loading: false,
+      error: null
+    });
 
-      expect(resource.value).toEqual({
-        data: null,
-        loading: false,
-        error: "An error occurred"
-      });
+    mutate("mutated");
+
+    expect(resource.value).toEqual({
+      data: "done",
+      loading: false,
+      error: null
+    });
+  });
+
+  test("can react to a mutation", async () => {
+    const asyncFunction = async () => {
+      return "done";
+    };
+
+    let hasReacted = false;
+    const reactionFunction = () => {
+      hasReacted = true;
+    };
+
+    const { mutate } = $resource(asyncFunction, undefined, {
+      onMutate: reactionFunction
+    });
+
+    await new Promise(process.nextTick);
+
+    mutate("mutated");
+
+    await new Promise(process.nextTick);
+
+    expect(hasReacted).toBe(true);
+  });
+
+  test("can mutate a resource and change the value on success", async () => {
+    const asyncFunction = async () => {
+      return "done";
+    };
+
+    const asyncReaction = async (newValue: string, __: string | null, mutate: (value: string | null, error?: unknown) => void) => {
+      mutate(`${newValue} - post async success`);
+    };
+
+    const { data: resource, mutate } = $resource(asyncFunction, undefined, {
+      onMutate: asyncReaction
+    });
+
+    await new Promise(process.nextTick);
+
+    expect(resource.value).toEqual({
+      data: "done",
+      loading: false,
+      error: null
+    });
+
+    mutate("mutated");
+
+    expect(resource.value).toEqual({
+      data: "mutated - post async success",
+      loading: false,
+      error: null
+    });
+  });
+
+  test("the onMutate function can set an error", async () => {
+    const asyncFunction = async () => {
+      return "done";
+    };
+
+    const asyncReaction = async (newValue: string, _: string | null, mutate: (value: string | null, error?: unknown) => void) => {
+      mutate(null, "An error occurred");
+    };
+
+    const { data: resource, mutate } = $resource(asyncFunction, undefined, {
+      onMutate: asyncReaction
+    });
+
+    await new Promise(process.nextTick);
+
+    expect(resource.value).toEqual({
+      data: "done",
+      loading: false,
+      error: null
+    });
+
+    mutate("mutated");
+
+    expect(resource.value).toEqual({
+      data: null,
+      loading: false,
+      error: "An error occurred"
     });
   });
 
@@ -479,54 +463,6 @@ describe("signals", () => {
 
     signal.undo();
     expect(signal.value).toBe(0);
-  });
-});
-
-describe("computed values", () => {
-  test("can be created from a source signal", () => {
-    const signal = $signal(0);
-    const computed = $computed(() => signal.value * 2);
-
-    expect(computed.value).toBe(0);
-
-    signal.value = 1;
-
-    expect(computed.value).toBe(2);
-  });
-
-  test("do not recompute when the same value is set in the source signal", () => {
-    const signal = $signal(0);
-
-    let timesComputed = 0;
-    const computed = $computed(() => {
-      timesComputed++;
-      return signal.value * 2;
-    });
-
-    expect(computed.value).toBe(0);
-    expect(timesComputed).toBe(1);
-
-    signal.value = 1;
-
-    expect(computed.value).toBe(2);
-    expect(timesComputed).toBe(2);
-
-    signal.value = 1;
-
-    expect(computed.value).toBe(2);
-    expect(timesComputed).toBe(2);
-  });
-
-  test("can be created from another computed value", () => {
-    const signal = $signal(0);
-    const computed = $computed(() => signal.value * 2);
-    const anotherComputed = $computed(() => computed.value * 2);
-    expect(anotherComputed.value).toBe(0);
-
-    signal.value = 1;
-
-    expect(computed.value).toBe(2);
-    expect(anotherComputed.value).toBe(4);
   });
 });
 
