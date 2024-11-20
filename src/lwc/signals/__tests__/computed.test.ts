@@ -42,6 +42,37 @@ describe("computed values", () => {
     expect(computed.value).toBe(2);
   });
 
+  test("are recomputed when the source is an array that changes through a pop when the signal is tracked", () => {
+    const signal = $signal([0], { track: true });
+    const computed = $computed(() => signal.value.length);
+    expect(computed.value).toBe(1);
+
+    signal.value.pop();
+
+    expect(computed.value).toBe(0);
+  });
+
+  test("are recomputed when the source is an array that changes through a shift when the signal is tracked", () => {
+    const signal = $signal([0], { track: true });
+    const computed = $computed(() => signal.value.length);
+    expect(computed.value).toBe(1);
+
+    signal.value.shift();
+
+    expect(computed.value).toBe(0);
+  });
+
+  test("are recomputed when the source is an array that changes through a splice when the signal is tracked", () => {
+    const signal = $signal([0], { track: true });
+    const computed = $computed(() => signal.value.length);
+    expect(computed.value).toBe(1);
+
+    signal.value.splice(0, 1);
+
+    expect(computed.value).toBe(0);
+  });
+
+
   test("are not recomputed when the source is an array with gets a push when the signal is not tracked", () => {
     const signal = $signal([0]);
     const computed = $computed(() => signal.value.length);
