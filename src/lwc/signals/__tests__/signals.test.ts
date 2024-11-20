@@ -3,75 +3,32 @@ import { createStorage, useCookies, useEventBus, useLocalStorage, useSessionStor
 import { jestMockPublish } from "../../../__mocks__/lightning/empApi";
 
 describe("signals", () => {
+  test("contain the passed value by default", () => {
+    const signal = $signal(0);
+    expect(signal.value).toBe(0);
+  });
+
+  test("update their value when a new one is set", () => {
+    const signal = $signal(0);
+    signal.value = 1;
+    expect(signal.value).toBe(1);
+  });
+
+  test("delay changing their value when debounced", async () => {
+    const debouncedSignal = $signal(0, {
+      debounce: 100
+    });
+
+    debouncedSignal.value = 1;
+
+    expect(debouncedSignal.value).toBe(0);
+
+    await new Promise(resolve => setTimeout(resolve, 100));
+
+    expect(debouncedSignal.value).toBe(1);
+  });
+
   describe("core functionality", () => {
-    test("should have a default value", () => {
-      const signal = $signal(0);
-      expect(signal.value).toBe(0);
-    });
-
-    test("should update the value", () => {
-      const signal = $signal(0);
-      signal.value = 1;
-      expect(signal.value).toBe(1);
-    });
-
-    test("can debounce setting a signal value", async () => {
-      const debouncedSignal = $signal(0, {
-        debounce: 100
-      });
-
-      debouncedSignal.value = 1;
-
-      expect(debouncedSignal.value).toBe(0);
-
-      await new Promise(resolve => setTimeout(resolve, 100));
-
-      expect(debouncedSignal.value).toBe(1);
-    });
-
-    test("can derive a computed value", () => {
-      const signal = $signal(0);
-      const computed = $computed(() => signal.value * 2);
-      expect(computed.value).toBe(0);
-      signal.value = 1;
-      expect(computed.value).toBe(2);
-    });
-
-    test("does not recompute when the same value is set", () => {
-      const signal = $signal(0);
-
-      let timesComputed = 0;
-      const computed = $computed(() => {
-        timesComputed++;
-        return signal.value * 2;
-      });
-
-      expect(computed.value).toBe(0);
-      expect(timesComputed).toBe(1);
-
-      signal.value = 1;
-
-      expect(computed.value).toBe(2);
-      expect(timesComputed).toBe(2);
-
-      signal.value = 1;
-
-      expect(computed.value).toBe(2);
-      expect(timesComputed).toBe(2);
-    });
-
-    test("can derive a computed value from another computed value", () => {
-      const signal = $signal(0);
-      const computed = $computed(() => signal.value * 2);
-      const anotherComputed = $computed(() => computed.value * 2);
-      expect(anotherComputed.value).toBe(0);
-
-      signal.value = 1;
-
-      expect(computed.value).toBe(2);
-      expect(anotherComputed.value).toBe(4);
-    });
-
     test("can create an effect", () => {
       const signal = $signal(0);
       let effectTracker = 0;
@@ -522,6 +479,54 @@ describe("signals", () => {
 
     signal.undo();
     expect(signal.value).toBe(0);
+  });
+});
+
+describe("computed values", () => {
+  test("can be created from a source signal", () => {
+    const signal = $signal(0);
+    const computed = $computed(() => signal.value * 2);
+
+    expect(computed.value).toBe(0);
+
+    signal.value = 1;
+
+    expect(computed.value).toBe(2);
+  });
+
+  test("do not recompute when the same value is set in the source signal", () => {
+    const signal = $signal(0);
+
+    let timesComputed = 0;
+    const computed = $computed(() => {
+      timesComputed++;
+      return signal.value * 2;
+    });
+
+    expect(computed.value).toBe(0);
+    expect(timesComputed).toBe(1);
+
+    signal.value = 1;
+
+    expect(computed.value).toBe(2);
+    expect(timesComputed).toBe(2);
+
+    signal.value = 1;
+
+    expect(computed.value).toBe(2);
+    expect(timesComputed).toBe(2);
+  });
+
+  test("can be created from another computed value", () => {
+    const signal = $signal(0);
+    const computed = $computed(() => signal.value * 2);
+    const anotherComputed = $computed(() => computed.value * 2);
+    expect(anotherComputed.value).toBe(0);
+
+    signal.value = 1;
+
+    expect(computed.value).toBe(2);
+    expect(anotherComputed.value).toBe(4);
   });
 });
 
