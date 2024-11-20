@@ -1,5 +1,6 @@
 import { useInMemoryStorage, State } from "./use";
 import { debounce } from "./utils";
+import { ObservableMembrane } from "./observable-membrane/observable-membrane";
 
 type ReadOnlySignal<T> = {
   readonly value: T;
@@ -81,8 +82,8 @@ function $computed<T>(fn: ComputedFunction<T>): ReadOnlySignal<T> {
 type StorageFn<T> = (value: T) => State<T> & { [key: string]: unknown };
 
 type SignalOptions<T> = {
-  storage: StorageFn<T>
-  debounce?: number
+  storage: StorageFn<T>;
+  debounce?: number;
 };
 
 /**
@@ -108,8 +109,19 @@ type SignalOptions<T> = {
  * @param value The initial value of the signal
  * @param options Options to configure the signal
  */
-function $signal<T>(value: T, options?: Partial<SignalOptions<T>>): Signal<T> & Omit<ReturnType<StorageFn<T>>, "get" | "set"> {
-  const _storageOption: State<T> = options?.storage?.(value) ?? useInMemoryStorage(value);
+function $signal<T>(
+  value: T,
+  options?: Partial<SignalOptions<T>>
+): Signal<T> & Omit<ReturnType<StorageFn<T>>, "get" | "set"> {
+  const membrane = new ObservableMembrane({
+    valueMutated() {
+      notifySubscribers();
+    }
+  });
+  const state = membrane.getProxy(value);
+
+  const _storageOption: State<T> =
+    options?.storage?.(state) ?? useInMemoryStorage(state);
   const subscribers: Set<VoidFunction> = new Set();
 
   function getter() {
@@ -124,7 +136,7 @@ function $signal<T>(value: T, options?: Partial<SignalOptions<T>>): Signal<T> & 
     if (newValue === _storageOption.get()) {
       return;
     }
-    _storageOption.set(newValue);
+    _storageOption.set(membrane.getProxy(newValue));
     notifySubscribers();
   }
 
@@ -136,25 +148,29 @@ function $signal<T>(value: T, options?: Partial<SignalOptions<T>>): Signal<T> & 
 
   _storageOption.registerOnChange?.(notifySubscribers);
 
-  const debouncedSetter = debounce((newValue) => setter(newValue as T), options?.debounce ?? 0);
-  const returnValue: Signal<T> & Omit<ReturnType<StorageFn<T>>, "get" | "set"> = {
-    ..._storageOption,
-    get value() {
-      return getter();
-    },
-    set value(newValue: T) {
-      if (options?.debounce) {
-        debouncedSetter(newValue);
-      } else {
-        setter(newValue);
-      }
-    },
-    readOnly: {
+  const debouncedSetter = debounce(
+    (newValue) => setter(newValue as T),
+    options?.debounce ?? 0
+  );
+  const returnValue: Signal<T> & Omit<ReturnType<StorageFn<T>>, "get" | "set"> =
+    {
+      ..._storageOption,
       get value() {
         return getter();
+      },
+      set value(newValue: T) {
+        if (options?.debounce) {
+          debouncedSetter(newValue);
+        } else {
+          setter(newValue);
+        }
+      },
+      readOnly: {
+        get value() {
+          return getter();
+        }
       }
-    }
-  };
+    };
 
   // We don't want to expose the `get` and `set` methods, so
   // remove before returning
@@ -182,7 +198,11 @@ type UnknownArgsMap = { [key: string]: unknown };
 
 type MutatorCallback<T> = (value: T | null, error?: unknown) => void;
 
-type OnMutate<T> = (newValue: T, oldValue: T | null, mutate: MutatorCallback<T>) => Promise<void> | void;
+type OnMutate<T> = (
+  newValue: T,
+  oldValue: T | null,
+  mutate: MutatorCallback<T>
+) => Promise<void> | void;
 
 type FetchWhenPredicate = () => boolean;
 
