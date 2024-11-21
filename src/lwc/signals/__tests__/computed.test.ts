@@ -22,6 +22,16 @@ describe("computed values", () => {
     expect(computed.value).toBe(2);
   });
 
+  test("are recomputed when a nested property of the source object changes when the signal is being tracked", () => {
+    const signal = $signal({ a: { b: 0 } }, { track: true });
+    const computed = $computed(() => signal.value.a.b * 2);
+    expect(computed.value).toBe(0);
+
+    signal.value.a.b = 1;
+
+    expect(computed.value).toBe(2);
+  });
+
   test("are not recomputed when the source is an object and has changes when the signal is not being tracked", () => {
     const signal = $signal({ a: 0 });
     const computed = $computed(() => signal.value.a * 2);
