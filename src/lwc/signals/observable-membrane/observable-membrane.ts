@@ -22,10 +22,7 @@ import { ReactiveProxyHandler } from './reactive-handler';
 import { ReadOnlyHandler } from './read-only-handler';
 import { init as initDevFormatter } from './reactive-dev-formatter';
 
-/* istanbul ignore else */
-if (process.env.NODE_ENV !== 'production') {
-    initDevFormatter();
-}
+initDevFormatter();
 
 type ValueObservedCallback = (obj: any, key: ProxyPropertyKey) => void;
 type ValueMutatedCallback = (obj: any, key: ProxyPropertyKey) => void;
@@ -57,10 +54,10 @@ function defaultValueIsObservable(value: any): boolean {
     return proto === ObjectDotPrototype || proto === null || getPrototypeOf(proto) === null;
 }
 
-const defaultValueObserved: ValueObservedCallback = (obj: any, key: ProxyPropertyKey) => {
+const defaultValueObserved: ValueObservedCallback = () => {
     /* do nothing */
 };
-const defaultValueMutated: ValueMutatedCallback = (obj: any, key: ProxyPropertyKey) => {
+const defaultValueMutated: ValueMutatedCallback = () => {
     /* do nothing */
 };
 
@@ -90,7 +87,7 @@ export class ObservableMembrane {
     getProxy(value: any) {
         const unwrappedValue = unwrap(value);
         if (this.valueIsObservable(unwrappedValue)) {
-            // When trying to extract the writable version of a readonly we return the readonly.
+            // When trying to extract the writable version of a readonly, we return the readonly.
             if (this.readOnlyObjectGraph.get(unwrappedValue) === value) {
                 return value;
             }
@@ -105,10 +102,6 @@ export class ObservableMembrane {
             return this.getReadOnlyHandler(value);
         }
         return value;
-    }
-
-    unwrapProxy(p: any) {
-        return unwrap(p);
     }
 
     private getReactiveHandler(value: any): any {

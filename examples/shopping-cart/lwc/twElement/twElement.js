@@ -1,7 +1,7 @@
-import {LightningElement} from 'lwc';
+import { LightningElement } from "lwc";
 import { loadStyle } from "lightning/platformResourceLoader";
 
-import tw from '@salesforce/resourceUrl/tw';
+import tw from "@salesforce/resourceUrl/tw";
 
 export default class TwElement extends LightningElement {
   connectedCallback() {

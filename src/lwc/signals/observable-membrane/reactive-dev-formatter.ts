@@ -20,7 +20,7 @@ import {
     ProxyPropertyKey,
 } from './shared';
 
-// Define globalThis since it's not current defined in by typescript.
+// Define globalThis since it's not currently defined in by TypeScript.
 // https://github.com/tc39/proposal-global
 declare var globalThis: any;
 
@@ -79,7 +79,6 @@ const formatter: DevToolFormatter = {
 
 // Inspired from paulmillr/es6-shim
 // https://github.com/paulmillr/es6-shim/blob/master/es6-shim.js#L176-L185
-/* istanbul ignore next */
 function getGlobal(): any {
     // the only reliable means to get the global object is `Function('return this')()`
     // However, this causes CSP violations in Chrome apps.
@@ -101,12 +100,6 @@ function getGlobal(): any {
 }
 
 export function init() {
-    /* istanbul ignore if */
-    if (process.env.NODE_ENV === 'production') {
-        // this method should never leak to prod
-        throw new ReferenceError();
-    }
-
     const global = getGlobal();
 
     // Custom Formatter for Dev Tools. To enable this, open Chrome Dev Tools
