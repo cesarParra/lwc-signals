@@ -115,8 +115,11 @@ function $signal(value, options) {
     // The Observable Membrane proxies the passed in object to track changes
     // to objects and arrays, but this introduces a performance overhead.
     const shouldTrack = options?.track ?? false;
-    const trackableState = shouldTrack ? new TrackedState(value, notifySubscribers) : new UntrackedState(value);
-    const _storageOption = options?.storage?.(trackableState.get()) ?? useInMemoryStorage(trackableState.get());
+    const trackableState = shouldTrack
+        ? new TrackedState(value, notifySubscribers)
+        : new UntrackedState(value);
+    const _storageOption = options?.storage?.(trackableState.get()) ??
+        useInMemoryStorage(trackableState.get());
     const subscribers = new Set();
     function getter() {
         const current = _getCurrentObserver();

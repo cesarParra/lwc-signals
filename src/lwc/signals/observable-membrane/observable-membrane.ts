@@ -1,7 +1,6 @@
 /* eslint-disable */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
-
 /*
  * Copyright (c) 2023, Salesforce.com, Inc.
  * All rights reserved.
@@ -54,10 +53,10 @@ function defaultValueIsObservable(value: any): boolean {
     return proto === ObjectDotPrototype || proto === null || getPrototypeOf(proto) === null;
 }
 
-const defaultValueObserved: ValueObservedCallback = () => {
+const defaultValueObserved: ValueObservedCallback = (obj: any, key: ProxyPropertyKey) => {
     /* do nothing */
 };
-const defaultValueMutated: ValueMutatedCallback = () => {
+const defaultValueMutated: ValueMutatedCallback = (obj: any, key: ProxyPropertyKey) => {
     /* do nothing */
 };
 
@@ -87,7 +86,7 @@ export class ObservableMembrane {
     getProxy(value: any) {
         const unwrappedValue = unwrap(value);
         if (this.valueIsObservable(unwrappedValue)) {
-            // When trying to extract the writable version of a readonly, we return the readonly.
+            // When trying to extract the writable version of a readonly we return the readonly.
             if (this.readOnlyObjectGraph.get(unwrappedValue) === value) {
                 return value;
             }
@@ -102,6 +101,10 @@ export class ObservableMembrane {
             return this.getReadOnlyHandler(value);
         }
         return value;
+    }
+
+    unwrapProxy(p: any) {
+        return unwrap(p);
     }
 
     private getReactiveHandler(value: any): any {

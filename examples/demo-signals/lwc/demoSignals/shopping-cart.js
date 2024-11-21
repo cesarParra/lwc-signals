@@ -19,14 +19,17 @@ import updateShoppingCart from "@salesforce/apex/ShoppingCartController.updateSh
  */
 
 // Store each state change in the cart history
-export const cartHistory = $signal([]);
+export const cartHistory = $signal([], {track: true});
+$effect(() => {
+  console.log('cartHistory', JSON.stringify(cartHistory.value, null, 2));
+});
 let isUndoing = false;
 
 export const undoCartChange = () => {
   isUndoing = true;
   const lastState = cartHistory.value[cartHistory.value.length - 1];
   // Remove the last state from the history
-  cartHistory.value = cartHistory.value.slice(0, -1);
+  cartHistory.value.splice(-1, 1);
   if (lastState) {
     updateCart(lastState);
   }
@@ -55,7 +58,7 @@ async function updateCartOnTheServer(newCart, previousValue, mutate) {
 
     // Store the previous value in the history
     if (shouldUpdateHistory) {
-      cartHistory.value = [...cartHistory.value, previousValue];
+      cartHistory.value.push(previousValue);
     }
   } catch (error) {
     mutate(null, error);

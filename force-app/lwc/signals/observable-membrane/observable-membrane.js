@@ -27,10 +27,10 @@ function defaultValueIsObservable(value) {
     const proto = getPrototypeOf(value);
     return proto === ObjectDotPrototype || proto === null || getPrototypeOf(proto) === null;
 }
-const defaultValueObserved = () => {
+const defaultValueObserved = (obj, key) => {
     /* do nothing */
 };
-const defaultValueMutated = () => {
+const defaultValueMutated = (obj, key) => {
     /* do nothing */
 };
 function createShadowTarget(value) {
@@ -51,7 +51,7 @@ export class ObservableMembrane {
     getProxy(value) {
         const unwrappedValue = unwrap(value);
         if (this.valueIsObservable(unwrappedValue)) {
-            // When trying to extract the writable version of a readonly, we return the readonly.
+            // When trying to extract the writable version of a readonly we return the readonly.
             if (this.readOnlyObjectGraph.get(unwrappedValue) === value) {
                 return value;
             }
@@ -65,6 +65,9 @@ export class ObservableMembrane {
             return this.getReadOnlyHandler(value);
         }
         return value;
+    }
+    unwrapProxy(p) {
+        return unwrap(p);
     }
     getReactiveHandler(value) {
         let proxy = this.reactiveObjectGraph.get(value);

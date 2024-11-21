@@ -1,4 +1,4 @@
-import { $computed, $signal } from "../core";
+import { $computed, $signal, $effect } from "../core";
 
 describe("computed values", () => {
   test("can be created from a source signal", () => {
@@ -13,7 +13,7 @@ describe("computed values", () => {
   });
 
   test("are recomputed when the source is an object and has changes when the signal is being tracked", () => {
-    const signal = $signal({ a: 0 }, { track: true });
+    const signal = $signal({ a: 0, b: 1 }, { track: true });
     const computed = $computed(() => signal.value.a * 2);
     expect(computed.value).toBe(0);
 
@@ -71,7 +71,6 @@ describe("computed values", () => {
 
     expect(computed.value).toBe(0);
   });
-
 
   test("are not recomputed when the source is an array with gets a push when the signal is not tracked", () => {
     const signal = $signal([0]);

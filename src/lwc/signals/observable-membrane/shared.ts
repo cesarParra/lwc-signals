@@ -1,7 +1,6 @@
 /* eslint-disable */
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-nocheck
-
 /*
  * Copyright (c) 2023, Salesforce.com, Inc.
  * All rights reserved.

@@ -89,6 +89,7 @@ type SignalOptions<T> = {
 
 interface TrackableState<T> {
   get(): T;
+
   set(value: T): void;
 }
 
@@ -161,10 +162,13 @@ function $signal<T>(
   // The Observable Membrane proxies the passed in object to track changes
   // to objects and arrays, but this introduces a performance overhead.
   const shouldTrack = options?.track ?? false;
-  const trackableState: TrackableState<T> = shouldTrack ? new TrackedState(value, notifySubscribers) : new UntrackedState(value);
+  const trackableState: TrackableState<T> = shouldTrack
+    ? new TrackedState(value, notifySubscribers)
+    : new UntrackedState(value);
 
   const _storageOption: State<T> =
-    options?.storage?.(trackableState.get()) ?? useInMemoryStorage(trackableState.get());
+    options?.storage?.(trackableState.get()) ??
+    useInMemoryStorage(trackableState.get());
   const subscribers: Set<VoidFunction> = new Set();
 
   function getter() {
