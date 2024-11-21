@@ -1,5 +1,6 @@
 import { useInMemoryStorage } from "./use";
 import { debounce } from "./utils";
+import { ObservableMembrane } from "./observable-membrane/observable-membrane";
 const context = [];
 function _getCurrentObserver() {
     return context[context.length - 1];
@@ -59,6 +60,33 @@ function $computed(fn) {
     });
     return computedSignal.readOnly;
 }
+class UntrackedState {
+    constructor(value) {
+        this._value = value;
+    }
+    get() {
+        return this._value;
+    }
+    set(value) {
+        this._value = value;
+    }
+}
+class TrackedState {
+    constructor(value, onChangeCallback) {
+        this._membrane = new ObservableMembrane({
+            valueMutated() {
+                onChangeCallback();
+            }
+        });
+        this._value = this._membrane.getProxy(value);
+    }
+    get() {
+        return this._value;
+    }
+    set(value) {
+        this._value = this._membrane.getProxy(value);
+    }
+}
 /**
  * Creates a new signal with the provided value. A signal is a reactive
  * primitive that can be used to store and update values. Signals can be
@@ -83,7 +111,15 @@ function $computed(fn) {
  * @param options Options to configure the signal
  */
 function $signal(value, options) {
-    const _storageOption = options?.storage?.(value) ?? useInMemoryStorage(value);
+    // Defaults to not tracking changes through the Observable Membrane.
+    // The Observable Membrane proxies the passed in object to track changes
+    // to objects and arrays, but this introduces a performance overhead.
+    const shouldTrack = options?.track ?? false;
+    const trackableState = shouldTrack
+        ? new TrackedState(value, notifySubscribers)
+        : new UntrackedState(value);
+    const _storageOption = options?.storage?.(trackableState.get()) ??
+        useInMemoryStorage(trackableState.get());
     const subscribers = new Set();
     function getter() {
         const current = _getCurrentObserver();
@@ -96,7 +132,8 @@ function $signal(value, options) {
         if (newValue === _storageOption.get()) {
             return;
         }
-        _storageOption.set(newValue);
+        trackableState.set(newValue);
+        _storageOption.set(trackableState.get());
         notifySubscribers();
     }
     function notifySubscribers() {

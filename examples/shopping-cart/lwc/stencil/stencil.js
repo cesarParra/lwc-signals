@@ -1,4 +1,4 @@
-import { LightningElement, api } from 'lwc';
+import { LightningElement, api } from "lwc";
 
 /**
  * Stencil class for `c-stencil` component.
@@ -43,7 +43,7 @@ export default class Stencil extends LightningElement {
    * @access public
    * @default medium
    */
-  @api weightVariant = 'medium';
+  @api weightVariant = "medium";
 
   get containerStyle() {
     return `${this.containerHeight}; ${this.containerWidth}; ${this.containerRadius}`;
@@ -55,7 +55,7 @@ export default class Stencil extends LightningElement {
 
   get containerWidth() {
     if (!this.width) {
-      return 'width: 100%';
+      return "width: 100%";
     }
 
     return `width: ${this.width}px`;
@@ -63,10 +63,10 @@ export default class Stencil extends LightningElement {
 
   get containerRadius() {
     if (!this.circle) {
-      return 'border-radius: 0.25rem';
+      return "border-radius: 0.25rem";
     }
 
-    return 'border-radius: 50%';
+    return "border-radius: 50%";
   }
 
   get items() {
@@ -79,16 +79,16 @@ export default class Stencil extends LightningElement {
   }
 
   get loadingBackgroundColor() {
-    if (this.weightVariant === 'light') {
-      return 'background-color: #f3f2f2';
+    if (this.weightVariant === "light") {
+      return "background-color: #f3f2f2";
     }
 
-    if (this.weightVariant === 'medium') {
-      return 'background-color: #e2e2e2';
+    if (this.weightVariant === "medium") {
+      return "background-color: #e2e2e2";
     }
 
-    if (this.weightVariant === 'dark') {
-      return 'background-color: #ccc';
+    if (this.weightVariant === "dark") {
+      return "background-color: #ccc";
     }
   }
 }

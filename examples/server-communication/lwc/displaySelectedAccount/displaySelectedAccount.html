@@ -3,7 +3,10 @@
   <div>
     <h1>Selected Account</h1>
     <template if:true={account.loading}>
-      <lightning-spinner alternative-text="Loading" size="large"></lightning-spinner>
+      <lightning-spinner
+        alternative-text="Loading"
+        size="large"
+      ></lightning-spinner>
     </template>
 
     <template if:false={account.loading}>

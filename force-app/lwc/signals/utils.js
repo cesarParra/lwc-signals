@@ -4,6 +4,6 @@ export function debounce(func, delay) {
         if (debounceTimer) {
             clearTimeout(debounceTimer);
         }
-        debounceTimer = setTimeout(() => func(...args), delay);
+        debounceTimer = window.setTimeout(() => func(...args), delay);
     };
 }
