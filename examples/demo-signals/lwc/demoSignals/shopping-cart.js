@@ -19,9 +19,9 @@ import updateShoppingCart from "@salesforce/apex/ShoppingCartController.updateSh
  */
 
 // Store each state change in the cart history
-export const cartHistory = $signal([], {track: true});
+export const cartHistory = $signal([], { track: true });
 $effect(() => {
-  console.log('cartHistory', JSON.stringify(cartHistory.value, null, 2));
+  console.log("cartHistory", JSON.stringify(cartHistory.value, null, 2));
 });
 let isUndoing = false;
 

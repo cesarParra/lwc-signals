@@ -1,4 +1,4 @@
-import { $computed, $signal, $effect } from "../core";
+import { $computed, $signal } from "../core";
 
 describe("computed values", () => {
   test("can be created from a source signal", () => {

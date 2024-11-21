@@ -175,6 +175,28 @@ export const counterPlusTwo = $computed(() => counterPlusOne.value + 1);
 
 Because `$computed` values return a signal, you can use them as you would use any other signal.
 
+## Tracking objects and arrays
+
+By default, for a signal to be reactive it needs to be reassigned. This can be cumbersome when dealing with objects
+and arrays, as you would need to reassign the whole object or array to trigger the reactivity.
+
+To improve that experience, you can set the `track` flag to true when creating the signal. This will make the signal
+reactive to changes in the object or array properties.
+
+> 📒 Think about this as using the `@track` decorator in LWC properties. It works the exact same way behind the scenes.
+
+```javascript
+import { $signal } from "c/signals";
+
+const obj = $signal({ x: 1, y: 2 }, { track: true });
+const computedFromObj = $computed(() => obj.value.x + obj.value.y);
+
+// When a value in the object changes, the computed value will automatically update
+obj.value.x = 2;
+
+console.log(computedFromObj.value); // 4
+```
+
 ## Reacting to multiple signals
 
 You can also use multiple signals in a single `computed` and react to changes in any of them.
