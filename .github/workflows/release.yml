@@ -11,6 +11,9 @@ on:
         required: false
         default: "true"
 
+permissions:
+  contents: write
+
 jobs:
   release:
     name: Release
@@ -46,5 +49,4 @@ jobs:
             @semantic-release/exec
             conventional-changelog-conventionalcommits
         env:
-          GITHUB_TOKEN: ${{ secrets.GH_TOKEN }}
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
