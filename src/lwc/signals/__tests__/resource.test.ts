@@ -429,7 +429,7 @@ test("times called", async () => {
     () => source?.value?.data,
     {
       initialValue: "initial",
-      //fetchWhen: () => source.value.data === "done"
+      fetchWhen: () => source.value.data === "done"
     }
   );
   let timesComputedCalled = 0;

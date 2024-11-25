@@ -1,5 +1,5 @@
 import { useInMemoryStorage, State } from "./use";
-import { debounce } from "./utils";
+import { debounce, deepEqual } from "./utils";
 import { ObservableMembrane } from "./observable-membrane/observable-membrane";
 
 type ReadOnlySignal<T> = {
@@ -180,7 +180,10 @@ function $signal<T>(
   }
 
   function setter(newValue: T) {
-    if (newValue === _storageOption.get()) {
+    // TODO: New unit test for resources since this fixes a bug where it was always reevaluating
+    // TODO: because it was checking for object equality, which in the case of a resource was always false.
+    // TODO: The unit test should fail before, and pass with these changes
+    if (deepEqual(newValue, _storageOption.get())) {
       return;
     }
     trackableState.set(newValue);
@@ -398,7 +401,7 @@ function $resource<T>(
       }
     },
     refetch: async () => {
-      //_isInitialLoad = true;
+      _isInitialLoad = true;
       await execute();
     }
   };
