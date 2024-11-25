@@ -392,7 +392,7 @@ Data from a resource signal comes in the following format:
 
 ```typescript
 type AsyncData<T> = {
-  data: T | null; // The data fetched from the server. It is null until the data is fetched
+  data: ReadOnlySignal<T> | null; // The data fetched from the server. It is null until the data is fetched
   loading: boolean; // A boolean that indicates if the data is being fetched
   error: unknown | null; // An error object that is populated if the fetch fails
 };
@@ -606,6 +606,9 @@ export default class ContactList extends LightningElement {
 ```
 
 ### Mutating `$resource` data
+
+Notice that the data returned by a resource is a ReadOnlySignal.
+This means that you cannot mutate the data directly, so how can you update the data?
 
 Besides `refetch`, the `$resource` function also returns a `mutate` function that allows you to mutate the data.
 

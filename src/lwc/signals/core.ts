@@ -270,15 +270,15 @@ type ResourceOptions<T> = {
  * the data. Optionally, you can provide a source object or function that will
  * be used as the parameters for the fetch function.
  *
- * If a function that contain $computed values is provided as the source, the
+ * If a function that contains $computed values is provided as the source, the
  * resource will automatically refetch the data when the computed value changes.
  *
  * `$resource` returns an object with 2 properties:
- * - `data`: a signal that contains the current state of the resource. It has
+ * - `data`: a read-only signal that contains the current state of the resource. It has
  *  the following shape:
  *  ```javascript
  *  {
- *  data: T | null;
+ *  data: ReadOnlySignal<T> | null;
  *  loading: boolean;
  *  error: unknown | null;
  *  }
@@ -332,18 +332,24 @@ function $resource<T>(
   const _fetchWhen = options?.fetchWhen ?? (() => true);
 
   const execute = async () => {
-    _signal.value = loadingState(_value);
-
-    const derivedSource: UnknownArgsMap | undefined =
-      source instanceof Function ? source() : source;
-
-    if (!_isInitialLoad && derivedSource === _previousParams) {
-      // No need to fetch the data again if the params haven't changed
-      return;
-    }
+    const derivedSourceFn: () => UnknownArgsMap | undefined =
+      source instanceof Function ? source : () => source;
 
     try {
-      const data = _fetchWhen() ? await fn(derivedSource) : _value;
+      let data: T | null = null;
+      if (_fetchWhen()) {
+        const derivedSource = derivedSourceFn();
+        if (!_isInitialLoad && derivedSource === _previousParams) {
+          // No need to fetch the data again if the params haven't changed
+          return;
+        }
+        _previousParams = derivedSource;
+        _signal.value = loadingState(_value);
+        data = await fn(derivedSource);
+      } else {
+        data = _value;
+      }
+
       // Keep track of the previous value
       _value = data;
       _signal.value = {
@@ -358,7 +364,6 @@ function $resource<T>(
         error
       };
     } finally {
-      _previousParams = derivedSource;
       _isInitialLoad = false;
     }
   };
@@ -393,7 +398,7 @@ function $resource<T>(
       }
     },
     refetch: async () => {
-      _isInitialLoad = true;
+      //_isInitialLoad = true;
       await execute();
     }
   };

@@ -1,6 +1,9 @@
-import { $resource, $signal } from "../core";
+/* eslint-disable */
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-nocheck
+import { $resource, $signal, $computed, $effect } from "../core";
 
-describe('resources', () => {
+describe("resources", () => {
   test("can can be created by providing an async function", async () => {
     const asyncFunction = async () => {
       return "done";
@@ -194,7 +197,11 @@ describe('resources', () => {
       return "done";
     };
 
-    const asyncReaction = async (newValue: string, __: string | null, mutate: (value: string | null, error?: unknown) => void) => {
+    const asyncReaction = async (
+      newValue: string,
+      __: string | null,
+      mutate: (value: string | null, error?: unknown) => void
+    ) => {
       mutate(`${newValue} - post async success`);
     };
 
@@ -224,7 +231,11 @@ describe('resources', () => {
       return "done";
     };
 
-    const asyncReaction = async (newValue: string, _: string | null, mutate: (value: string | null, error?: unknown) => void) => {
+    const asyncReaction = async (
+      newValue: string,
+      _: string | null,
+      mutate: (value: string | null, error?: unknown) => void
+    ) => {
       mutate(null, "An error occurred");
     };
 
@@ -294,13 +305,16 @@ describe('resources', () => {
     };
 
     const source = $signal("changed");
-    const { data: resource } = $resource(asyncFunction, () => ({
+    const { data: resource } = $resource(
+      asyncFunction,
+      () => ({
         source: source.value
       }),
       {
         initialValue: "initial",
         fetchWhen: () => false
-      });
+      }
+    );
 
     expect(resource.value).toEqual({
       data: "initial",
@@ -323,13 +337,16 @@ describe('resources', () => {
     };
 
     const source = $signal("changed");
-    const { data: resource } = $resource(asyncFunction, () => ({
+    const { data: resource } = $resource(
+      asyncFunction,
+      () => ({
         source: source.value
       }),
       {
         initialValue: "initial",
         fetchWhen: () => true
-      });
+      }
+    );
 
     expect(resource.value).toEqual({
       data: "initial",
@@ -353,13 +370,16 @@ describe('resources', () => {
 
     const flagSignal = $signal(false);
     const source = $signal("changed");
-    const { data: resource } = $resource(asyncFunction, () => ({
+    const { data: resource } = $resource(
+      asyncFunction,
+      () => ({
         source: source.value
       }),
       {
         initialValue: "initial",
         fetchWhen: () => flagSignal.value
-      });
+      }
+    );
 
     expect(resource.value).toEqual({
       data: "initial",
@@ -393,3 +413,33 @@ describe('resources', () => {
   });
 });
 
+test("times called", async () => {
+  const sourceAsync = async () => {
+    return "done";
+  };
+
+  const asyncFunction = async (source: string | null) => {
+    return source;
+  };
+
+  const { data: source } = $resource(sourceAsync);
+  $effect(() => console.log("SOURCE", source.value));
+  const { data: resource } = $resource(
+    asyncFunction,
+    () => source?.value?.data,
+    {
+      initialValue: "initial",
+      //fetchWhen: () => source.value.data === "done"
+    }
+  );
+  let timesComputedCalled = 0;
+  $computed(() => {
+    timesComputedCalled++;
+    console.log("RESOURCE", resource.value);
+    return resource.value.data;
+  });
+
+  await new Promise(process.nextTick);
+
+  console.log(timesComputedCalled);
+});
