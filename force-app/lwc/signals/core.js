@@ -1,9 +1,9 @@
 import { useInMemoryStorage } from "./use";
-import { debounce } from "./utils";
+import { debounce, deepEqual } from "./utils";
 import { ObservableMembrane } from "./observable-membrane/observable-membrane";
 const context = [];
 function _getCurrentObserver() {
-    return context[context.length - 1];
+  return context[context.length - 1];
 }
 /**
  * Creates a new effect that will be executed immediately and whenever
@@ -25,16 +25,15 @@ function _getCurrentObserver() {
  * @param fn The function to execute
  */
 function $effect(fn) {
-    const execute = () => {
-        context.push(execute);
-        try {
-            fn();
-        }
-        finally {
-            context.pop();
-        }
-    };
-    execute();
+  const execute = () => {
+    context.push(execute);
+    try {
+      fn();
+    } finally {
+      context.pop();
+    }
+  };
+  execute();
 }
 /**
  * Creates a new computed value that will be updated whenever the signals
@@ -52,40 +51,40 @@ function $effect(fn) {
  * @param fn The function that returns the computed value.
  */
 function $computed(fn) {
-    // The initial value is undefined, as it will be computed
-    // when the effect runs for the first time
-    const computedSignal = $signal(undefined);
-    $effect(() => {
-        computedSignal.value = fn();
-    });
-    return computedSignal.readOnly;
+  // The initial value is undefined, as it will be computed
+  // when the effect runs for the first time
+  const computedSignal = $signal(undefined);
+  $effect(() => {
+    computedSignal.value = fn();
+  });
+  return computedSignal.readOnly;
 }
 class UntrackedState {
-    constructor(value) {
-        this._value = value;
-    }
-    get() {
-        return this._value;
-    }
-    set(value) {
-        this._value = value;
-    }
+  constructor(value) {
+    this._value = value;
+  }
+  get() {
+    return this._value;
+  }
+  set(value) {
+    this._value = value;
+  }
 }
 class TrackedState {
-    constructor(value, onChangeCallback) {
-        this._membrane = new ObservableMembrane({
-            valueMutated() {
-                onChangeCallback();
-            }
-        });
-        this._value = this._membrane.getProxy(value);
-    }
-    get() {
-        return this._value;
-    }
-    set(value) {
-        this._value = this._membrane.getProxy(value);
-    }
+  constructor(value, onChangeCallback) {
+    this._membrane = new ObservableMembrane({
+      valueMutated() {
+        onChangeCallback();
+      }
+    });
+    this._value = this._membrane.getProxy(value);
+  }
+  get() {
+    return this._value;
+  }
+  set(value) {
+    this._value = this._membrane.getProxy(value);
+  }
 }
 /**
  * Creates a new signal with the provided value. A signal is a reactive
@@ -111,185 +110,148 @@ class TrackedState {
  * @param options Options to configure the signal
  */
 function $signal(value, options) {
-    // Defaults to not tracking changes through the Observable Membrane.
-    // The Observable Membrane proxies the passed in object to track changes
-    // to objects and arrays, but this introduces a performance overhead.
-    const shouldTrack = options?.track ?? false;
-    const trackableState = shouldTrack
-        ? new TrackedState(value, notifySubscribers)
-        : new UntrackedState(value);
-    const _storageOption = options?.storage?.(trackableState.get()) ??
-        useInMemoryStorage(trackableState.get());
-    const subscribers = new Set();
-    function getter() {
-        const current = _getCurrentObserver();
-        if (current) {
-            subscribers.add(current);
-        }
-        return _storageOption.get();
+  // Defaults to not tracking changes through the Observable Membrane.
+  // The Observable Membrane proxies the passed in object to track changes
+  // to objects and arrays, but this introduces a performance overhead.
+  const shouldTrack = options?.track ?? false;
+  const trackableState = shouldTrack
+    ? new TrackedState(value, notifySubscribers)
+    : new UntrackedState(value);
+  const _storageOption =
+    options?.storage?.(trackableState.get()) ??
+    useInMemoryStorage(trackableState.get());
+  const subscribers = new Set();
+  function getter() {
+    const current = _getCurrentObserver();
+    if (current) {
+      subscribers.add(current);
     }
-    function setter(newValue) {
-        if (newValue === _storageOption.get()) {
-            return;
-        }
-        trackableState.set(newValue);
-        _storageOption.set(trackableState.get());
-        notifySubscribers();
+    return _storageOption.get();
+  }
+  function setter(newValue) {
+    // TODO: New unit test for resources since this fixes a bug where it was always reevaluating
+    // TODO: because it was checking for object equality, which in the case of a resource was always false.
+    // TODO: The unit test should fail before, and pass with these changes
+    if (deepEqual(newValue, _storageOption.get())) {
+      return;
     }
-    function notifySubscribers() {
-        for (const subscriber of subscribers) {
-            subscriber();
-        }
+    trackableState.set(newValue);
+    _storageOption.set(trackableState.get());
+    notifySubscribers();
+  }
+  function notifySubscribers() {
+    for (const subscriber of subscribers) {
+      subscriber();
     }
-    _storageOption.registerOnChange?.(notifySubscribers);
-    const debouncedSetter = debounce((newValue) => setter(newValue), options?.debounce ?? 0);
-    const returnValue = {
-        ..._storageOption,
-        get value() {
-            return getter();
-        },
-        set value(newValue) {
-            if (options?.debounce) {
-                debouncedSetter(newValue);
-            }
-            else {
-                setter(newValue);
-            }
-        },
-        readOnly: {
-            get value() {
-                return getter();
-            }
-        }
-    };
-    // We don't want to expose the `get` and `set` methods, so
-    // remove before returning
-    delete returnValue.get;
-    delete returnValue.set;
-    return returnValue;
+  }
+  _storageOption.registerOnChange?.(notifySubscribers);
+  const debouncedSetter = debounce(
+    (newValue) => setter(newValue),
+    options?.debounce ?? 0
+  );
+  const returnValue = {
+    ..._storageOption,
+    get value() {
+      return getter();
+    },
+    set value(newValue) {
+      if (options?.debounce) {
+        debouncedSetter(newValue);
+      } else {
+        setter(newValue);
+      }
+    },
+    readOnly: {
+      get value() {
+        return getter();
+      }
+    }
+  };
+  // We don't want to expose the `get` and `set` methods, so
+  // remove before returning
+  delete returnValue.get;
+  delete returnValue.set;
+  return returnValue;
 }
-/**
- * Creates a new resource that fetches data from an async source. The resource
- * will automatically fetch the data when the component is mounted.
- *
- * It receives a function that returns a promise, which will be called to fetch
- * the data. Optionally, you can provide a source object or function that will
- * be used as the parameters for the fetch function.
- *
- * If a function that contain $computed values is provided as the source, the
- * resource will automatically refetch the data when the computed value changes.
- *
- * `$resource` returns an object with 2 properties:
- * - `data`: a signal that contains the current state of the resource. It has
- *  the following shape:
- *  ```javascript
- *  {
- *  data: T | null;
- *  loading: boolean;
- *  error: unknown | null;
- *  }
- *  ```
- *
- * - `refetch`: a function that can be called to force refetch the data.
- *
- * ```javascript
- * import { $signal, $resource } from 'c/signals';
- * import getAccounts from '@salesforce/apex/AccountController.getAccounts';
- *
- * const accountId = $signal('00B5e00000Dv9ZCEAZ');
- *
- * // If the account Id value is changed, the resource will automatically refetch the data
- * const { data: accounts, refetch } = $resource(getAccounts, () => ({ recordId: accountId.value }));
- *
- * export { accounts, refetch };
- *
- * // Usage from a component
- * import { LightningElement } from 'lwc';
- * import { $computed } from 'c/signals';
- * import { accounts, refetch } from 'c/myResource';
- *
- * export default class MyComponent extends LightningElement {
- *   accounts = $computed(() => this.accounts = accounts.value).value;
- * }
- *
- * @param fn The function that will be called to fetch the data. Usually an Apex method but can be any async function.
- * @param source The source object or function that will be used as the parameters for the fetch function
- * @param options The options to configure the resource. Allows you to provide an initial value for the resource.
- */
 function $resource(fn, source, options) {
-    function loadingState(data) {
-        return {
-            data: data,
-            loading: true,
-            error: null
-        };
-    }
-    let _isInitialLoad = true;
-    let _value = options?.initialValue ?? null;
-    let _previousParams;
-    const _signal = $signal(loadingState(_value));
-    // Optimistic updates are enabled by default
-    const _optimisticMutate = options?.optimisticMutate ?? true;
-    const _fetchWhen = options?.fetchWhen ?? (() => true);
-    const execute = async () => {
-        _signal.value = loadingState(_value);
-        const derivedSource = source instanceof Function ? source() : source;
-        if (!_isInitialLoad && derivedSource === _previousParams) {
-            // No need to fetch the data again if the params haven't changed
-            return;
-        }
-        try {
-            const data = _fetchWhen() ? await fn(derivedSource) : _value;
-            // Keep track of the previous value
-            _value = data;
-            _signal.value = {
-                data,
-                loading: false,
-                error: null
-            };
-        }
-        catch (error) {
-            _signal.value = {
-                data: null,
-                loading: false,
-                error
-            };
-        }
-        finally {
-            _previousParams = derivedSource;
-            _isInitialLoad = false;
-        }
-    };
-    $effect(execute);
-    /**
-     * Callback function that updates the value of the resource.
-     * @param value The value we want to set the resource to.
-     * @param error An optional error object.
-     */
-    function mutatorCallback(value, error) {
-        _value = value;
-        _signal.value = {
-            data: value,
-            loading: false,
-            error: error ?? null
-        };
-    }
+  function loadingState(data) {
     return {
-        data: _signal.readOnly,
-        mutate: (newValue) => {
-            const previousValue = _value;
-            if (_optimisticMutate) {
-                // If optimistic updates are enabled, update the value immediately
-                mutatorCallback(newValue);
-            }
-            if (options?.onMutate) {
-                options.onMutate(newValue, previousValue, mutatorCallback);
-            }
-        },
-        refetch: async () => {
-            _isInitialLoad = true;
-            await execute();
-        }
+      data: data,
+      loading: true,
+      error: null
     };
+  }
+  let _isInitialLoad = true;
+  let _value = options?.initialValue ?? null;
+  let _previousParams;
+  const _signal = $signal(loadingState(_value));
+  // Optimistic updates are enabled by default
+  const _optimisticMutate = options?.optimisticMutate ?? true;
+  const _fetchWhen = options?.fetchWhen ?? (() => true);
+  const execute = async () => {
+    const derivedSourceFn = source instanceof Function ? source : () => source;
+    try {
+      let data = null;
+      if (_fetchWhen()) {
+        const derivedSource = derivedSourceFn();
+        // TODO: Use deepEquality to compare the derivedSource to previousParams
+        if (!_isInitialLoad && derivedSource === _previousParams) {
+          // No need to fetch the data again if the params haven't changed
+          return;
+        }
+        _previousParams = derivedSource;
+        _signal.value = loadingState(_value);
+        data = await fn(derivedSource);
+      } else {
+        data = _value;
+      }
+      // Keep track of the previous value
+      _value = data;
+      _signal.value = {
+        data,
+        loading: false,
+        error: null
+      };
+    } catch (error) {
+      _signal.value = {
+        data: null,
+        loading: false,
+        error
+      };
+    } finally {
+      _isInitialLoad = false;
+    }
+  };
+  $effect(execute);
+  /**
+   * Callback function that updates the value of the resource.
+   * @param value The value we want to set the resource to.
+   * @param error An optional error object.
+   */
+  function mutatorCallback(value, error) {
+    _value = value;
+    _signal.value = {
+      data: value,
+      loading: false,
+      error: error ?? null
+    };
+  }
+  return {
+    data: _signal.readOnly,
+    mutate: (newValue) => {
+      const previousValue = _value;
+      if (_optimisticMutate) {
+        // If optimistic updates are enabled, update the value immediately
+        mutatorCallback(newValue);
+      }
+      if (options?.onMutate) {
+        options.onMutate(newValue, previousValue, mutatorCallback);
+      }
+    },
+    refetch: async () => {
+      _isInitialLoad = true;
+      await execute();
+    }
+  };
 }
 export { $signal, $effect, $computed, $resource };

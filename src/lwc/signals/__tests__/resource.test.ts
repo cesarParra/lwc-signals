@@ -1,6 +1,3 @@
-/* eslint-disable */
-// eslint-disable-next-line @typescript-eslint/ban-ts-comment
-// @ts-nocheck
 import { $resource, $signal, $computed, $effect } from "../core";
 
 describe("resources", () => {
@@ -364,15 +361,15 @@ describe("resources", () => {
   });
 
   test("fetches when the fetchWhen option is passed reevaluates to true", async () => {
-    const asyncFunction = async (params?: { [key: string]: unknown }) => {
-      return params?.["source"];
+    const asyncFunction = async (params: { [key: string]: unknown }) => {
+      return params["source"];
     };
 
     const flagSignal = $signal(false);
     const source = $signal("changed");
     const { data: resource } = $resource(
       asyncFunction,
-      () => ({
+      (): Record<string, unknown> => ({
         source: source.value
       }),
       {
@@ -443,3 +440,5 @@ test("times called", async () => {
 
   console.log(timesComputedCalled);
 });
+
+// TODO: We want a test that verifies that when fetchWhen never turns to true, it never recalculates a computed (never triggers reactivity)

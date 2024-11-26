@@ -11,6 +11,12 @@ export function debounce<F extends (...args: unknown[]) => unknown>(
   };
 }
 
+// TODO: Uts:
+// TODO: undefined value comparison
+// TODO: simple value comparison
+// TODO: object comparison
+// TODO: array comparison
+
 export function deepEqual(x: unknown, y: unknown): boolean {
   const objectKeysFn = Object.keys,
     typeOfX = typeof x,
