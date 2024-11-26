@@ -1,5 +1,12 @@
 import { $resource, $signal, $computed, $effect } from "../core";
 
+beforeAll(() => {
+  global.console = {
+    ...console,
+    log: jest.fn() // Mock console.log
+  };
+});
+
 describe("resources", () => {
   test("can can be created by providing an async function", async () => {
     const asyncFunction = async () => {
@@ -70,7 +77,7 @@ describe("resources", () => {
   });
 
   test("get reevaluated when a reactive source is provided", async () => {
-    const asyncFunction = async (params?: { [key: string]: unknown }) => {
+    const asyncFunction = async (params: { [key: string]: unknown }) => {
       return params?.["source"];
     };
 
@@ -108,6 +115,66 @@ describe("resources", () => {
       loading: false,
       error: null
     });
+  });
+
+  test("are reevaluated the correct amount of times when source is provided and the return value changes", async () => {
+    const asyncFunction = async (params: { [key: string]: unknown }) => {
+      return params["source"];
+    };
+
+    const source = $signal(0);
+    const { data: resource } = $resource(asyncFunction, () => ({
+      source: source.value
+    }));
+
+    let effectAmount = 0;
+    $effect(() => {
+      console.log(resource.value);
+      effectAmount++;
+    });
+
+    // The effect is always evaluated on creation.
+    expect(effectAmount).toBe(1);
+    await new Promise(process.nextTick);
+    // Expect it to be evaluated once more because it goes through the loading/not loading change.
+    expect(effectAmount).toBe(2);
+
+    source.value = 1;
+
+    // With the value change, expect 2 more evaluations, one for the loading state and one for the new value.
+    expect(effectAmount).toBe(3);
+    await new Promise(process.nextTick);
+    expect(effectAmount).toBe(4);
+  });
+
+  test("do not go through the reevaluation cycle when source is provided and the return value does not change", async () => {
+    const asyncFunction = async (params: { [key: string]: unknown }) => {
+      return params["source"];
+    };
+
+    const source = $signal({ a: "a" });
+    const { data: resource } = $resource(asyncFunction, () => ({
+      source: source.value
+    }));
+
+    let effectAmount = 0;
+    $effect(() => {
+      console.log(resource.value);
+      effectAmount++;
+    });
+
+    // The effect is always evaluated on creation.
+    expect(effectAmount).toBe(1);
+    await new Promise(process.nextTick);
+    // Expect it to be evaluated once more because it goes through the loading/not loading change.
+    expect(effectAmount).toBe(2);
+
+    source.value = { a: "a" };
+
+    // Since the value did not change, we should not go through the reevaluation cycle.
+    expect(effectAmount).toBe(2);
+    await new Promise(process.nextTick);
+    expect(effectAmount).toBe(2);
   });
 
   test("can be mutated", async () => {
@@ -297,8 +364,8 @@ describe("resources", () => {
   });
 
   test("does not fetch when a fetchWhen option is passed that evaluates to false", async () => {
-    const asyncFunction = async (params?: { [key: string]: unknown }) => {
-      return params?.["source"];
+    const asyncFunction = async (params: { [key: string]: unknown }) => {
+      return params["source"];
     };
 
     const source = $signal("changed");
@@ -328,9 +395,51 @@ describe("resources", () => {
     });
   });
 
+
+  test("do not go through the reevaluation cycle when fetchWhen does not return true", async () => {
+    const asyncFunction = async (params: { [key: string]: unknown }) => {
+      return params["source"];
+    };
+
+    const source = $signal(0);
+    const fetchWhenSource = $signal({ a: "a" });
+    const { data: resource } = $resource(asyncFunction, () => ({
+      source: source.value
+    }), {
+      fetchWhen: () => fetchWhenSource.value.a !== "a"
+    });
+
+    let effectAmount = 0;
+    $effect(() => {
+      console.log(resource.value);
+      effectAmount++;
+    });
+
+    // The effect is always evaluated on creation.
+    expect(effectAmount).toBe(1);
+
+    await new Promise(process.nextTick);
+    // Expect it to be evaluated once more because it goes through the loading/not loading change.
+    expect(effectAmount).toBe(1);
+
+    fetchWhenSource.value = { a: "a" };
+
+    // Since fetchWhen will continue to evaluate to false, we should not go through the reevaluation cycle.
+    expect(effectAmount).toBe(1);
+    await new Promise(process.nextTick);
+    expect(effectAmount).toBe(1);
+
+    source.value = 1;
+
+    // Since fetchWhen will continue to evaluate to false, we should not go through the reevaluation cycle.
+    expect(effectAmount).toBe(1);
+    await new Promise(process.nextTick);
+    expect(effectAmount).toBe(1);
+  });
+
   test("fetches when a fetchWhen option is passed that evaluates to true", async () => {
-    const asyncFunction = async (params?: { [key: string]: unknown }) => {
-      return params?.["source"];
+    const asyncFunction = async (params: { [key: string]: unknown }) => {
+      return params["source"];
     };
 
     const source = $signal("changed");

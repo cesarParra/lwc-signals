@@ -347,8 +347,7 @@ function $resource<ReturnType, Params>(
       let data: ReturnType | null = null;
       if (_fetchWhen()) {
         const derivedSource = derivedSourceFn();
-        // TODO: Use deepEquality to compare the derivedSource to previousParams
-        if (!_isInitialLoad && derivedSource === _previousParams) {
+        if (!_isInitialLoad && deepEqual(derivedSource,_previousParams)) {
           // No need to fetch the data again if the params haven't changed
           return;
         }
