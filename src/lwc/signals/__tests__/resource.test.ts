@@ -519,35 +519,3 @@ describe("resources", () => {
   });
 });
 
-test("times called", async () => {
-  const sourceAsync = async () => {
-    return "done";
-  };
-
-  const asyncFunction = async (source: string | null) => {
-    return source;
-  };
-
-  const { data: source } = $resource(sourceAsync);
-  $effect(() => console.log("SOURCE", source.value));
-  const { data: resource } = $resource(
-    asyncFunction,
-    () => source?.value?.data,
-    {
-      initialValue: "initial",
-      fetchWhen: () => source.value.data === "done"
-    }
-  );
-  let timesComputedCalled = 0;
-  $computed(() => {
-    timesComputedCalled++;
-    console.log("RESOURCE", resource.value);
-    return resource.value.data;
-  });
-
-  await new Promise(process.nextTick);
-
-  console.log(timesComputedCalled);
-});
-
-// TODO: We want a test that verifies that when fetchWhen never turns to true, it never recalculates a computed (never triggers reactivity)
