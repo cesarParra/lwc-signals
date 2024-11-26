@@ -1,5 +1,14 @@
 ### 🚀 Release Notes
 
+**Version**: 1.0.1
+**Date**: 2024-11-26
+
+### 🐞 Bug Fixes
+
+- Reactive cycle improvements ([2fa354a](https://github.com/cesarParra/lwc-signals/commit/2fa354a8bd67e12773468460d61e90b47db1891d))
+
+### 🚀 Release Notes
+
 **Version**: 1.0.0
 **Date**: 2024-11-22
 
