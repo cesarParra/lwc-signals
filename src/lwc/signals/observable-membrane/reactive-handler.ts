@@ -140,7 +140,6 @@ export class ReactiveProxyHandler extends BaseProxyHandler {
             // if the originalTarget is a proxy itself, it might reject
             // the preventExtension call, in which case we should not attempt to lock down
             // the shadow target.
-            // TODO: It should not actually be possible to reach this `if` statement.
             // If a proxy rejects extensions, then calling preventExtensions will throw an error:
             // https://codepen.io/nolanlawson-the-selector/pen/QWMOjbY
             /* istanbul ignore if */

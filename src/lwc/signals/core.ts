@@ -1,5 +1,5 @@
 import { useInMemoryStorage, State } from "./use";
-import { debounce } from "./utils";
+import { debounce, deepEqual } from "./utils";
 import { ObservableMembrane } from "./observable-membrane/observable-membrane";
 
 type ReadOnlySignal<T> = {
@@ -180,7 +180,7 @@ function $signal<T>(
   }
 
   function setter(newValue: T) {
-    if (newValue === _storageOption.get()) {
+    if (deepEqual(newValue, _storageOption.get())) {
       return;
     }
     trackableState.set(newValue);
@@ -242,8 +242,6 @@ type ResourceResponse<T> = {
   refetch: () => void;
 };
 
-type UnknownArgsMap = { [key: string]: unknown };
-
 type MutatorCallback<T> = (value: T | null, error?: unknown) => void;
 
 type OnMutate<T> = (
@@ -270,15 +268,15 @@ type ResourceOptions<T> = {
  * the data. Optionally, you can provide a source object or function that will
  * be used as the parameters for the fetch function.
  *
- * If a function that contain $computed values is provided as the source, the
+ * If a function that contains $computed values is provided as the source, the
  * resource will automatically refetch the data when the computed value changes.
  *
  * `$resource` returns an object with 2 properties:
- * - `data`: a signal that contains the current state of the resource. It has
+ * - `data`: a read-only signal that contains the current state of the resource. It has
  *  the following shape:
  *  ```javascript
  *  {
- *  data: T | null;
+ *  data: ReadOnlySignal<T> | null;
  *  loading: boolean;
  *  error: unknown | null;
  *  }
@@ -310,12 +308,22 @@ type ResourceOptions<T> = {
  * @param source The source object or function that will be used as the parameters for the fetch function
  * @param options The options to configure the resource. Allows you to provide an initial value for the resource.
  */
-function $resource<T>(
-  fn: (params?: { [key: string]: unknown }) => Promise<T>,
-  source?: UnknownArgsMap | (() => UnknownArgsMap),
-  options?: Partial<ResourceOptions<T>>
-): ResourceResponse<T> {
-  function loadingState(data: T | null): AsyncData<T> {
+function $resource<ReturnType>(
+  fn: () => Promise<ReturnType>,
+  source?: undefined,
+  options?: Partial<ResourceOptions<ReturnType>>
+): ResourceResponse<ReturnType>;
+function $resource<ReturnType, Params>(
+  fn: (params: Params) => Promise<ReturnType>,
+  source: Params | (() => Params),
+  options?: Partial<ResourceOptions<ReturnType>>
+): ResourceResponse<ReturnType>;
+function $resource<ReturnType, Params>(
+  fn: (params: Params | undefined) => Promise<ReturnType>,
+  source?: Params | (() => Params),
+  options?: Partial<ResourceOptions<ReturnType>>
+): ResourceResponse<ReturnType> {
+  function loadingState(data: ReturnType | null): AsyncData<ReturnType> {
     return {
       data: data,
       loading: true,
@@ -324,26 +332,32 @@ function $resource<T>(
   }
 
   let _isInitialLoad = true;
-  let _value: T | null = options?.initialValue ?? null;
-  let _previousParams: UnknownArgsMap | undefined;
-  const _signal = $signal<AsyncData<T>>(loadingState(_value));
+  let _value: ReturnType | null = options?.initialValue ?? null;
+  let _previousParams: Params | undefined;
+  const _signal = $signal<AsyncData<ReturnType>>(loadingState(_value));
   // Optimistic updates are enabled by default
   const _optimisticMutate = options?.optimisticMutate ?? true;
   const _fetchWhen = options?.fetchWhen ?? (() => true);
 
   const execute = async () => {
-    _signal.value = loadingState(_value);
-
-    const derivedSource: UnknownArgsMap | undefined =
-      source instanceof Function ? source() : source;
-
-    if (!_isInitialLoad && derivedSource === _previousParams) {
-      // No need to fetch the data again if the params haven't changed
-      return;
-    }
+    const derivedSourceFn: () => Params | undefined =
+      source instanceof Function ? source : () => source;
 
     try {
-      const data = _fetchWhen() ? await fn(derivedSource) : _value;
+      let data: ReturnType | null = null;
+      if (_fetchWhen()) {
+        const derivedSource = derivedSourceFn();
+        if (!_isInitialLoad && deepEqual(derivedSource,_previousParams)) {
+          // No need to fetch the data again if the params haven't changed
+          return;
+        }
+        _previousParams = derivedSource;
+        _signal.value = loadingState(_value);
+        data = await fn(derivedSource);
+      } else {
+        data = _value;
+      }
+
       // Keep track of the previous value
       _value = data;
       _signal.value = {
@@ -358,7 +372,6 @@ function $resource<T>(
         error
       };
     } finally {
-      _previousParams = derivedSource;
       _isInitialLoad = false;
     }
   };
@@ -370,7 +383,7 @@ function $resource<T>(
    * @param value The value we want to set the resource to.
    * @param error An optional error object.
    */
-  function mutatorCallback(value: T | null, error?: unknown): void {
+  function mutatorCallback(value: ReturnType | null, error?: unknown): void {
     _value = value;
     _signal.value = {
       data: value,
@@ -381,7 +394,7 @@ function $resource<T>(
 
   return {
     data: _signal.readOnly,
-    mutate: (newValue: T) => {
+    mutate: (newValue: ReturnType) => {
       const previousValue = _value;
       if (_optimisticMutate) {
         // If optimistic updates are enabled, update the value immediately
