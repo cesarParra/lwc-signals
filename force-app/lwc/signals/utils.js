@@ -7,11 +7,6 @@ export function debounce(func, delay) {
     debounceTimer = window.setTimeout(() => func(...args), delay);
   };
 }
-// TODO: Uts:
-// TODO: undefined value comparison
-// TODO: simple value comparison
-// TODO: object comparison
-// TODO: array comparison
 export function deepEqual(x, y) {
   const objectKeysFn = Object.keys,
     typeOfX = typeof x,
