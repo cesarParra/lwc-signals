@@ -1,5 +1,14 @@
 ### 🚀 Release Notes
 
+**Version**: 1.1.1
+**Date**: 2024-11-29
+
+### 🐞 Bug Fixes
+
+- removing console logs. ([1e9aecf](https://github.com/cesarParra/lwc-signals/commit/1e9aecf1ff8e471119f3df2c327d214880e73387))
+
+### 🚀 Release Notes
+
 **Version**: 1.1.0
 **Date**: 2024-11-29
 
