@@ -14,4 +14,13 @@ describe("effects", () => {
     signal.value = 1;
     expect(effectTracker).toBe(1);
   });
+
+  test("throw an error when a circular dependency is detected", () => {
+    expect(() => {
+      const signal = $signal(0);
+      $effect(() => {
+        signal.value = signal.value++;
+      });
+    }).toThrow();
+  });
 });
