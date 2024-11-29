@@ -52,10 +52,8 @@ function $effect(fn) {
 }
 function computedGetter(node) {
   if (node.state === ERRORED) {
-    console.log("throwing error", node.error);
     throw node.error;
   }
-  console.log("all good");
   return node.signal.readOnly;
 }
 /**
