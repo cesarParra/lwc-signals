@@ -1,5 +1,14 @@
 ### 🚀 Release Notes
 
+**Version**: 1.1.0
+**Date**: 2024-11-29
+
+### ✨ Features
+
+- Error handling and cyclical dependency management ([#20](https://github.com/cesarParra/lwc-signals/issues/20)) ([97fa7fe](https://github.com/cesarParra/lwc-signals/commit/97fa7fe78955e744044096e384d32d4dfa5b0922))
+
+### 🚀 Release Notes
+
 **Version**: 1.0.2
 **Date**: 2024-11-29
 
