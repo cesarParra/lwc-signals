@@ -1,5 +1,14 @@
 ### 🚀 Release Notes
 
+**Version**: 1.0.2
+**Date**: 2024-11-29
+
+### 🐞 Bug Fixes
+
+- Fix issues with equality ([fef168f](https://github.com/cesarParra/lwc-signals/commit/fef168fab4d2f1367ca1efdb2e7a8a1af7651475))
+
+### 🚀 Release Notes
+
 **Version**: 1.0.1
 **Date**: 2024-11-26
 
