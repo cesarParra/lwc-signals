@@ -19,6 +19,16 @@ function _getCurrentObserver(): VoidFunction | undefined {
   return context[context.length - 1];
 }
 
+const UNSET = Symbol("UNSET");
+const COMPUTING = Symbol("COMPUTING");
+const ERRORED = Symbol("ERRORED");
+const READY = Symbol("READY");
+
+interface EffectNode {
+  error: unknown;
+  state: symbol;
+}
+
 /**
  * Creates a new effect that will be executed immediately and whenever
  * any of the signals it reads from change.
@@ -39,10 +49,22 @@ function _getCurrentObserver(): VoidFunction | undefined {
  * @param fn The function to execute
  */
 function $effect(fn: VoidFunction): void {
+  const effectNode: EffectNode = {
+    error: null,
+    state: UNSET
+  }
+
   const execute = () => {
+    if (effectNode.state === COMPUTING) {
+      throw new Error("Circular dependency detected");
+    }
+
     context.push(execute);
     try {
+      effectNode.state = COMPUTING;
       fn();
+      effectNode.error = null;
+      effectNode.state = READY;
     } finally {
       context.pop();
     }
@@ -51,7 +73,21 @@ function $effect(fn: VoidFunction): void {
   execute();
 }
 
+interface ComputedNode<T> {
+  signal: Signal<T | undefined>;
+  error: unknown;
+  state: symbol;
+}
+
 type ComputedFunction<T> = () => T;
+
+function computedGetter<T>(node: ComputedNode<T>) {
+  if (node.state === ERRORED) {
+    throw node.error;
+  }
+
+  return node.signal.readOnly as ReadOnlySignal<T>;
+}
 
 /**
  * Creates a new computed value that will be updated whenever the signals
@@ -69,15 +105,29 @@ type ComputedFunction<T> = () => T;
  * @param fn The function that returns the computed value.
  */
 function $computed<T>(fn: ComputedFunction<T>): ReadOnlySignal<T> {
-  // The initial value is undefined, as it will be computed
-  // when the effect runs for the first time
-  const computedSignal: Signal<T | undefined> = $signal(undefined);
+  const computedNode: ComputedNode<T> = {
+    signal: $signal<T | undefined>(undefined),
+    error: null,
+    state: UNSET
+  };
 
   $effect(() => {
-    computedSignal.value = fn();
+    if (computedNode.state === COMPUTING) {
+      throw new Error("Circular dependency detected");
+    }
+
+    try {
+      computedNode.state = COMPUTING;
+      computedNode.signal.value = fn();
+      computedNode.error = null;
+      computedNode.state = READY;
+    } catch (error) {
+      computedNode.state = ERRORED;
+      computedNode.error = error;
+    }
   });
 
-  return computedSignal.readOnly as ReadOnlySignal<T>;
+  return computedGetter(computedNode);
 }
 
 type StorageFn<T> = (value: T) => State<T> & { [key: string]: unknown };
