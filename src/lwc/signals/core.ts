@@ -1,5 +1,6 @@
 import { useInMemoryStorage, State } from "./use";
-import { debounce, deepEqual } from "./utils";
+import { debounce } from "./utils/debounce";
+import { isEqual } from "./utils/isEqual";
 import { ObservableMembrane } from "./observable-membrane/observable-membrane";
 
 type ReadOnlySignal<T> = {
@@ -180,7 +181,7 @@ function $signal<T>(
   }
 
   function setter(newValue: T) {
-    if (deepEqual(newValue, _storageOption.get())) {
+    if (isEqual(newValue, _storageOption.get())) {
       return;
     }
     trackableState.set(newValue);
@@ -347,7 +348,7 @@ function $resource<ReturnType, Params>(
       let data: ReturnType | null = null;
       if (_fetchWhen()) {
         const derivedSource = derivedSourceFn();
-        if (!_isInitialLoad && deepEqual(derivedSource,_previousParams)) {
+        if (!_isInitialLoad && isEqual(derivedSource, _previousParams)) {
           // No need to fetch the data again if the params haven't changed
           return;
         }

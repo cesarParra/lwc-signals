@@ -1,5 +1,6 @@
 import { useInMemoryStorage } from "./use";
-import { debounce, deepEqual } from "./utils";
+import { debounce } from "./utils/debounce";
+import { isEqual } from "./utils/isEqual";
 import { ObservableMembrane } from "./observable-membrane/observable-membrane";
 const context = [];
 function _getCurrentObserver() {
@@ -129,7 +130,7 @@ function $signal(value, options) {
     return _storageOption.get();
   }
   function setter(newValue) {
-    if (deepEqual(newValue, _storageOption.get())) {
+    if (isEqual(newValue, _storageOption.get())) {
       return;
     }
     trackableState.set(newValue);
@@ -191,7 +192,7 @@ function $resource(fn, source, options) {
       let data = null;
       if (_fetchWhen()) {
         const derivedSource = derivedSourceFn();
-        if (!_isInitialLoad && deepEqual(derivedSource, _previousParams)) {
+        if (!_isInitialLoad && isEqual(derivedSource, _previousParams)) {
           // No need to fetch the data again if the params haven't changed
           return;
         }
