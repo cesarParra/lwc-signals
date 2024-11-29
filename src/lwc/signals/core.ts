@@ -51,7 +51,26 @@ function $effect(fn: VoidFunction): void {
   execute();
 }
 
+interface ComputedNode<T> {
+  signal: Signal<T | undefined>;
+  error: unknown;
+  state: symbol;
+}
+
+const UNSET = Symbol("UNSET");
+const COMPUTING = Symbol("COMPUTING");
+const ERRORED = Symbol("ERRORED");
+const READY = Symbol("READY");
+
 type ComputedFunction<T> = () => T;
+
+function computedGetter<T>(node: ComputedNode<T>) {
+  if (node.signal.value === ERRORED) {
+    throw node.error;
+  }
+
+  return node.signal.readOnly as ReadOnlySignal<T>;
+}
 
 /**
  * Creates a new computed value that will be updated whenever the signals
@@ -69,15 +88,30 @@ type ComputedFunction<T> = () => T;
  * @param fn The function that returns the computed value.
  */
 function $computed<T>(fn: ComputedFunction<T>): ReadOnlySignal<T> {
-  // The initial value is undefined, as it will be computed
-  // when the effect runs for the first time
-  const computedSignal: Signal<T | undefined> = $signal(undefined);
+  const computedNode: ComputedNode<T> = {
+    signal: $signal<T | undefined>(undefined),
+    error: null,
+    state: UNSET
+  };
 
   $effect(() => {
-    computedSignal.value = fn();
+    if (computedNode.state === COMPUTING) {
+      throw new Error("Circular dependency detected");
+    }
+
+    try {
+      computedNode.state = COMPUTING;
+      computedNode.signal.value = fn();
+      computedNode.error = null;
+    } catch (error) {
+      computedNode.state = ERRORED;
+      computedNode.error = error;
+    }
+
+    computedNode.state = READY;
   });
 
-  return computedSignal.readOnly as ReadOnlySignal<T>;
+  return computedGetter(computedNode);
 }
 
 type StorageFn<T> = (value: T) => State<T> & { [key: string]: unknown };

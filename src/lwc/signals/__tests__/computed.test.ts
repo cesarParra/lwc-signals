@@ -46,4 +46,13 @@ describe("computed values", () => {
     expect(computed.value).toBe(2);
     expect(anotherComputed.value).toBe(4);
   });
+
+  // test("throws an error when a circular dependency is detected", () => {
+  //   const signal = $signal(0);
+  //   const computed = $computed(() => signal.value * 2);
+  //   const computed2 = $computed(() => computed.value + 1);
+  //
+  //   // TODO
+  //
+  // });
 });
