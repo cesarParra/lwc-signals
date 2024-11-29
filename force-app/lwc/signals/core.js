@@ -6,6 +6,10 @@ const context = [];
 function _getCurrentObserver() {
   return context[context.length - 1];
 }
+const UNSET = Symbol("UNSET");
+const COMPUTING = Symbol("COMPUTING");
+const ERRORED = Symbol("ERRORED");
+const READY = Symbol("READY");
 /**
  * Creates a new effect that will be executed immediately and whenever
  * any of the signals it reads from change.
@@ -26,15 +30,33 @@ function _getCurrentObserver() {
  * @param fn The function to execute
  */
 function $effect(fn) {
+  const effectNode = {
+    error: null,
+    state: UNSET
+  };
   const execute = () => {
+    if (effectNode.state === COMPUTING) {
+      throw new Error("Circular dependency detected");
+    }
     context.push(execute);
     try {
+      effectNode.state = COMPUTING;
       fn();
+      effectNode.error = null;
+      effectNode.state = READY;
     } finally {
       context.pop();
     }
   };
   execute();
+}
+function computedGetter(node) {
+  if (node.state === ERRORED) {
+    console.log("throwing error", node.error);
+    throw node.error;
+  }
+  console.log("all good");
+  return node.signal.readOnly;
 }
 /**
  * Creates a new computed value that will be updated whenever the signals
@@ -52,13 +74,26 @@ function $effect(fn) {
  * @param fn The function that returns the computed value.
  */
 function $computed(fn) {
-  // The initial value is undefined, as it will be computed
-  // when the effect runs for the first time
-  const computedSignal = $signal(undefined);
+  const computedNode = {
+    signal: $signal(undefined),
+    error: null,
+    state: UNSET
+  };
   $effect(() => {
-    computedSignal.value = fn();
+    if (computedNode.state === COMPUTING) {
+      throw new Error("Circular dependency detected");
+    }
+    try {
+      computedNode.state = COMPUTING;
+      computedNode.signal.value = fn();
+      computedNode.error = null;
+      computedNode.state = READY;
+    } catch (error) {
+      computedNode.state = ERRORED;
+      computedNode.error = error;
+    }
   });
-  return computedSignal.readOnly;
+  return computedGetter(computedNode);
 }
 class UntrackedState {
   constructor(value) {
