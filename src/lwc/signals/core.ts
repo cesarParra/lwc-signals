@@ -463,4 +463,20 @@ function $resource<ReturnType, Params>(
   };
 }
 
-export { $signal, $effect, $computed, $resource };
+class Bounder {
+  constructor(private component: Record<string, object>, private propertyName: string) {}
+  to(signal: Signal<unknown>) {
+    $effect(() => {
+      // @ts-expect-error The property name will be found
+      this.component[this.propertyName] = signal.value;
+    });
+
+    return signal.value;
+  }
+}
+
+function $binded(component: Record<string, object>, propertyName: string) {
+  return new Bounder(component, propertyName);
+}
+
+export { $signal, $effect, $computed, $resource, $binded };

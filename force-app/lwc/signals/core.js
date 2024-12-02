@@ -284,4 +284,20 @@ function $resource(fn, source, options) {
     }
   };
 }
-export { $signal, $effect, $computed, $resource };
+class Bounder {
+  constructor(component, propertyName) {
+    this.component = component;
+    this.propertyName = propertyName;
+  }
+  to(signal) {
+    $effect(() => {
+      // @ts-expect-error The property name will be found
+      this.component[this.propertyName] = signal.value;
+    });
+    return signal.value;
+  }
+}
+function $binded(component, propertyName) {
+  return new Bounder(component, propertyName);
+}
+export { $signal, $effect, $computed, $resource, $binded };
