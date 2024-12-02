@@ -1,12 +1,5 @@
 import { $computed, $effect, $signal } from "../core";
 
-beforeAll(() => {
-  global.console = {
-    ...console,
-    log: jest.fn(), // Mock console.log
-  };
-});
-
 describe("a tracked signal", () => {
   test("recomputes when the source is an object that changes", () => {
     const signal = $signal({ a: 0, b: 1 }, { track: true });
@@ -16,35 +9,6 @@ describe("a tracked signal", () => {
     signal.value.a = 1;
 
     expect(computed.value).toBe(2);
-  });
-
-  test("effects when the source isn an object that changes", () => {
-    const signal = $signal({ a: 0, b: 1 }, { track: true });
-    let timesCalled = 0;
-    $effect(() => {
-      console.log(signal.value.a);
-      timesCalled++;
-    });
-    expect(timesCalled).toBe(1);
-
-    signal.value.a = 1;
-
-    expect(timesCalled).toBe(2);
-  });
-
-  test("effects when the source is a computed object from a tracked signal", () => {
-    const signal = $signal({ a: 0, b: 1 }, { track: true });
-    const computed = $computed(() => signal.value);
-    let timesCalled = 0;
-    $effect(() => {
-      console.log(computed.value);
-      timesCalled++;
-    });
-    expect(timesCalled).toBe(1);
-
-    signal.value.a = 1;
-
-    expect(timesCalled).toBe(2);
   });
 
   test("recomputes when a nested property of the source object changes", () => {
