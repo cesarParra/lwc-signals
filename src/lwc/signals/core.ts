@@ -444,6 +444,7 @@ function $resource<ReturnType, Params>(
   }
 
   return {
+    // some change.
     data: _signal.readOnly,
     mutate: (newValue: ReturnType) => {
       const previousValue = _value;
