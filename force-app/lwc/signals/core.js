@@ -73,7 +73,7 @@ function computedGetter(node) {
  */
 function $computed(fn) {
   const computedNode = {
-    signal: $signal(undefined),
+    signal: $signal(undefined, { track: true }),
     error: null,
     state: UNSET
   };
@@ -103,6 +103,9 @@ class UntrackedState {
   set(value) {
     this._value = value;
   }
+  forceSet() {
+    return false;
+  }
 }
 class TrackedState {
   constructor(value, onChangeCallback) {
@@ -118,6 +121,9 @@ class TrackedState {
   }
   set(value) {
     this._value = this._membrane.getProxy(value);
+  }
+  forceSet() {
+    return true;
   }
 }
 /**
@@ -163,7 +169,7 @@ function $signal(value, options) {
     return _storageOption.get();
   }
   function setter(newValue) {
-    if (isEqual(newValue, _storageOption.get())) {
+    if (!trackableState.forceSet() && isEqual(newValue, _storageOption.get())) {
       return;
     }
     trackableState.set(newValue);

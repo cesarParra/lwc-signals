@@ -1,4 +1,4 @@
-import { $resource, $signal, $computed, $effect } from "../core";
+import { $resource, $signal, $effect } from "../core";
 
 beforeAll(() => {
   global.console = {

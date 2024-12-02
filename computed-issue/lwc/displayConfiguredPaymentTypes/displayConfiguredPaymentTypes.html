@@ -1,0 +1,27 @@
+<!-- Display Configured Payment Types -->
+<template>
+  <h1>Display Configured Payment Types</h1>
+  <div lwc:if={configured.loading}>Loading...</div>
+  <div lwc:else>
+    <template if:true={configured.error}>
+      <div>Error: {configured.error}</div>
+    </template>
+    <template if:true={configured.data}>
+      <div>
+        <h2>Configured Payment Types</h2>
+        <ul>
+          <template for:each={configured.data} for:item="paymentType">
+            <li key={paymentType.UniqueName}>{paymentType.UniqueName}</li>
+          </template>
+        </ul>
+      </div>
+    </template>
+  </div>
+  <hr />
+  <!--  <h1>Registered Payment Types</h1>-->
+  <!--  <template for:each={registered} for:item="paymentType">-->
+  <!--    <div key={paymentType}>-->
+  <!--      {paymentType}-->
+  <!--    </div>-->
+  <!--  </template>-->
+</template>
