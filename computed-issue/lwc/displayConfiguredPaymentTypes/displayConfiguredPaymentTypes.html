@@ -18,10 +18,17 @@
     </template>
   </div>
   <hr />
-  <!--  <h1>Registered Payment Types</h1>-->
-  <!--  <template for:each={registered} for:item="paymentType">-->
-  <!--    <div key={paymentType}>-->
-  <!--      {paymentType}-->
-  <!--    </div>-->
-  <!--  </template>-->
+  <h1>Available Payment Types</h1>
+  <template for:each={available} for:item="paymentType">
+    <div key={paymentType.UniqueName}>
+      {paymentType.DisplayName}
+    </div>
+  </template>
+  <hr />
+  <h1>Available Payment Types As Options</h1>
+  <template for:each={asOptions} for:item="paymentType">
+    <div key={paymentType.value}>
+      Label: {paymentType.label} * Value: {paymentType.value}
+    </div>
+  </template>
 </template>

@@ -11,6 +11,13 @@ public with sharing class ConfiguredPaymentTypesController {
         @AuraEnabled
         public String UniqueName { get; set; }
 
+        @AuraEnabled
+        public String DisplayName {
+            get {
+                return this.UniqueName.replace('_', ' ');
+            }
+        }
+
         public PaymentType(String UniqueName) {
             this.UniqueName = UniqueName;
         }

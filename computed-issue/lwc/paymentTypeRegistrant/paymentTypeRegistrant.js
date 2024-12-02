@@ -1,5 +1,5 @@
 import { LightningElement } from "lwc";
-import { registeredPaymentComponents } from "c/paymentTypesStore";
+import { registeredPaymentTypeNames } from "c/paymentTypesStore";
 
 export default class PaymentTypeRegistrant extends LightningElement {
   textValue = "";
@@ -9,7 +9,8 @@ export default class PaymentTypeRegistrant extends LightningElement {
   }
 
   handleSubmit() {
-    registeredPaymentComponents.value.push(this.textValue);
+    registeredPaymentTypeNames.value = [...registeredPaymentTypeNames.value, this.textValue];
     this.textValue = "";
+    this.refs.paymentTypeInput.value = "";
   }
 }
