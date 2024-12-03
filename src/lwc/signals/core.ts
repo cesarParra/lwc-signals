@@ -11,6 +11,7 @@ export type Signal<T> = {
   get value(): T;
   set value(newValue: T);
   readOnly: ReadOnlySignal<T>;
+  brand: symbol;
 };
 
 const context: VoidFunction[] = [];
@@ -264,6 +265,7 @@ function $signal<T>(
           setter(newValue);
         }
       },
+      brand: Symbol.for("lwc-signals"),
       readOnly: {
         get value() {
           return getter();
@@ -271,10 +273,10 @@ function $signal<T>(
       }
     };
 
-  // We don't want to expose the `get` and `set` methods, so
-  // remove before returning
   delete returnValue.get;
   delete returnValue.set;
+  delete returnValue.registerOnChange;
+  delete returnValue.unsubscribe;
 
   return returnValue;
 }

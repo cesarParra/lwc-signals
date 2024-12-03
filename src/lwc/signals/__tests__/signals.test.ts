@@ -25,6 +25,11 @@ describe("signals", () => {
 
     expect(debouncedSignal.value).toBe(1);
   });
+
+  test("should be identified with a symbol", () => {
+    const signal = $signal(0);
+    expect(signal.brand).toBe(Symbol.for("lwc-signals"));
+  });
 });
 
 
