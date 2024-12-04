@@ -1,4 +1,4 @@
-import { $computed, $signal } from "../core";
+import { $computed, $effect, $signal } from "../core";
 
 describe("computed values", () => {
   test("can be created from a source signal", () => {
@@ -45,5 +45,16 @@ describe("computed values", () => {
 
     expect(computed.value).toBe(2);
     expect(anotherComputed.value).toBe(4);
+  });
+
+  test("computed objects that return the same value as a tracked signal recomputes", () => {
+    const signal = $signal({ a: 0, b: 0 }, { track: true });
+    const computed = $computed(() => signal.value);
+    const spy = jest.fn(() => computed.value);
+    $effect(spy);
+    spy.mockReset();
+
+    signal.value.a = 1;
+    expect(spy).toHaveBeenCalled();
   });
 });

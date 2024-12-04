@@ -53,7 +53,7 @@ function $effect(fn: VoidFunction): void {
   const effectNode: EffectNode = {
     error: null,
     state: UNSET
-  }
+  };
 
   const execute = () => {
     if (effectNode.state === COMPUTING) {
@@ -107,7 +107,7 @@ function computedGetter<T>(node: ComputedNode<T>) {
  */
 function $computed<T>(fn: ComputedFunction<T>): ReadOnlySignal<T> {
   const computedNode: ComputedNode<T> = {
-    signal: $signal<T | undefined>(undefined),
+    signal: $signal<T | undefined>(undefined, { track: true }),
     error: null,
     state: UNSET
   };
@@ -143,6 +143,8 @@ interface TrackableState<T> {
   get(): T;
 
   set(value: T): void;
+
+  forceUpdate(): boolean;
 }
 
 class UntrackedState<T> implements TrackableState<T> {
@@ -158,6 +160,10 @@ class UntrackedState<T> implements TrackableState<T> {
 
   set(value: T) {
     this._value = value;
+  }
+
+  forceUpdate() {
+    return false;
   }
 }
 
@@ -180,6 +186,10 @@ class TrackedState<T> implements TrackableState<T> {
 
   set(value: T) {
     this._value = this._membrane.getProxy(value);
+  }
+
+  forceUpdate(): boolean {
+    return true;
   }
 }
 
@@ -232,7 +242,10 @@ function $signal<T>(
   }
 
   function setter(newValue: T) {
-    if (isEqual(newValue, _storageOption.get())) {
+    if (
+      !trackableState.forceUpdate() &&
+      isEqual(newValue, _storageOption.get())
+    ) {
       return;
     }
     trackableState.set(newValue);
