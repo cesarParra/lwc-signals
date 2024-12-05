@@ -85,4 +85,21 @@ describe("computed values", () => {
 
     spy.mockRestore();
   });
+
+  test("console errors with an identifier when one was provided", () => {
+    const spy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    try {
+      const signal = $signal(0);
+      $computed(() => {
+        signal.value;
+        throw new Error("error");
+      }, { identifier: "test-identifier" });
+      signal.value = 1;
+    } catch (e) {
+      expect(spy).toHaveBeenCalledWith(expect.stringContaining("test-identifier"), expect.any(Error));
+    }
+
+    spy.mockRestore();
+  });
 });

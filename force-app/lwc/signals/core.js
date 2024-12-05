@@ -11,7 +11,8 @@ const COMPUTING = Symbol("COMPUTING");
 const ERRORED = Symbol("ERRORED");
 const READY = Symbol("READY");
 const defaultEffectProps = {
-  _fromComputed: false
+  _fromComputed: false,
+  identifier: null
 };
 /**
  * Creates a new effect that will be executed immediately and whenever
@@ -60,7 +61,9 @@ function $effect(fn, props) {
   execute();
 }
 function handleEffectError(error, props) {
-  const source = props._fromComputed ? "Computed" : "Effect";
+  const source =
+    (props._fromComputed ? "Computed" : "Effect") +
+    (props.identifier ? ` (${props.identifier})` : "");
   const errorMessage = `An error occurred in a ${source} function`;
   console.error(errorMessage, error);
   throw error;
@@ -79,13 +82,15 @@ function handleEffectError(error, props) {
  * ```
  *
  * @param fn The function that returns the computed value.
+ * @param props Options to configure the computed value.
  */
-function $computed(fn) {
+function $computed(fn, props) {
   const computedSignal = $signal(undefined, {
     track: true
   });
   $effect(() => (computedSignal.value = fn()), {
-    _fromComputed: true
+    _fromComputed: true,
+    identifier: props?.identifier ?? null
   });
   return computedSignal.readOnly;
 }

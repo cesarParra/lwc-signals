@@ -32,10 +32,12 @@ interface EffectNode {
 
 type EffectProps = {
   _fromComputed: boolean;
+  identifier: string | null;
 };
 
 const defaultEffectProps: EffectProps = {
-  _fromComputed: false
+  _fromComputed: false,
+  identifier: null
 };
 
 /**
@@ -89,13 +91,16 @@ function $effect(fn: VoidFunction, props?: Partial<EffectProps>): void {
 }
 
 function handleEffectError(error: unknown, props: EffectProps) {
-  const source = props._fromComputed ? "Computed" : "Effect";
+  const source = (props._fromComputed ? "Computed" : "Effect") + (props.identifier ? ` (${props.identifier})` : "");
   const errorMessage = `An error occurred in a ${source} function`;
   console.error(errorMessage, error);
   throw error;
 }
 
 type ComputedFunction<T> = () => T;
+type ComputedProps = {
+  identifier: string | null;
+}
 
 /**
  * Creates a new computed value that will be updated whenever the signals
@@ -111,13 +116,15 @@ type ComputedFunction<T> = () => T;
  * ```
  *
  * @param fn The function that returns the computed value.
+ * @param props Options to configure the computed value.
  */
-function $computed<T>(fn: ComputedFunction<T>): ReadOnlySignal<T> {
+function $computed<T>(fn: ComputedFunction<T>, props?: ComputedProps): ReadOnlySignal<T> {
   const computedSignal: Signal<T | undefined> = $signal(undefined, {
     track: true
   });
   $effect(() => (computedSignal.value = fn()), {
-    _fromComputed: true
+    _fromComputed: true,
+    identifier: props?.identifier ?? null
   });
   return computedSignal.readOnly as ReadOnlySignal<T>;
 }
