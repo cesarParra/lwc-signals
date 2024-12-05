@@ -102,4 +102,30 @@ describe("computed values", () => {
 
     spy.mockRestore();
   });
+
+  test("allow for errors to be handled through a custom function", () => {
+    const customErrorHandlerFn = jest.fn() as (error: unknown) => void;
+
+    $computed(() => {
+      throw new Error("test");
+    }, {
+      errorHandler: customErrorHandlerFn
+    });
+
+    expect(customErrorHandlerFn).toHaveBeenCalled();
+  });
+
+  test("allow for errors to be handled through a custom function and return a fallback value", () => {
+    function customErrorHandlerFn() {
+      return "fallback";
+    }
+
+    const computed = $computed(() => {
+      throw new Error("test");
+    }, {
+      errorHandler: customErrorHandlerFn
+    });
+
+    expect(computed.value).toBe("fallback");
+  });
 });

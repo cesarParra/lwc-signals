@@ -90,10 +90,26 @@ function $computed(fn, props) {
   const computedSignal = $signal(undefined, {
     track: true
   });
-  $effect(() => (computedSignal.value = fn()), {
-    _fromComputed: true,
-    identifier: props?.identifier ?? null
-  });
+  $effect(
+    () => {
+      if (props?.errorHandler) {
+        // If this computed has a custom errorHandler, then error
+        // handling occurs in the computed function itself.
+        try {
+          computedSignal.value = fn();
+        } catch (error) {
+          computedSignal.value = props.errorHandler(error);
+        }
+      } else {
+        // Otherwise, the error handling is done in the $effect
+        computedSignal.value = fn();
+      }
+    },
+    {
+      _fromComputed: true,
+      identifier: props?.identifier ?? null
+    }
+  );
   return computedSignal.readOnly;
 }
 class UntrackedState {

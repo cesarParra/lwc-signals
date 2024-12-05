@@ -103,8 +103,9 @@ function handleEffectError(error: unknown, props: EffectProps) {
 }
 
 type ComputedFunction<T> = () => T;
-type ComputedProps = {
+type ComputedProps<T> = {
   identifier: string | null;
+  errorHandler?: (error: unknown) => T | undefined;
 };
 
 /**
@@ -125,15 +126,31 @@ type ComputedProps = {
  */
 function $computed<T>(
   fn: ComputedFunction<T>,
-  props?: ComputedProps
+  props?: Partial<ComputedProps<T>>
 ): ReadOnlySignal<T> {
   const computedSignal: Signal<T | undefined> = $signal(undefined, {
     track: true
   });
-  $effect(() => (computedSignal.value = fn()), {
-    _fromComputed: true,
-    identifier: props?.identifier ?? null
-  });
+  $effect(
+    () => {
+      if (props?.errorHandler) {
+        // If this computed has a custom errorHandler, then error
+        // handling occurs in the computed function itself.
+        try {
+          computedSignal.value = fn();
+        } catch (error) {
+          computedSignal.value = props.errorHandler(error);
+        }
+      } else {
+        // Otherwise, the error handling is done in the $effect
+        computedSignal.value = fn();
+      }
+    },
+    {
+      _fromComputed: true,
+      identifier: props?.identifier ?? null
+    }
+  );
   return computedSignal.readOnly as ReadOnlySignal<T>;
 }
 
