@@ -10,6 +10,9 @@ const UNSET = Symbol("UNSET");
 const COMPUTING = Symbol("COMPUTING");
 const ERRORED = Symbol("ERRORED");
 const READY = Symbol("READY");
+const defaultEffectProps = {
+  _fromComputed: false
+};
 /**
  * Creates a new effect that will be executed immediately and whenever
  * any of the signals it reads from change.
@@ -28,8 +31,10 @@ const READY = Symbol("READY");
  * ```
  *
  * @param fn The function to execute
+ * @param props Options to configure the effect
  */
-function $effect(fn) {
+function $effect(fn, props) {
+  const _props = { ...defaultEffectProps, ...props };
   const effectNode = {
     error: null,
     state: UNSET
@@ -45,15 +50,20 @@ function $effect(fn) {
       effectNode.error = null;
       effectNode.state = READY;
     } catch (error) {
-      console.error(error);
       effectNode.state = ERRORED;
       effectNode.error = error;
-      throw error;
+      handleEffectError(error, _props);
     } finally {
       context.pop();
     }
   };
   execute();
+}
+function handleEffectError(error, props) {
+  const source = props._fromComputed ? "Computed" : "Effect";
+  const errorMessage = `An error occurred in a ${source} function`;
+  console.error(errorMessage, error);
+  throw error;
 }
 /**
  * Creates a new computed value that will be updated whenever the signals
@@ -71,8 +81,12 @@ function $effect(fn) {
  * @param fn The function that returns the computed value.
  */
 function $computed(fn) {
-  const computedSignal = $signal(undefined, { track: true });
-  $effect(() => (computedSignal.value = fn()));
+  const computedSignal = $signal(undefined, {
+    track: true
+  });
+  $effect(() => (computedSignal.value = fn()), {
+    _fromComputed: true
+  });
   return computedSignal.readOnly;
 }
 class UntrackedState {

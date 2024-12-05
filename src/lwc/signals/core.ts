@@ -30,6 +30,14 @@ interface EffectNode {
   state: symbol;
 }
 
+type EffectProps = {
+  _fromComputed: boolean;
+};
+
+const defaultEffectProps: EffectProps = {
+  _fromComputed: false
+};
+
 /**
  * Creates a new effect that will be executed immediately and whenever
  * any of the signals it reads from change.
@@ -48,8 +56,10 @@ interface EffectNode {
  * ```
  *
  * @param fn The function to execute
+ * @param props Options to configure the effect
  */
-function $effect(fn: VoidFunction): void {
+function $effect(fn: VoidFunction, props?: Partial<EffectProps>): void {
+  const _props = { ...defaultEffectProps, ...props };
   const effectNode: EffectNode = {
     error: null,
     state: UNSET
@@ -67,10 +77,9 @@ function $effect(fn: VoidFunction): void {
       effectNode.error = null;
       effectNode.state = READY;
     } catch (error) {
-      console.error(error);
       effectNode.state = ERRORED;
       effectNode.error = error;
-      throw error;
+      handleEffectError(error, _props);
     } finally {
       context.pop();
     }
@@ -79,10 +88,11 @@ function $effect(fn: VoidFunction): void {
   execute();
 }
 
-interface ComputedNode<T> {
-  signal: Signal<T | undefined>;
-  error: unknown;
-  state: symbol;
+function handleEffectError(error: unknown, props: EffectProps) {
+  const source = props._fromComputed ? "Computed" : "Effect";
+  const errorMessage = `An error occurred in a ${source} function`;
+  console.error(errorMessage, error);
+  throw error;
 }
 
 type ComputedFunction<T> = () => T;
@@ -103,8 +113,12 @@ type ComputedFunction<T> = () => T;
  * @param fn The function that returns the computed value.
  */
 function $computed<T>(fn: ComputedFunction<T>): ReadOnlySignal<T> {
-  const computedSignal: Signal<T | undefined> = $signal(undefined, {track: true});
-  $effect(() => computedSignal.value = fn());
+  const computedSignal: Signal<T | undefined> = $signal(undefined, {
+    track: true
+  });
+  $effect(() => (computedSignal.value = fn()), {
+    _fromComputed: true
+  });
   return computedSignal.readOnly as ReadOnlySignal<T>;
 }
 
