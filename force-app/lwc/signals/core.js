@@ -53,7 +53,9 @@ function $effect(fn, props) {
     } catch (error) {
       effectNode.state = ERRORED;
       effectNode.error = error;
-      handleEffectError(error, _props);
+      _props.errorHandler
+        ? _props.errorHandler(error)
+        : handleEffectError(error, _props);
     } finally {
       context.pop();
     }

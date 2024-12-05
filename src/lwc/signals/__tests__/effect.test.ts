@@ -51,4 +51,15 @@ describe("effects", () => {
     }
     spy.mockRestore();
   });
+
+  test("allow for errors to be handled through a custom function", () => {
+    const customErrorHandlerFn = jest.fn();
+    $effect(() => {
+      throw new Error("test");
+    }, {
+      errorHandler: customErrorHandlerFn
+    });
+
+    expect(customErrorHandlerFn).toHaveBeenCalled();
+  });
 });

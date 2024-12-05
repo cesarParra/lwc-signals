@@ -33,6 +33,7 @@ interface EffectNode {
 type EffectProps = {
   _fromComputed: boolean;
   identifier: string | null;
+  errorHandler?: (error: unknown) => void;
 };
 
 const defaultEffectProps: EffectProps = {
@@ -81,7 +82,9 @@ function $effect(fn: VoidFunction, props?: Partial<EffectProps>): void {
     } catch (error) {
       effectNode.state = ERRORED;
       effectNode.error = error;
-      handleEffectError(error, _props);
+      _props.errorHandler
+        ? _props.errorHandler(error)
+        : handleEffectError(error, _props);
     } finally {
       context.pop();
     }
@@ -91,7 +94,9 @@ function $effect(fn: VoidFunction, props?: Partial<EffectProps>): void {
 }
 
 function handleEffectError(error: unknown, props: EffectProps) {
-  const source = (props._fromComputed ? "Computed" : "Effect") + (props.identifier ? ` (${props.identifier})` : "");
+  const source =
+    (props._fromComputed ? "Computed" : "Effect") +
+    (props.identifier ? ` (${props.identifier})` : "");
   const errorMessage = `An error occurred in a ${source} function`;
   console.error(errorMessage, error);
   throw error;
@@ -100,7 +105,7 @@ function handleEffectError(error: unknown, props: EffectProps) {
 type ComputedFunction<T> = () => T;
 type ComputedProps = {
   identifier: string | null;
-}
+};
 
 /**
  * Creates a new computed value that will be updated whenever the signals
@@ -118,7 +123,10 @@ type ComputedProps = {
  * @param fn The function that returns the computed value.
  * @param props Options to configure the computed value.
  */
-function $computed<T>(fn: ComputedFunction<T>, props?: ComputedProps): ReadOnlySignal<T> {
+function $computed<T>(
+  fn: ComputedFunction<T>,
+  props?: ComputedProps
+): ReadOnlySignal<T> {
   const computedSignal: Signal<T | undefined> = $signal(undefined, {
     track: true
   });
