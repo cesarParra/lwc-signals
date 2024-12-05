@@ -8,10 +8,21 @@ $computed(
     throw new Error("An error occurred during a computation");
   },
   {
-    identifier: "computed-with-error"
+    errorHandler: (error) => {
+      console.error("error thrown from computed", error);
+      // Allows for a fallback value to be returned when an error occurs.
+      return 0;
+    }
   }
 );
 
-$effect(() => {
-  throw new Error("An error occurred during an effect");
-});
+$effect(
+  () => {
+    throw new Error("An error occurred during an effect");
+  },
+  {
+    errorHandler: (error) => {
+      console.error("error thrown from effect", error);
+    }
+  }
+);
