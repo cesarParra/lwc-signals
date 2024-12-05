@@ -31,11 +31,24 @@ describe("effects", () => {
   });
 
   test("throw an error when a circular dependency is detected", () => {
+    console.error = jest.fn();
     expect(() => {
       const signal = $signal(0);
       $effect(() => {
         signal.value = signal.value++;
       });
     }).toThrow();
+  });
+
+  test("console errors when an effect throws an error", () => {
+    const spy = jest.spyOn(console, "error").mockImplementation(() => {});
+    try {
+      $effect(() => {
+        throw new Error("test");
+      });
+    } catch (error) {
+      expect(spy).toHaveBeenCalled();
+    }
+    spy.mockRestore();
   });
 });

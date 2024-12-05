@@ -57,4 +57,32 @@ describe("computed values", () => {
     signal.value.a = 1;
     expect(spy).toHaveBeenCalled();
   });
+
+  test("throw an error when a circular dependency is detected", () => {
+    console.error = jest.fn();
+    expect(() => {
+      const signal = $signal(0);
+      $computed(() => {
+        signal.value = signal.value++;
+        return signal.value;
+      });
+    }).toThrow();
+  });
+
+  test("console errors when a computed throws an error", () => {
+    const spy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    try {
+      const signal = $signal(0);
+      $computed(() => {
+        signal.value;
+        throw new Error("error");
+      });
+      signal.value = 1;
+    } catch (e) {
+      expect(spy).toHaveBeenCalled();
+    }
+
+    spy.mockRestore();
+  });
 });

@@ -66,6 +66,11 @@ function $effect(fn: VoidFunction): void {
       fn();
       effectNode.error = null;
       effectNode.state = READY;
+    } catch (error) {
+      console.error(error);
+      effectNode.state = ERRORED;
+      effectNode.error = error;
+      throw error;
     } finally {
       context.pop();
     }
@@ -81,14 +86,6 @@ interface ComputedNode<T> {
 }
 
 type ComputedFunction<T> = () => T;
-
-function computedGetter<T>(node: ComputedNode<T>) {
-  if (node.state === ERRORED) {
-    throw node.error;
-  }
-
-  return node.signal.readOnly as ReadOnlySignal<T>;
-}
 
 /**
  * Creates a new computed value that will be updated whenever the signals
@@ -106,29 +103,9 @@ function computedGetter<T>(node: ComputedNode<T>) {
  * @param fn The function that returns the computed value.
  */
 function $computed<T>(fn: ComputedFunction<T>): ReadOnlySignal<T> {
-  const computedNode: ComputedNode<T> = {
-    signal: $signal<T | undefined>(undefined, { track: true }),
-    error: null,
-    state: UNSET
-  };
-
-  $effect(() => {
-    if (computedNode.state === COMPUTING) {
-      throw new Error("Circular dependency detected");
-    }
-
-    try {
-      computedNode.state = COMPUTING;
-      computedNode.signal.value = fn();
-      computedNode.error = null;
-      computedNode.state = READY;
-    } catch (error) {
-      computedNode.state = ERRORED;
-      computedNode.error = error;
-    }
-  });
-
-  return computedGetter(computedNode);
+  const computedSignal: Signal<T | undefined> = $signal(undefined, {track: true});
+  $effect(() => computedSignal.value = fn());
+  return computedSignal.readOnly as ReadOnlySignal<T>;
 }
 
 type StorageFn<T> = (value: T) => State<T> & { [key: string]: unknown };
