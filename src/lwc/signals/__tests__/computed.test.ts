@@ -57,4 +57,75 @@ describe("computed values", () => {
     signal.value.a = 1;
     expect(spy).toHaveBeenCalled();
   });
+
+  test("throw an error when a circular dependency is detected", () => {
+    console.error = jest.fn();
+    expect(() => {
+      const signal = $signal(0);
+      $computed(() => {
+        signal.value = signal.value++;
+        return signal.value;
+      });
+    }).toThrow();
+  });
+
+  test("console errors when a computed throws an error", () => {
+    const spy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    try {
+      const signal = $signal(0);
+      $computed(() => {
+        signal.value;
+        throw new Error("error");
+      });
+      signal.value = 1;
+    } catch (e) {
+      expect(spy).toHaveBeenCalled();
+    }
+
+    spy.mockRestore();
+  });
+
+  test("console errors with an identifier when one was provided", () => {
+    const spy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    try {
+      const signal = $signal(0);
+      $computed(() => {
+        signal.value;
+        throw new Error("error");
+      }, { identifier: "test-identifier" });
+      signal.value = 1;
+    } catch (e) {
+      expect(spy).toHaveBeenCalledWith(expect.stringContaining("test-identifier"), expect.any(Error));
+    }
+
+    spy.mockRestore();
+  });
+
+  test("allow for errors to be handled through a custom function", () => {
+    const customErrorHandlerFn = jest.fn() as (error: unknown) => void;
+
+    $computed(() => {
+      throw new Error("test");
+    }, {
+      errorHandler: customErrorHandlerFn
+    });
+
+    expect(customErrorHandlerFn).toHaveBeenCalled();
+  });
+
+  test("allow for errors to be handled through a custom function and return a fallback value", () => {
+    function customErrorHandlerFn() {
+      return "fallback";
+    }
+
+    const computed = $computed(() => {
+      throw new Error("test");
+    }, {
+      errorHandler: customErrorHandlerFn
+    });
+
+    expect(computed.value).toBe("fallback");
+  });
 });

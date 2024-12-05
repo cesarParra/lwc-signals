@@ -30,6 +30,17 @@ interface EffectNode {
   state: symbol;
 }
 
+type EffectProps = {
+  _fromComputed: boolean;
+  identifier: string | null;
+  errorHandler?: (error: unknown) => void;
+};
+
+const defaultEffectProps: EffectProps = {
+  _fromComputed: false,
+  identifier: null
+};
+
 /**
  * Creates a new effect that will be executed immediately and whenever
  * any of the signals it reads from change.
@@ -48,8 +59,10 @@ interface EffectNode {
  * ```
  *
  * @param fn The function to execute
+ * @param props Options to configure the effect
  */
-function $effect(fn: VoidFunction): void {
+function $effect(fn: VoidFunction, props?: Partial<EffectProps>): void {
+  const _props = { ...defaultEffectProps, ...props };
   const effectNode: EffectNode = {
     error: null,
     state: UNSET
@@ -66,6 +79,12 @@ function $effect(fn: VoidFunction): void {
       fn();
       effectNode.error = null;
       effectNode.state = READY;
+    } catch (error) {
+      effectNode.state = ERRORED;
+      effectNode.error = error;
+      _props.errorHandler
+        ? _props.errorHandler(error)
+        : handleEffectError(error, _props);
     } finally {
       context.pop();
     }
@@ -74,21 +93,20 @@ function $effect(fn: VoidFunction): void {
   execute();
 }
 
-interface ComputedNode<T> {
-  signal: Signal<T | undefined>;
-  error: unknown;
-  state: symbol;
+function handleEffectError(error: unknown, props: EffectProps) {
+  const source =
+    (props._fromComputed ? "Computed" : "Effect") +
+    (props.identifier ? ` (${props.identifier})` : "");
+  const errorMessage = `An error occurred in a ${source} function`;
+  console.error(errorMessage, error);
+  throw error;
 }
 
 type ComputedFunction<T> = () => T;
-
-function computedGetter<T>(node: ComputedNode<T>) {
-  if (node.state === ERRORED) {
-    throw node.error;
-  }
-
-  return node.signal.readOnly as ReadOnlySignal<T>;
-}
+type ComputedProps<T> = {
+  identifier: string | null;
+  errorHandler?: (error: unknown) => T | undefined;
+};
 
 /**
  * Creates a new computed value that will be updated whenever the signals
@@ -104,31 +122,36 @@ function computedGetter<T>(node: ComputedNode<T>) {
  * ```
  *
  * @param fn The function that returns the computed value.
+ * @param props Options to configure the computed value.
  */
-function $computed<T>(fn: ComputedFunction<T>): ReadOnlySignal<T> {
-  const computedNode: ComputedNode<T> = {
-    signal: $signal<T | undefined>(undefined, { track: true }),
-    error: null,
-    state: UNSET
-  };
-
-  $effect(() => {
-    if (computedNode.state === COMPUTING) {
-      throw new Error("Circular dependency detected");
-    }
-
-    try {
-      computedNode.state = COMPUTING;
-      computedNode.signal.value = fn();
-      computedNode.error = null;
-      computedNode.state = READY;
-    } catch (error) {
-      computedNode.state = ERRORED;
-      computedNode.error = error;
-    }
+function $computed<T>(
+  fn: ComputedFunction<T>,
+  props?: Partial<ComputedProps<T>>
+): ReadOnlySignal<T> {
+  const computedSignal: Signal<T | undefined> = $signal(undefined, {
+    track: true
   });
-
-  return computedGetter(computedNode);
+  $effect(
+    () => {
+      if (props?.errorHandler) {
+        // If this computed has a custom errorHandler, then error
+        // handling occurs in the computed function itself.
+        try {
+          computedSignal.value = fn();
+        } catch (error) {
+          computedSignal.value = props.errorHandler(error);
+        }
+      } else {
+        // Otherwise, the error handling is done in the $effect
+        computedSignal.value = fn();
+      }
+    },
+    {
+      _fromComputed: true,
+      identifier: props?.identifier ?? null
+    }
+  );
+  return computedSignal.readOnly as ReadOnlySignal<T>;
 }
 
 type StorageFn<T> = (value: T) => State<T> & { [key: string]: unknown };
