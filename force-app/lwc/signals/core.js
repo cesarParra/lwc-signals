@@ -329,4 +329,7 @@ function $resource(fn, source, options) {
     }
   };
 }
-export { $signal, $effect, $computed, $resource };
+function isASignal(anything) {
+  return !!anything && anything.brand === Symbol.for("lwc-signals");
+}
+export { $signal, $effect, $computed, $resource, isASignal };
