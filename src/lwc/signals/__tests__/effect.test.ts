@@ -115,7 +115,7 @@ describe("effects", () => {
     $effect(() => {
       throw new Error("test");
     }, {
-      errorHandler: customErrorHandlerFn
+      onError: customErrorHandlerFn
     });
 
     expect(customErrorHandlerFn).toHaveBeenCalled();

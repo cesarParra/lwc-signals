@@ -250,7 +250,7 @@ In this example, the test-identifier string will appear as part of the console.e
 
 ### Custom Error Handlers
 
-Both computed and effect signals can receive a custom `errorHandler` property,
+Both computed and effect signals can receive a custom `onError` property,
 that allows developers to completely override the default functionality that logs and rethrows the error.
 
 #### Effect handlers
@@ -275,7 +275,7 @@ $effect(
     throw new Error("test");
   },
   {
-    errorHandler: customErrorHandlerFn
+    onError: customErrorHandlerFn
   }
 );
 ```
@@ -304,7 +304,7 @@ $computed(
     throw new Error("test");
   },
   {
-    errorHandler: customErrorHandlerFn
+    onError: customErrorHandlerFn
   }
 );
 ```

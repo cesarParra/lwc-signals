@@ -38,7 +38,7 @@ interface EffectNode {
 type EffectOptions = {
   _fromComputed: boolean;
   identifier: string | symbol;
-  errorHandler?: (error: unknown) => void;
+  onError?: (error: unknown) => void;
 };
 
 const defaultEffectOptions: EffectOptions = {
@@ -87,8 +87,8 @@ function $effect(fn: VoidFunction, options?: Partial<EffectOptions>): Effect {
     } catch (error) {
       effectNode.state = ERRORED;
       effectNode.error = error;
-      _optionsWithDefaults.errorHandler
-        ? _optionsWithDefaults.errorHandler(error)
+      _optionsWithDefaults.onError
+        ? _optionsWithDefaults.onError(error)
         : handleEffectError(error, _optionsWithDefaults);
     } finally {
       context.pop();
@@ -116,7 +116,7 @@ function handleEffectError(error: unknown, options: EffectOptions) {
 type ComputedFunction<T> = () => T;
 type ComputedOptions<T> = {
   identifier: string | symbol;
-  errorHandler?: (
+  onError?: (
     error: unknown,
     previousValue: T | undefined
   ) => T | undefined;
@@ -156,14 +156,14 @@ function $computed<T>(
   });
   $effect(
     () => {
-      if (options?.errorHandler) {
-        // If this computed has a custom errorHandler, then error
+      if (options?.onError) {
+        // If this computed has a custom error handler, then the
         // handling occurs in the computed function itself.
         try {
           computedSignal.value = fn();
         } catch (error) {
           const previousValue = computedSignal.peek();
-          computedSignal.value = options.errorHandler(error, previousValue);
+          computedSignal.value = options.onError(error, previousValue);
         }
       } else {
         // Otherwise, the error handling is done in the $effect

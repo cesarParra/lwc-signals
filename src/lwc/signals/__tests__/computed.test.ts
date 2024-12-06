@@ -114,7 +114,7 @@ describe("computed values", () => {
     $computed(() => {
       throw new Error("test");
     }, {
-      errorHandler: customErrorHandlerFn
+      onError: customErrorHandlerFn
     });
 
     expect(customErrorHandlerFn).toHaveBeenCalled();
@@ -128,7 +128,7 @@ describe("computed values", () => {
     const computed = $computed(() => {
       throw new Error("test");
     }, {
-      errorHandler: customErrorHandlerFn
+      onError: customErrorHandlerFn
     });
 
     expect(computed.value).toBe("fallback");
@@ -147,7 +147,7 @@ describe("computed values", () => {
 
       return signal.value;
     }, {
-      errorHandler: customErrorHandlerFn
+      onError: customErrorHandlerFn
     });
 
     expect(computed.value).toBe(0);
