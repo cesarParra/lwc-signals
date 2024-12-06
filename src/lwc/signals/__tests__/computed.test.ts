@@ -128,4 +128,31 @@ describe("computed values", () => {
 
     expect(computed.value).toBe("fallback");
   });
+
+  test("allows for custom error handlers to return the previous value", () => {
+    const signal = $signal(0);
+    function customErrorHandlerFn(_error: unknown, previousValue: number | undefined) {
+      return previousValue;
+    }
+
+    const computed = $computed(() => {
+      if (signal.value === 2) {
+        throw new Error("test");
+      }
+
+      return signal.value;
+    }, {
+      errorHandler: customErrorHandlerFn
+    });
+
+    expect(computed.value).toBe(0);
+
+    signal.value = 1;
+
+    expect(computed.value).toBe(1)
+
+    signal.value = 2;
+
+    expect(computed.value).toBe(1);
+  });
 });
