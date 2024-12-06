@@ -160,4 +160,35 @@ describe("computed values", () => {
 
     expect(computed.value).toBe(1);
   });
+
+  test("allows for custom error handlers to have access to the identifier", () => {
+    const signal = $signal(0);
+    const identifier = "test-identifier";
+    function customErrorHandlerFn(_error: unknown, _previousValue: number | undefined, options: { identifier: string | symbol }) {
+      return options.identifier;
+    }
+
+    const computed = $computed(() => {
+      if (signal.value === 2) {
+        throw new Error("test");
+      }
+
+      return signal.value;
+    }, {
+      // @ts-expect-error This is just for testing purposes, we are overriding the return type of the function
+      // which usually we should not do.
+      onError: customErrorHandlerFn,
+      identifier
+    });
+
+    expect(computed.value).toBe(0);
+
+    signal.value = 1;
+
+    expect(computed.value).toBe(1)
+
+    signal.value = 2;
+
+    expect(computed.value).toBe(identifier);
+  });
 });

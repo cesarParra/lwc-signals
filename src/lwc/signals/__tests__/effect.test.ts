@@ -121,6 +121,19 @@ describe("effects", () => {
     expect(customErrorHandlerFn).toHaveBeenCalled();
   });
 
+  test("give access to the effect identifier in the onError handler", () => {
+    function customErrorHandler(_error: unknown, options: { identifier: string | symbol }) {
+      expect(options.identifier).toBe("test-identifier");
+    }
+
+    $effect(() => {
+      throw new Error("test");
+    }, {
+      identifier: "test-identifier",
+      onError: customErrorHandler
+    });
+  });
+
   test("can change and read a signal value without causing a cycle by peeking at it", () => {
     const counter = $signal(0);
     $effect(() => {

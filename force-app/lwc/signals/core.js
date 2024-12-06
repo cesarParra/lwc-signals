@@ -54,7 +54,7 @@ function $effect(fn, options) {
       effectNode.state = ERRORED;
       effectNode.error = error;
       _optionsWithDefaults.onError
-        ? _optionsWithDefaults.onError(error)
+        ? _optionsWithDefaults.onError(error, _optionsWithDefaults)
         : handleEffectError(error, _optionsWithDefaults);
     } finally {
       context.pop();
@@ -107,7 +107,9 @@ function $computed(fn, options) {
           computedSignal.value = fn();
         } catch (error) {
           const previousValue = computedSignal.peek();
-          computedSignal.value = options.onError(error, previousValue);
+          computedSignal.value = options.onError(error, previousValue, {
+            identifier: _optionsWithDefaults.identifier
+          });
         }
       } else {
         // Otherwise, the error handling is done in the $effect

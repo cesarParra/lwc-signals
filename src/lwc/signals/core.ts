@@ -38,7 +38,7 @@ interface EffectNode {
 type EffectOptions = {
   _fromComputed: boolean;
   identifier: string | symbol;
-  onError?: (error: unknown) => void;
+  onError?: (error: unknown, options: EffectOptions) => void;
 };
 
 const defaultEffectOptions: EffectOptions = {
@@ -88,7 +88,7 @@ function $effect(fn: VoidFunction, options?: Partial<EffectOptions>): Effect {
       effectNode.state = ERRORED;
       effectNode.error = error;
       _optionsWithDefaults.onError
-        ? _optionsWithDefaults.onError(error)
+        ? _optionsWithDefaults.onError(error, _optionsWithDefaults)
         : handleEffectError(error, _optionsWithDefaults);
     } finally {
       context.pop();
@@ -118,7 +118,8 @@ type ComputedOptions<T> = {
   identifier: string | symbol;
   onError?: (
     error: unknown,
-    previousValue: T | undefined
+    previousValue: T | undefined,
+    options: { identifier: string | symbol }
   ) => T | undefined;
 };
 
@@ -163,7 +164,9 @@ function $computed<T>(
           computedSignal.value = fn();
         } catch (error) {
           const previousValue = computedSignal.peek();
-          computedSignal.value = options.onError(error, previousValue);
+          computedSignal.value = options.onError(error, previousValue, {
+            identifier: _optionsWithDefaults.identifier
+          });
         }
       } else {
         // Otherwise, the error handling is done in the $effect
