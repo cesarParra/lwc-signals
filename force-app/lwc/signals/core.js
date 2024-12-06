@@ -12,7 +12,7 @@ const ERRORED = Symbol("ERRORED");
 const READY = Symbol("READY");
 const defaultEffectProps = {
   _fromComputed: false,
-  identifier: null
+  identifier: Symbol()
 };
 /**
  * Creates a new effect that will be executed immediately and whenever
@@ -61,15 +61,22 @@ function $effect(fn, props) {
     }
   };
   execute();
+  return {
+    identifier: _props.identifier
+  };
 }
 function handleEffectError(error, props) {
-  const source =
-    (props._fromComputed ? "Computed" : "Effect") +
-    (props.identifier ? ` (${props.identifier})` : "");
-  const errorMessage = `An error occurred in a ${source} function`;
-  console.error(errorMessage, error);
+  const errorTemplate = `
+  LWC Signals: An error occurred in a reactive function \n
+  Type: ${props._fromComputed ? "Computed" : "Effect"} \n
+  Identifier: ${props.identifier.toString()}
+  `.trim();
+  console.error(errorTemplate, error);
   throw error;
 }
+const defaultComputedProps = {
+  identifier: Symbol()
+};
 /**
  * Creates a new computed value that will be updated whenever the signals
  * it reads from change. Returns a read-only signal that contains the
@@ -87,6 +94,7 @@ function handleEffectError(error, props) {
  * @param props Options to configure the computed value.
  */
 function $computed(fn, props) {
+  const _props = { ...defaultComputedProps, ...props };
   const computedSignal = $signal(undefined, {
     track: true
   });
@@ -98,7 +106,8 @@ function $computed(fn, props) {
         try {
           computedSignal.value = fn();
         } catch (error) {
-          computedSignal.value = props.errorHandler(error);
+          const previousValue = computedSignal.peek();
+          computedSignal.value = props.errorHandler(error, previousValue);
         }
       } else {
         // Otherwise, the error handling is done in the $effect
@@ -107,10 +116,12 @@ function $computed(fn, props) {
     },
     {
       _fromComputed: true,
-      identifier: props?.identifier ?? null
+      identifier: _props.identifier
     }
   );
-  return computedSignal.readOnly;
+  const returnValue = computedSignal.readOnly;
+  returnValue.identifier = _props.identifier;
+  return returnValue;
 }
 class UntrackedState {
   constructor(value) {
@@ -225,6 +236,9 @@ function $signal(value, options) {
       get value() {
         return getter();
       }
+    },
+    peek() {
+      return _storageOption.get();
     }
   };
   delete returnValue.get;
