@@ -86,6 +86,11 @@ describe("computed values", () => {
     spy.mockRestore();
   });
 
+  test("have a default identifier", () => {
+    const computed = $computed(() => {});
+    expect(computed.identifier).toBeDefined();
+  });
+
   test("console errors with an identifier when one was provided", () => {
     const spy = jest.spyOn(console, "error").mockImplementation(() => {});
 
@@ -109,7 +114,7 @@ describe("computed values", () => {
     $computed(() => {
       throw new Error("test");
     }, {
-      errorHandler: customErrorHandlerFn
+      onError: customErrorHandlerFn
     });
 
     expect(customErrorHandlerFn).toHaveBeenCalled();
@@ -123,7 +128,7 @@ describe("computed values", () => {
     const computed = $computed(() => {
       throw new Error("test");
     }, {
-      errorHandler: customErrorHandlerFn
+      onError: customErrorHandlerFn
     });
 
     expect(computed.value).toBe("fallback");
@@ -142,7 +147,7 @@ describe("computed values", () => {
 
       return signal.value;
     }, {
-      errorHandler: customErrorHandlerFn
+      onError: customErrorHandlerFn
     });
 
     expect(computed.value).toBe(0);
@@ -154,5 +159,36 @@ describe("computed values", () => {
     signal.value = 2;
 
     expect(computed.value).toBe(1);
+  });
+
+  test("allows for custom error handlers to have access to the identifier", () => {
+    const signal = $signal(0);
+    const identifier = "test-identifier";
+    function customErrorHandlerFn(_error: unknown, _previousValue: number | undefined, options: { identifier: string | symbol }) {
+      return options.identifier;
+    }
+
+    const computed = $computed(() => {
+      if (signal.value === 2) {
+        throw new Error("test");
+      }
+
+      return signal.value;
+    }, {
+      // @ts-expect-error This is just for testing purposes, we are overriding the return type of the function
+      // which usually we should not do.
+      onError: customErrorHandlerFn,
+      identifier
+    });
+
+    expect(computed.value).toBe(0);
+
+    signal.value = 1;
+
+    expect(computed.value).toBe(1)
+
+    signal.value = 2;
+
+    expect(computed.value).toBe(identifier);
   });
 });

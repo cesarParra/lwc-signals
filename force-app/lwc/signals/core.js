@@ -10,9 +10,9 @@ const UNSET = Symbol("UNSET");
 const COMPUTING = Symbol("COMPUTING");
 const ERRORED = Symbol("ERRORED");
 const READY = Symbol("READY");
-const defaultEffectProps = {
+const defaultEffectOptions = {
   _fromComputed: false,
-  identifier: null
+  identifier: Symbol()
 };
 /**
  * Creates a new effect that will be executed immediately and whenever
@@ -32,10 +32,10 @@ const defaultEffectProps = {
  * ```
  *
  * @param fn The function to execute
- * @param props Options to configure the effect
+ * @param options Options to configure the effect
  */
-function $effect(fn, props) {
-  const _props = { ...defaultEffectProps, ...props };
+function $effect(fn, options) {
+  const _optionsWithDefaults = { ...defaultEffectOptions, ...options };
   const effectNode = {
     error: null,
     state: UNSET
@@ -53,23 +53,30 @@ function $effect(fn, props) {
     } catch (error) {
       effectNode.state = ERRORED;
       effectNode.error = error;
-      _props.errorHandler
-        ? _props.errorHandler(error)
-        : handleEffectError(error, _props);
+      _optionsWithDefaults.onError
+        ? _optionsWithDefaults.onError(error, _optionsWithDefaults)
+        : handleEffectError(error, _optionsWithDefaults);
     } finally {
       context.pop();
     }
   };
   execute();
+  return {
+    identifier: _optionsWithDefaults.identifier
+  };
 }
-function handleEffectError(error, props) {
-  const source =
-    (props._fromComputed ? "Computed" : "Effect") +
-    (props.identifier ? ` (${props.identifier})` : "");
-  const errorMessage = `An error occurred in a ${source} function`;
-  console.error(errorMessage, error);
+function handleEffectError(error, options) {
+  const errorTemplate = `
+  LWC Signals: An error occurred in a reactive function \n
+  Type: ${options._fromComputed ? "Computed" : "Effect"} \n
+  Identifier: ${options.identifier.toString()}
+  `.trim();
+  console.error(errorTemplate, error);
   throw error;
 }
+const defaultComputedOptions = {
+  identifier: Symbol()
+};
 /**
  * Creates a new computed value that will be updated whenever the signals
  * it reads from change. Returns a read-only signal that contains the
@@ -84,21 +91,25 @@ function handleEffectError(error, props) {
  * ```
  *
  * @param fn The function that returns the computed value.
- * @param props Options to configure the computed value.
+ * @param options Options to configure the computed value.
  */
-function $computed(fn, props) {
+function $computed(fn, options) {
+  const _optionsWithDefaults = { ...defaultComputedOptions, ...options };
   const computedSignal = $signal(undefined, {
     track: true
   });
   $effect(
     () => {
-      if (props?.errorHandler) {
-        // If this computed has a custom errorHandler, then error
+      if (options?.onError) {
+        // If this computed has a custom error handler, then the
         // handling occurs in the computed function itself.
         try {
           computedSignal.value = fn();
         } catch (error) {
-          computedSignal.value = props.errorHandler(error);
+          const previousValue = computedSignal.peek();
+          computedSignal.value = options.onError(error, previousValue, {
+            identifier: _optionsWithDefaults.identifier
+          });
         }
       } else {
         // Otherwise, the error handling is done in the $effect
@@ -107,10 +118,12 @@ function $computed(fn, props) {
     },
     {
       _fromComputed: true,
-      identifier: props?.identifier ?? null
+      identifier: _optionsWithDefaults.identifier
     }
   );
-  return computedSignal.readOnly;
+  const returnValue = computedSignal.readOnly;
+  returnValue.identifier = _optionsWithDefaults.identifier;
+  return returnValue;
 }
 class UntrackedState {
   constructor(value) {
@@ -225,6 +238,9 @@ function $signal(value, options) {
       get value() {
         return getter();
       }
+    },
+    peek() {
+      return _storageOption.get();
     }
   };
   delete returnValue.get;

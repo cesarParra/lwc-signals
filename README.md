@@ -250,7 +250,7 @@ In this example, the test-identifier string will appear as part of the console.e
 
 ### Custom Error Handlers
 
-Both computed and effect signals can receive a custom `errorHandler` property,
+Both computed and effect signals can receive a custom `onError` property,
 that allows developers to completely override the default functionality that logs and rethrows the error.
 
 #### Effect handlers
@@ -258,10 +258,11 @@ that allows developers to completely override the default functionality that log
 For `$effect` handlers, you can pass a function with the following shape:
 
 ```typescript
-(error: any) => void
+(error: any, options: { identifier: string | symbol }) => void
 ```
 
-The thrown error will be passed as an argument, and nothing should be returned.
+The function will receive the thrown error as the first argument, and an object with the identifier as the second.
+It should not return anything.
 
 Example:
 
@@ -275,7 +276,7 @@ $effect(
     throw new Error("test");
   },
   {
-    errorHandler: customErrorHandlerFn
+    onError: customErrorHandlerFn
   }
 );
 ```
@@ -285,16 +286,22 @@ $effect(
 For `$computed` handlers, you can pass a function with the following shape:
 
 ```typescript
-(error: unknown) => T | undefined;
+(error: unknown, previousValue: T, options: { identifier: string | symbol }) =>
+  T | undefined;
 ```
 
 Where you can return nothing, or a value of type `T`, which should be of the same type as the computed value itself.
 This allows you to provide a "fallback" value, that the computed value will receive in case of errors.
 
+As a second argument, you will receive the previous value of the computed signal, which can be useful to provide a
+fallback value based on the previous value.
+
+The third argument is an object with the received identifier.
+
 Example
 
 ```javascript
-function customErrorHandlerFn(error) {
+function customErrorHandlerFn(error, _previousValue, _options) {
   // custom logic or logging or rethrowing here
   return "fallback value";
 }
@@ -304,7 +311,7 @@ $computed(
     throw new Error("test");
   },
   {
-    errorHandler: customErrorHandlerFn
+    onError: customErrorHandlerFn
   }
 );
 ```

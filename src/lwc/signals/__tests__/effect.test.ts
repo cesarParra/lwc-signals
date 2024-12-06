@@ -40,6 +40,11 @@ describe("effects", () => {
     }).toThrow();
   });
 
+  test("return an object with an identifier", () => {
+    const effect = $effect(() => {});
+    expect(effect.identifier).toBeDefined();
+  });
+
   test("console errors when an effect throws an error", () => {
     const spy = jest.spyOn(console, "error").mockImplementation(() => {});
     try {
@@ -52,15 +57,81 @@ describe("effects", () => {
     spy.mockRestore();
   });
 
+  test("console errors with the default identifier", () => {
+    const spy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    const signal = $signal(0);
+    const effect = $effect(() => {
+      if (signal.value === 1) {
+        throw new Error("test");
+      }
+    });
+
+    try {
+      signal.value = 1;
+    } catch (e) {
+      expect(spy).toHaveBeenCalledWith(expect.stringContaining(effect.identifier.toString()), expect.any(Error));
+    }
+
+    spy.mockRestore();
+  });
+
+  test("allow for the identifier to be overridden", () => {
+    const signal = $signal(0);
+    const effect = $effect(() => {
+      if (signal.value === 1) {
+        throw new Error("test");
+      }
+    }, {
+      identifier: "test-identifier"
+    });
+
+    expect(effect.identifier).toBe("test-identifier");
+  });
+
+  test("console errors with a custom identifier if provided", () => {
+    const spy = jest.spyOn(console, "error").mockImplementation(() => {});
+
+    const signal = $signal(0);
+    $effect(() => {
+      if (signal.value === 1) {
+        throw new Error("test");
+      }
+    }, {
+      identifier: "test-identifier"
+    });
+
+    try {
+      signal.value = 1;
+    } catch (e) {
+      expect(spy).toHaveBeenCalledWith(expect.stringContaining("test-identifier"), expect.any(Error));
+    }
+
+    spy.mockRestore();
+  });
+
   test("allow for errors to be handled through a custom function", () => {
     const customErrorHandlerFn = jest.fn();
     $effect(() => {
       throw new Error("test");
     }, {
-      errorHandler: customErrorHandlerFn
+      onError: customErrorHandlerFn
     });
 
     expect(customErrorHandlerFn).toHaveBeenCalled();
+  });
+
+  test("give access to the effect identifier in the onError handler", () => {
+    function customErrorHandler(_error: unknown, options: { identifier: string | symbol }) {
+      expect(options.identifier).toBe("test-identifier");
+    }
+
+    $effect(() => {
+      throw new Error("test");
+    }, {
+      identifier: "test-identifier",
+      onError: customErrorHandler
+    });
   });
 
   test("can change and read a signal value without causing a cycle by peeking at it", () => {
