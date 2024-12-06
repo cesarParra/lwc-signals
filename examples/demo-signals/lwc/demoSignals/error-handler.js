@@ -8,10 +8,13 @@ $computed(
     throw new Error("An error occurred during a computation");
   },
   {
-    errorHandler: (error) => {
+    errorHandler: (error /*_previousValue*/) => {
       console.error("error thrown from computed", error);
       // Allows for a fallback value to be returned when an error occurs.
       return 0;
+
+      // The previous value can also be returned to keep the last known value.
+      // return previousValue;
     }
   }
 );
