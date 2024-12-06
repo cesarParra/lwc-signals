@@ -35,13 +35,13 @@ interface EffectNode {
   state: symbol;
 }
 
-type EffectProps = {
+type EffectOptions = {
   _fromComputed: boolean;
   identifier: string | symbol;
   errorHandler?: (error: unknown) => void;
 };
 
-const defaultEffectProps: EffectProps = {
+const defaultEffectOptions: EffectOptions = {
   _fromComputed: false,
   identifier: Symbol()
 };
@@ -64,10 +64,10 @@ const defaultEffectProps: EffectProps = {
  * ```
  *
  * @param fn The function to execute
- * @param props Options to configure the effect
+ * @param options Options to configure the effect
  */
-function $effect(fn: VoidFunction, props?: Partial<EffectProps>): Effect {
-  const _props = { ...defaultEffectProps, ...props };
+function $effect(fn: VoidFunction, options?: Partial<EffectOptions>): Effect {
+  const _optionsWithDefaults = { ...defaultEffectOptions, ...options };
   const effectNode: EffectNode = {
     error: null,
     state: UNSET
@@ -87,9 +87,9 @@ function $effect(fn: VoidFunction, props?: Partial<EffectProps>): Effect {
     } catch (error) {
       effectNode.state = ERRORED;
       effectNode.error = error;
-      _props.errorHandler
-        ? _props.errorHandler(error)
-        : handleEffectError(error, _props);
+      _optionsWithDefaults.errorHandler
+        ? _optionsWithDefaults.errorHandler(error)
+        : handleEffectError(error, _optionsWithDefaults);
     } finally {
       context.pop();
     }
@@ -98,15 +98,15 @@ function $effect(fn: VoidFunction, props?: Partial<EffectProps>): Effect {
   execute();
 
   return {
-    identifier: _props.identifier
+    identifier: _optionsWithDefaults.identifier
   };
 }
 
-function handleEffectError(error: unknown, props: EffectProps) {
+function handleEffectError(error: unknown, options: EffectOptions) {
   const errorTemplate = `
   LWC Signals: An error occurred in a reactive function \n
-  Type: ${props._fromComputed ? "Computed" : "Effect"} \n
-  Identifier: ${props.identifier.toString()}
+  Type: ${options._fromComputed ? "Computed" : "Effect"} \n
+  Identifier: ${options.identifier.toString()}
   `.trim();
 
   console.error(errorTemplate, error);
@@ -114,7 +114,7 @@ function handleEffectError(error: unknown, props: EffectProps) {
 }
 
 type ComputedFunction<T> = () => T;
-type ComputedProps<T> = {
+type ComputedOptions<T> = {
   identifier: string | symbol;
   errorHandler?: (
     error: unknown,
@@ -122,7 +122,7 @@ type ComputedProps<T> = {
   ) => T | undefined;
 };
 
-const defaultComputedProps: ComputedProps<unknown> = {
+const defaultComputedOptions: ComputedOptions<unknown> = {
   identifier: Symbol()
 };
 
@@ -144,26 +144,26 @@ type Computed<T> = ReadOnlySignal<T> & {
  * ```
  *
  * @param fn The function that returns the computed value.
- * @param props Options to configure the computed value.
+ * @param options Options to configure the computed value.
  */
 function $computed<T>(
   fn: ComputedFunction<T>,
-  props?: Partial<ComputedProps<T>>
+  options?: Partial<ComputedOptions<T>>
 ): Computed<T> {
-  const _props = { ...defaultComputedProps, ...props };
+  const _optionsWithDefaults = { ...defaultComputedOptions, ...options };
   const computedSignal: Signal<T | undefined> = $signal(undefined, {
     track: true
   });
   $effect(
     () => {
-      if (props?.errorHandler) {
+      if (options?.errorHandler) {
         // If this computed has a custom errorHandler, then error
         // handling occurs in the computed function itself.
         try {
           computedSignal.value = fn();
         } catch (error) {
           const previousValue = computedSignal.peek();
-          computedSignal.value = props.errorHandler(error, previousValue);
+          computedSignal.value = options.errorHandler(error, previousValue);
         }
       } else {
         // Otherwise, the error handling is done in the $effect
@@ -172,12 +172,12 @@ function $computed<T>(
     },
     {
       _fromComputed: true,
-      identifier: _props.identifier
+      identifier: _optionsWithDefaults.identifier
     }
   );
 
   const returnValue = computedSignal.readOnly as Computed<T>;
-  returnValue.identifier = _props.identifier;
+  returnValue.identifier = _optionsWithDefaults.identifier;
   return returnValue;
 }
 
