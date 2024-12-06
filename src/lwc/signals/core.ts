@@ -12,6 +12,7 @@ export type Signal<T> = {
   set value(newValue: T);
   readOnly: ReadOnlySignal<T>;
   brand: symbol;
+  peek(): T;
 };
 
 const context: VoidFunction[] = [];
@@ -105,7 +106,7 @@ function handleEffectError(error: unknown, props: EffectProps) {
 type ComputedFunction<T> = () => T;
 type ComputedProps<T> = {
   identifier: string | null;
-  errorHandler?: (error: unknown) => T | undefined;
+  errorHandler?: (error: unknown, previousValue: T | undefined) => T | undefined;
 };
 
 /**
@@ -139,7 +140,8 @@ function $computed<T>(
         try {
           computedSignal.value = fn();
         } catch (error) {
-          computedSignal.value = props.errorHandler(error);
+          const previousValue = computedSignal.peek();
+          computedSignal.value = props.errorHandler(error, previousValue);
         }
       } else {
         // Otherwise, the error handling is done in the $effect
@@ -306,6 +308,9 @@ function $signal<T>(
         get value() {
           return getter();
         }
+      },
+      peek() {
+        return _storageOption.get();
       }
     };
 

@@ -191,6 +191,33 @@ $effect(() => console.log(counter.value));
 
 > ❗ DO NOT use `$effect` to update the signal value, as it will create an infinite loop.
 
+## Peeking at the signal value
+
+If the rare case that you have an effect that needs to read of a signal without subscribing to it, you can
+use the signal's `peek` function to read the value.
+
+```javascript
+import { $signal, $effect } from "c/signals";
+
+const counter = $signal(0);
+
+$effect(() => console.log(counter.peek()));
+```
+
+This can be useful when you need to update the value of a signal based on its current value, but you want
+to avoid causing a circular dependency.
+
+```javascript
+const counter = $signal(0);
+$effect(() => {
+  // Without peeking, this kind of operation would cause a circular dependency.
+  counter.value = counter.peek() + 1;
+});
+```
+
+Note that you should use this feature sparingly, as it can lead to bugs that are hard to track down.
+The preferred way of reading a signal is through the `signal.value`.
+
 ## Error Handling
 
 When unhandled errors occur in a `computed` or `effect`, by default, the error will be logged to the console through
