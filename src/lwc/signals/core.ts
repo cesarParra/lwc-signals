@@ -534,4 +534,8 @@ function $resource<ReturnType, Params>(
   };
 }
 
-export { $signal, $effect, $computed, $resource };
+function isASignal(anything: unknown): anything is Signal<unknown> {
+  return !!anything && (anything as Signal<unknown>).brand === Symbol.for("lwc-signals");
+}
+
+export { $signal, $effect, $computed, $resource, isASignal };
