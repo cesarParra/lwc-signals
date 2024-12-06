@@ -86,6 +86,11 @@ describe("computed values", () => {
     spy.mockRestore();
   });
 
+  test("have a default identifier", () => {
+    const computed = $computed(() => {});
+    expect(computed.identifier).toBeDefined();
+  });
+
   test("console errors with an identifier when one was provided", () => {
     const spy = jest.spyOn(console, "error").mockImplementation(() => {});
 

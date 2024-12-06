@@ -15,6 +15,10 @@ export type Signal<T> = {
   peek(): T;
 };
 
+type Effect = {
+  identifier: string | symbol;
+};
+
 const context: VoidFunction[] = [];
 
 function _getCurrentObserver(): VoidFunction | undefined {
@@ -33,13 +37,13 @@ interface EffectNode {
 
 type EffectProps = {
   _fromComputed: boolean;
-  identifier: string | null;
+  identifier: string | symbol;
   errorHandler?: (error: unknown) => void;
 };
 
 const defaultEffectProps: EffectProps = {
   _fromComputed: false,
-  identifier: null
+  identifier: Symbol()
 };
 
 /**
@@ -62,7 +66,7 @@ const defaultEffectProps: EffectProps = {
  * @param fn The function to execute
  * @param props Options to configure the effect
  */
-function $effect(fn: VoidFunction, props?: Partial<EffectProps>): void {
+function $effect(fn: VoidFunction, props?: Partial<EffectProps>): Effect {
   const _props = { ...defaultEffectProps, ...props };
   const effectNode: EffectNode = {
     error: null,
@@ -92,21 +96,38 @@ function $effect(fn: VoidFunction, props?: Partial<EffectProps>): void {
   };
 
   execute();
+
+  return {
+    identifier: _props.identifier
+  };
 }
 
 function handleEffectError(error: unknown, props: EffectProps) {
-  const source =
-    (props._fromComputed ? "Computed" : "Effect") +
-    (props.identifier ? ` (${props.identifier})` : "");
-  const errorMessage = `An error occurred in a ${source} function`;
-  console.error(errorMessage, error);
+  const errorTemplate = `
+  LWC Signals: An error occurred in a reactive function \n
+  Type: ${props._fromComputed ? "Computed" : "Effect"} \n
+  Identifier: ${props.identifier.toString()}
+  `.trim();
+
+  console.error(errorTemplate, error);
   throw error;
 }
 
 type ComputedFunction<T> = () => T;
 type ComputedProps<T> = {
-  identifier: string | null;
-  errorHandler?: (error: unknown, previousValue: T | undefined) => T | undefined;
+  identifier: string | symbol;
+  errorHandler?: (
+    error: unknown,
+    previousValue: T | undefined
+  ) => T | undefined;
+};
+
+const defaultComputedProps: ComputedProps<unknown> = {
+  identifier: Symbol()
+};
+
+type Computed<T> = ReadOnlySignal<T> & {
+  identifier: string | symbol;
 };
 
 /**
@@ -128,7 +149,8 @@ type ComputedProps<T> = {
 function $computed<T>(
   fn: ComputedFunction<T>,
   props?: Partial<ComputedProps<T>>
-): ReadOnlySignal<T> {
+): Computed<T> {
+  const _props = { ...defaultComputedProps, ...props };
   const computedSignal: Signal<T | undefined> = $signal(undefined, {
     track: true
   });
@@ -150,10 +172,13 @@ function $computed<T>(
     },
     {
       _fromComputed: true,
-      identifier: props?.identifier ?? null
+      identifier: _props.identifier
     }
   );
-  return computedSignal.readOnly as ReadOnlySignal<T>;
+
+  const returnValue = computedSignal.readOnly as Computed<T>;
+  returnValue.identifier = _props.identifier;
+  return returnValue;
 }
 
 type StorageFn<T> = (value: T) => State<T> & { [key: string]: unknown };
