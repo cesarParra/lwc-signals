@@ -62,4 +62,14 @@ describe("effects", () => {
 
     expect(customErrorHandlerFn).toHaveBeenCalled();
   });
+
+  test("can change and read a signal value without causing a cycle by peeking at it", () => {
+    const counter = $signal(0);
+    $effect(() => {
+      // Without peeking, this kind of operation would cause a circular dependency.
+      counter.value = counter.peek() + 1;
+    });
+
+    expect(counter.value).toBe(1);
+  });
 });
