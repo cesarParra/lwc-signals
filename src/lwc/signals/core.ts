@@ -246,6 +246,8 @@ class TrackedState<T> implements TrackableState<T> {
   }
 }
 
+const SIGNAL_OBJECT_BRAND = Symbol.for("lwc-signals");
+
 /**
  * Creates a new signal with the provided value. A signal is a reactive
  * primitive that can be used to store and update values. Signals can be
@@ -331,7 +333,7 @@ function $signal<T>(
           setter(newValue);
         }
       },
-      brand: Symbol.for("lwc-signals"),
+      brand: SIGNAL_OBJECT_BRAND,
       readOnly: {
         get value() {
           return getter();
@@ -534,8 +536,8 @@ function $resource<ReturnType, Params>(
   };
 }
 
-function isASignal(anything: unknown): anything is Signal<unknown> {
-  return !!anything && (anything as Signal<unknown>).brand === Symbol.for("lwc-signals");
+function isSignal(anything: unknown): anything is Signal<unknown> {
+  return !!anything && (anything as Signal<unknown>).brand === SIGNAL_OBJECT_BRAND;
 }
 
-export { $signal, $effect, $computed, $resource, isASignal };
+export { $signal, $effect, $computed, $resource, isSignal };
