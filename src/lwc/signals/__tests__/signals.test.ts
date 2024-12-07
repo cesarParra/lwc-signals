@@ -25,6 +25,19 @@ describe("signals", () => {
 
     expect(debouncedSignal.value).toBe(1);
   });
+
+  test("should be identified with a symbol", () => {
+    const signal = $signal(0);
+    expect(signal.brand).toBe(Symbol.for("lwc-signals"));
+  });
+
+  test("allow for peeking the value without triggering a reactivity", () => {
+    const signal = $signal(0);
+    const spy = jest.fn(() => signal.value);
+    const value = signal.peek();
+    expect(spy).not.toHaveBeenCalled();
+    expect(value).toBe(0);
+  });
 });
 
 

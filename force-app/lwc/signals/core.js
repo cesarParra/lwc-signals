@@ -10,6 +10,10 @@ const UNSET = Symbol("UNSET");
 const COMPUTING = Symbol("COMPUTING");
 const ERRORED = Symbol("ERRORED");
 const READY = Symbol("READY");
+const defaultEffectOptions = {
+  _fromComputed: false,
+  identifier: Symbol()
+};
 /**
  * Creates a new effect that will be executed immediately and whenever
  * any of the signals it reads from change.
@@ -28,8 +32,10 @@ const READY = Symbol("READY");
  * ```
  *
  * @param fn The function to execute
+ * @param options Options to configure the effect
  */
-function $effect(fn) {
+function $effect(fn, options) {
+  const _optionsWithDefaults = { ...defaultEffectOptions, ...options };
   const effectNode = {
     error: null,
     state: UNSET
@@ -44,18 +50,33 @@ function $effect(fn) {
       fn();
       effectNode.error = null;
       effectNode.state = READY;
+    } catch (error) {
+      effectNode.state = ERRORED;
+      effectNode.error = error;
+      _optionsWithDefaults.onError
+        ? _optionsWithDefaults.onError(error, _optionsWithDefaults)
+        : handleEffectError(error, _optionsWithDefaults);
     } finally {
       context.pop();
     }
   };
   execute();
+  return {
+    identifier: _optionsWithDefaults.identifier
+  };
 }
-function computedGetter(node) {
-  if (node.state === ERRORED) {
-    throw node.error;
-  }
-  return node.signal.readOnly;
+function handleEffectError(error, options) {
+  const errorTemplate = `
+  LWC Signals: An error occurred in a reactive function \n
+  Type: ${options._fromComputed ? "Computed" : "Effect"} \n
+  Identifier: ${options.identifier.toString()}
+  `.trim();
+  console.error(errorTemplate, error);
+  throw error;
 }
+const defaultComputedOptions = {
+  identifier: Symbol()
+};
 /**
  * Creates a new computed value that will be updated whenever the signals
  * it reads from change. Returns a read-only signal that contains the
@@ -70,28 +91,39 @@ function computedGetter(node) {
  * ```
  *
  * @param fn The function that returns the computed value.
+ * @param options Options to configure the computed value.
  */
-function $computed(fn) {
-  const computedNode = {
-    signal: $signal(undefined),
-    error: null,
-    state: UNSET
-  };
-  $effect(() => {
-    if (computedNode.state === COMPUTING) {
-      throw new Error("Circular dependency detected");
-    }
-    try {
-      computedNode.state = COMPUTING;
-      computedNode.signal.value = fn();
-      computedNode.error = null;
-      computedNode.state = READY;
-    } catch (error) {
-      computedNode.state = ERRORED;
-      computedNode.error = error;
-    }
+function $computed(fn, options) {
+  const _optionsWithDefaults = { ...defaultComputedOptions, ...options };
+  const computedSignal = $signal(undefined, {
+    track: true
   });
-  return computedGetter(computedNode);
+  $effect(
+    () => {
+      if (options?.onError) {
+        // If this computed has a custom error handler, then the
+        // handling occurs in the computed function itself.
+        try {
+          computedSignal.value = fn();
+        } catch (error) {
+          const previousValue = computedSignal.peek();
+          computedSignal.value = options.onError(error, previousValue, {
+            identifier: _optionsWithDefaults.identifier
+          });
+        }
+      } else {
+        // Otherwise, the error handling is done in the $effect
+        computedSignal.value = fn();
+      }
+    },
+    {
+      _fromComputed: true,
+      identifier: _optionsWithDefaults.identifier
+    }
+  );
+  const returnValue = computedSignal.readOnly;
+  returnValue.identifier = _optionsWithDefaults.identifier;
+  return returnValue;
 }
 class UntrackedState {
   constructor(value) {
@@ -102,6 +134,9 @@ class UntrackedState {
   }
   set(value) {
     this._value = value;
+  }
+  forceUpdate() {
+    return false;
   }
 }
 class TrackedState {
@@ -118,6 +153,9 @@ class TrackedState {
   }
   set(value) {
     this._value = this._membrane.getProxy(value);
+  }
+  forceUpdate() {
+    return true;
   }
 }
 /**
@@ -163,7 +201,10 @@ function $signal(value, options) {
     return _storageOption.get();
   }
   function setter(newValue) {
-    if (isEqual(newValue, _storageOption.get())) {
+    if (
+      !trackableState.forceUpdate() &&
+      isEqual(newValue, _storageOption.get())
+    ) {
       return;
     }
     trackableState.set(newValue);
@@ -192,16 +233,20 @@ function $signal(value, options) {
         setter(newValue);
       }
     },
+    brand: Symbol.for("lwc-signals"),
     readOnly: {
       get value() {
         return getter();
       }
+    },
+    peek() {
+      return _storageOption.get();
     }
   };
-  // We don't want to expose the `get` and `set` methods, so
-  // remove before returning
   delete returnValue.get;
   delete returnValue.set;
+  delete returnValue.registerOnChange;
+  delete returnValue.unsubscribe;
   return returnValue;
 }
 function $resource(fn, source, options) {
@@ -284,4 +329,7 @@ function $resource(fn, source, options) {
     }
   };
 }
-export { $signal, $effect, $computed, $resource };
+function isASignal(anything) {
+  return !!anything && anything.brand === Symbol.for("lwc-signals");
+}
+export { $signal, $effect, $computed, $resource, isASignal };
