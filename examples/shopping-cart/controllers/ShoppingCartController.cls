@@ -12,8 +12,8 @@ public with sharing class ShoppingCartController {
 
     private static List<ItemDto> buildSampleItemList() {
         List<ItemDto> items = new List<ItemDto>();
-        items.add(new ItemDto('1', 'Nomad Tumbler', new List<String>{'White'}, 1, 35.0, 'https://tailwindui.com/img/ecommerce-images/shopping-cart-page-01-product-03.jpg'));
-        items.add(new ItemDto('2', 'Basic Tee', new List<String>{'Sienna', 'Large'}, 1, 32.0, 'https://tailwindui.com/img/ecommerce-images/shopping-cart-page-01-product-01.jpg'));
+        items.add(new ItemDto('1', 'Nomad Tumbler', new List<String>{'White'}, 1, 35.0, 'resource/tumbler'));
+        items.add(new ItemDto('2', 'Basic Tee', new List<String>{'Sienna', 'Large'}, 1, 32.0, 'resource/tee'));
         return items;
     }
 

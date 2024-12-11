@@ -6,6 +6,7 @@ import {
   cartHistory,
   undoCartChange
 } from "c/demoSignals";
+import basePath from "@salesforce/community/basePath";
 
 // States
 import ready from "./states/ready.html";
@@ -43,7 +44,11 @@ export default class ShoppingCartDetails extends TwElement {
   get items() {
     return (
       this.itemData.data.items?.map((item) => {
-        return { ...item, total: item.price * item.quantity };
+        return {
+          ...item,
+          imgUrl: `${basePath}/${item.imgUrl}`,
+          total: item.price * item.quantity
+        };
       }) ?? []
     );
   }
