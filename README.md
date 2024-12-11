@@ -8,9 +8,8 @@ A simple yet powerful reactive state management solution for Lightning Web Compo
 ![Version](https://img.shields.io/badge/version-1.1.1-blue)
 
 Inspired by the Signals technology behind SolidJs, Preact, Svelte 5 Runes and the Vue 3 Composition API, LWC Signals is
-a
-reactive signals for Lightning Web Components that allows you to create reactive data signals
-that can be used to share state between components.
+a reactive signals implementation for Lightning Web Components.
+It allows you to create reactive data signals that can be used to share up-to-date state between components.
 
 It features:
 
@@ -161,7 +160,7 @@ export default class Display extends LightningElement {
     <img src="./doc-assets/counter-example.gif" alt="Counter Example" />
 </p>
 
-### Stacking computed values
+#### Stacking computed values
 
 You can also stack computed values to create more complex reactive values that derive from each other
 
@@ -175,6 +174,147 @@ export const counterPlusTwo = $computed(() => counterPlusOne.value + 1);
 ```
 
 Because `$computed` values return a signal, you can use them as you would use any other signal.
+
+### `$effect`
+
+You can also use the `$effect` function to create a side effect that depends on a signal.
+
+Let's say you want to keep a log of the changes in the `counter` signal.
+
+```javascript
+import { $signal, $effect } from "c/signals";
+
+export const counter = $signal(0);
+
+$effect(() => console.log(counter.value));
+```
+
+> ❗ DO NOT use `$effect` to update the signal value, as it will create an infinite loop.
+
+## Peeking at the signal value
+
+If the rare case that you have an effect that needs to read of a signal without subscribing to it, you can
+use the signal's `peek` function to read the value.
+
+```javascript
+import { $signal, $effect } from "c/signals";
+
+const counter = $signal(0);
+
+$effect(() => console.log(counter.peek()));
+```
+
+This can be useful when you need to update the value of a signal based on its current value, but you want
+to avoid causing a circular dependency.
+
+```javascript
+const counter = $signal(0);
+$effect(() => {
+  // Without peeking, this kind of operation would cause a circular dependency.
+  counter.value = counter.peek() + 1;
+});
+```
+
+Note that you should use this feature sparingly, as it can lead to bugs that are hard to track down.
+The preferred way of reading a signal is through the `signal.value`.
+
+## Error Handling
+
+When unhandled errors occur in a `computed` or `effect`, by default, the error will be logged to the console through
+a `console.error` call, and then the error will be rethrown.
+
+If you wish to know which `computed` or `effect` caused the error, you can pass a second argument to the `computed` or
+`effect` with a unique identifier.
+
+```javascript
+$computed(
+  () => {
+    signal.value;
+    throw new Error("error");
+  },
+  { identifier: "test-identifier" }
+);
+
+$effect(
+  () => {
+    signal.value;
+    throw new Error("error");
+  },
+  { identifier: "test-identifier" }
+);
+```
+
+This value will be used only for debugging purposes, and does not affect the functionality otherwise.
+
+In this example, the test-identifier string will appear as part of the console.error message.
+
+### Custom Error Handlers
+
+Both computed and effect signals can receive a custom `onError` property,
+that allows developers to completely override the default functionality that logs and rethrows the error.
+
+#### Effect handlers
+
+For `$effect` handlers, you can pass a function with the following shape:
+
+```typescript
+(error: any, options: { identifier: string | symbol }) => void
+```
+
+The function will receive the thrown error as the first argument, and an object with the identifier as the second.
+It should not return anything.
+
+Example:
+
+```javascript
+function customErrorHandlerFn(error) {
+  // custom logic or logging or rethrowing here
+}
+
+$effect(
+  () => {
+    throw new Error("test");
+  },
+  {
+    onError: customErrorHandlerFn
+  }
+);
+```
+
+#### Computed handlers
+
+For `$computed` handlers, you can pass a function with the following shape:
+
+```typescript
+(error: unknown, previousValue: T, options: { identifier: string | symbol }) =>
+  T | undefined;
+```
+
+Where you can return nothing, or a value of type `T`, which should be of the same type as the computed value itself.
+This allows you to provide a "fallback" value, that the computed value will receive in case of errors.
+
+As a second argument, you will receive the previous value of the computed signal, which can be useful to provide a
+fallback value based on the previous value.
+
+The third argument is an object with the received identifier.
+
+Example
+
+```javascript
+function customErrorHandlerFn(error, _previousValue, _options) {
+  // custom logic or logging or rethrowing here
+  return "fallback value";
+}
+
+$computed(
+  () => {
+    throw new Error("test");
+  },
+  {
+    onError: customErrorHandlerFn
+  }
+);
+```
 
 ## Tracking objects and arrays
 
@@ -200,8 +340,8 @@ console.log(computedFromObj.value); // 4
 
 ## Reacting to multiple signals
 
-You can also use multiple signals in a single `computed` and react to changes in any of them.
-This gives you the ability to create complex reactive values that depend on multiple data sources
+You can also use multiple signals in a single `computed` or `effect` and react to changes in any of them.
+This allows you to create complex reactive values that depend on multiple data sources
 without having to track each one independently.
 
 > 👀 You can find the full working code for the following example in the `examples`
@@ -295,22 +435,6 @@ export default class BusinessCard extends LightningElement {
 
 > ❗ Notice that we are using a property instead of a getter in the `$computed` callback function, because
 > we need to reassign the value to `this.contactInfo` to trigger the reactivity, as it is a complex object.
-
-### `$effect`
-
-You can also use the `$effect` function to create a side effect that depends on a signal.
-
-Let's say you want to keep a log of the changes in the `counter` signal.
-
-```javascript
-import { $signal, $effect } from "c/signals";
-
-export const counter = $signal(0);
-
-$effect(() => console.log(counter.value));
-```
-
-> ❗ DO NOT use `$effect` to update the signal value, as it will create an infinite loop.
 
 ## Communicating with Apex data and other asynchronous operations
 
@@ -817,7 +941,8 @@ The following storage helpers are available by default:
   if using a platform event, this will contain the fields of the platform event.
 
   - The `options` (optional) parameter is an object that can contain the following properties (all of them optional):
-    - `replayId` The replay ID to start from, defaults to -1. When -2 is passed, it will replay from the last saved event.
+    - `replayId` The replay ID to start from, defaults to -1. When -2 is passed, it will replay from the last saved
+      event.
     - `onSubscribe` A callback function called when the subscription is successful.
     - `onError` A callback function called when an error response is received from the server for
       handshake, connect, subscribe, and unsubscribe meta channels.

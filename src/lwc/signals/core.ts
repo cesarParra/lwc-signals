@@ -11,6 +11,12 @@ export type Signal<T> = {
   get value(): T;
   set value(newValue: T);
   readOnly: ReadOnlySignal<T>;
+  brand: symbol;
+  peek(): T;
+};
+
+type Effect = {
+  identifier: string | symbol;
 };
 
 const context: VoidFunction[] = [];
@@ -28,6 +34,17 @@ interface EffectNode {
   error: unknown;
   state: symbol;
 }
+
+type EffectOptions = {
+  _fromComputed: boolean;
+  identifier: string | symbol;
+  onError?: (error: unknown, options: EffectOptions) => void;
+};
+
+const defaultEffectOptions: EffectOptions = {
+  _fromComputed: false,
+  identifier: Symbol()
+};
 
 /**
  * Creates a new effect that will be executed immediately and whenever
@@ -47,12 +64,14 @@ interface EffectNode {
  * ```
  *
  * @param fn The function to execute
+ * @param options Options to configure the effect
  */
-function $effect(fn: VoidFunction): void {
+function $effect(fn: VoidFunction, options?: Partial<EffectOptions>): Effect {
+  const _optionsWithDefaults = { ...defaultEffectOptions, ...options };
   const effectNode: EffectNode = {
     error: null,
     state: UNSET
-  }
+  };
 
   const execute = () => {
     if (effectNode.state === COMPUTING) {
@@ -65,29 +84,52 @@ function $effect(fn: VoidFunction): void {
       fn();
       effectNode.error = null;
       effectNode.state = READY;
+    } catch (error) {
+      effectNode.state = ERRORED;
+      effectNode.error = error;
+      _optionsWithDefaults.onError
+        ? _optionsWithDefaults.onError(error, _optionsWithDefaults)
+        : handleEffectError(error, _optionsWithDefaults);
     } finally {
       context.pop();
     }
   };
 
   execute();
+
+  return {
+    identifier: _optionsWithDefaults.identifier
+  };
 }
 
-interface ComputedNode<T> {
-  signal: Signal<T | undefined>;
-  error: unknown;
-  state: symbol;
+function handleEffectError(error: unknown, options: EffectOptions) {
+  const errorTemplate = `
+  LWC Signals: An error occurred in a reactive function \n
+  Type: ${options._fromComputed ? "Computed" : "Effect"} \n
+  Identifier: ${options.identifier.toString()}
+  `.trim();
+
+  console.error(errorTemplate, error);
+  throw error;
 }
 
 type ComputedFunction<T> = () => T;
+type ComputedOptions<T> = {
+  identifier: string | symbol;
+  onError?: (
+    error: unknown,
+    previousValue: T | undefined,
+    options: { identifier: string | symbol }
+  ) => T | undefined;
+};
 
-function computedGetter<T>(node: ComputedNode<T>) {
-  if (node.state === ERRORED) {
-    throw node.error;
-  }
+const defaultComputedOptions: ComputedOptions<unknown> = {
+  identifier: Symbol()
+};
 
-  return node.signal.readOnly as ReadOnlySignal<T>;
-}
+type Computed<T> = ReadOnlySignal<T> & {
+  identifier: string | symbol;
+};
 
 /**
  * Creates a new computed value that will be updated whenever the signals
@@ -103,31 +145,43 @@ function computedGetter<T>(node: ComputedNode<T>) {
  * ```
  *
  * @param fn The function that returns the computed value.
+ * @param options Options to configure the computed value.
  */
-function $computed<T>(fn: ComputedFunction<T>): ReadOnlySignal<T> {
-  const computedNode: ComputedNode<T> = {
-    signal: $signal<T | undefined>(undefined),
-    error: null,
-    state: UNSET
-  };
-
-  $effect(() => {
-    if (computedNode.state === COMPUTING) {
-      throw new Error("Circular dependency detected");
-    }
-
-    try {
-      computedNode.state = COMPUTING;
-      computedNode.signal.value = fn();
-      computedNode.error = null;
-      computedNode.state = READY;
-    } catch (error) {
-      computedNode.state = ERRORED;
-      computedNode.error = error;
-    }
+function $computed<T>(
+  fn: ComputedFunction<T>,
+  options?: Partial<ComputedOptions<T>>
+): Computed<T> {
+  const _optionsWithDefaults = { ...defaultComputedOptions, ...options };
+  const computedSignal: Signal<T | undefined> = $signal(undefined, {
+    track: true
   });
+  $effect(
+    () => {
+      if (options?.onError) {
+        // If this computed has a custom error handler, then the
+        // handling occurs in the computed function itself.
+        try {
+          computedSignal.value = fn();
+        } catch (error) {
+          const previousValue = computedSignal.peek();
+          computedSignal.value = options.onError(error, previousValue, {
+            identifier: _optionsWithDefaults.identifier
+          });
+        }
+      } else {
+        // Otherwise, the error handling is done in the $effect
+        computedSignal.value = fn();
+      }
+    },
+    {
+      _fromComputed: true,
+      identifier: _optionsWithDefaults.identifier
+    }
+  );
 
-  return computedGetter(computedNode);
+  const returnValue = computedSignal.readOnly as Computed<T>;
+  returnValue.identifier = _optionsWithDefaults.identifier;
+  return returnValue;
 }
 
 type StorageFn<T> = (value: T) => State<T> & { [key: string]: unknown };
@@ -142,6 +196,8 @@ interface TrackableState<T> {
   get(): T;
 
   set(value: T): void;
+
+  forceUpdate(): boolean;
 }
 
 class UntrackedState<T> implements TrackableState<T> {
@@ -157,6 +213,10 @@ class UntrackedState<T> implements TrackableState<T> {
 
   set(value: T) {
     this._value = value;
+  }
+
+  forceUpdate() {
+    return false;
   }
 }
 
@@ -180,7 +240,13 @@ class TrackedState<T> implements TrackableState<T> {
   set(value: T) {
     this._value = this._membrane.getProxy(value);
   }
+
+  forceUpdate(): boolean {
+    return true;
+  }
 }
+
+const SIGNAL_OBJECT_BRAND = Symbol.for("lwc-signals");
 
 /**
  * Creates a new signal with the provided value. A signal is a reactive
@@ -231,7 +297,10 @@ function $signal<T>(
   }
 
   function setter(newValue: T) {
-    if (isEqual(newValue, _storageOption.get())) {
+    if (
+      !trackableState.forceUpdate() &&
+      isEqual(newValue, _storageOption.get())
+    ) {
       return;
     }
     trackableState.set(newValue);
@@ -264,17 +333,21 @@ function $signal<T>(
           setter(newValue);
         }
       },
+      brand: SIGNAL_OBJECT_BRAND,
       readOnly: {
         get value() {
           return getter();
         }
+      },
+      peek() {
+        return _storageOption.get();
       }
     };
 
-  // We don't want to expose the `get` and `set` methods, so
-  // remove before returning
   delete returnValue.get;
   delete returnValue.set;
+  delete returnValue.registerOnChange;
+  delete returnValue.unsubscribe;
 
   return returnValue;
 }
@@ -463,4 +536,8 @@ function $resource<ReturnType, Params>(
   };
 }
 
-export { $signal, $effect, $computed, $resource };
+function isSignal(anything: unknown): anything is Signal<unknown> {
+  return !!anything && (anything as Signal<unknown>).brand === SIGNAL_OBJECT_BRAND;
+}
+
+export { $signal, $effect, $computed, $resource, isSignal };
