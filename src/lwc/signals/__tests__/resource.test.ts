@@ -527,5 +527,15 @@ describe("resources", () => {
 
     expect(resource.identifier).toBeDefined();
   });
+
+  test("allow for custom identifiers to be provided", () => {
+    const asyncFunction = async () => {
+      return "done";
+    };
+
+    const resource = $resource(asyncFunction, undefined, { identifier: "test-identifier" });
+
+    expect(resource.identifier).toBe("test-identifier");
+  });
 });
 
