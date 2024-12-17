@@ -395,7 +395,6 @@ describe("resources", () => {
     });
   });
 
-
   test("do not go through the reevaluation cycle when fetchWhen does not return true", async () => {
     const asyncFunction = async (params: { [key: string]: unknown }) => {
       return params["source"];
@@ -403,11 +402,15 @@ describe("resources", () => {
 
     const source = $signal(0);
     const fetchWhenSource = $signal({ a: "a" });
-    const { data: resource } = $resource(asyncFunction, () => ({
-      source: source.value
-    }), {
-      fetchWhen: () => fetchWhenSource.value.a !== "a"
-    });
+    const { data: resource } = $resource(
+      asyncFunction,
+      () => ({
+        source: source.value
+      }),
+      {
+        fetchWhen: () => fetchWhenSource.value.a !== "a"
+      }
+    );
 
     let effectAmount = 0;
     $effect(() => {
@@ -533,9 +536,27 @@ describe("resources", () => {
       return "done";
     };
 
-    const resource = $resource(asyncFunction, undefined, { identifier: "test-identifier" });
+    const resource = $resource(asyncFunction, undefined, {
+      identifier: "test-identifier"
+    });
 
     expect(resource.identifier).toBe("test-identifier");
   });
-});
 
+  test("console error with an identifier when one was provided", async () => {
+    const asyncFunction = async () => {
+      throw new Error("error");
+    };
+
+    const spy = jest.spyOn(console, "error").mockImplementation(() => {
+    });
+
+    $resource(asyncFunction, undefined, { identifier: "test-identifier" });
+
+    await new Promise(process.nextTick);
+
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining("test-identifier"), expect.any(Error));
+
+    spy.mockRestore();
+  });
+});

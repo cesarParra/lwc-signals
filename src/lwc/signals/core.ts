@@ -393,6 +393,24 @@ const defaultResourceOptions = {
 type RequireKeys<T extends object, K extends keyof T> = Required<Pick<T, K>> &
   Omit<T, K>;
 
+type OptionalResourceOptionsWithIdentifier<T> = RequireKeys<
+  Partial<ResourceOptions<T>>,
+  "identifier"
+>;
+
+function handleResourceError<T>(
+  error: unknown,
+  options: OptionalResourceOptionsWithIdentifier<T>
+) {
+  const errorTemplate = `
+  LWC Signals: An error occurred in a reactive function \n
+  Type: Resource \n
+  Identifier: ${options.identifier.toString()}
+  `.trim();
+
+  console.error(errorTemplate, error);
+}
+
 /**
  * Creates a new resource that fetches data from an async source. The resource
  * will automatically fetch the data when the component is mounted.
@@ -456,10 +474,8 @@ function $resource<ReturnType, Params>(
   source?: Params | (() => Params),
   options?: Partial<ResourceOptions<ReturnType>>
 ): ResourceResponse<ReturnType> {
-  const _optionsWithDefaults: RequireKeys<
-    Partial<ResourceOptions<ReturnType>>,
-    "identifier"
-  > = { ...defaultResourceOptions, ...options };
+  const _optionsWithDefaults: OptionalResourceOptionsWithIdentifier<ReturnType> =
+    { ...defaultResourceOptions, ...options };
 
   function loadingState(data: ReturnType | null): AsyncData<ReturnType> {
     return {
@@ -504,6 +520,7 @@ function $resource<ReturnType, Params>(
         error: null
       };
     } catch (error) {
+      handleResourceError(error, _optionsWithDefaults);
       _signal.value = {
         data: null,
         loading: false,
