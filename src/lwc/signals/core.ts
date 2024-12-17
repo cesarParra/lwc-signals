@@ -364,6 +364,7 @@ type ResourceResponse<T> = {
   data: ReadOnlySignal<AsyncData<T>>;
   mutate: (newValue: T) => void;
   refetch: () => void;
+  identifier: string | symbol;
 };
 
 type MutatorCallback<T> = (value: T | null, error?: unknown) => void;
@@ -382,7 +383,15 @@ type ResourceOptions<T> = {
   onMutate: OnMutate<T>;
   storage: StorageFn<T>;
   fetchWhen: FetchWhenPredicate;
+  identifier: string | symbol;
 };
+
+const defaultResourceOptions = {
+  identifier: Symbol()
+};
+
+type RequireKeys<T extends object, K extends keyof T> = Required<Pick<T, K>> &
+  Omit<T, K>;
 
 /**
  * Creates a new resource that fetches data from an async source. The resource
@@ -447,6 +456,11 @@ function $resource<ReturnType, Params>(
   source?: Params | (() => Params),
   options?: Partial<ResourceOptions<ReturnType>>
 ): ResourceResponse<ReturnType> {
+  const _optionsWithDefaults: RequireKeys<
+    Partial<ResourceOptions<ReturnType>>,
+    "identifier"
+  > = { ...defaultResourceOptions, ...options };
+
   function loadingState(data: ReturnType | null): AsyncData<ReturnType> {
     return {
       data: data,
@@ -456,12 +470,12 @@ function $resource<ReturnType, Params>(
   }
 
   let _isInitialLoad = true;
-  let _value: ReturnType | null = options?.initialValue ?? null;
+  let _value: ReturnType | null = _optionsWithDefaults?.initialValue ?? null;
   let _previousParams: Params | undefined;
   const _signal = $signal<AsyncData<ReturnType>>(loadingState(_value));
   // Optimistic updates are enabled by default
-  const _optimisticMutate = options?.optimisticMutate ?? true;
-  const _fetchWhen = options?.fetchWhen ?? (() => true);
+  const _optimisticMutate = _optionsWithDefaults?.optimisticMutate ?? true;
+  const _fetchWhen = _optionsWithDefaults?.fetchWhen ?? (() => true);
 
   const execute = async () => {
     const derivedSourceFn: () => Params | undefined =
@@ -500,7 +514,9 @@ function $resource<ReturnType, Params>(
     }
   };
 
-  $effect(execute);
+  $effect(execute, {
+    identifier: _optionsWithDefaults.identifier
+  });
 
   /**
    * Callback function that updates the value of the resource.
@@ -532,12 +548,15 @@ function $resource<ReturnType, Params>(
     refetch: async () => {
       _isInitialLoad = true;
       await execute();
-    }
+    },
+    identifier: _optionsWithDefaults.identifier
   };
 }
 
 function isSignal(anything: unknown): anything is Signal<unknown> {
-  return !!anything && (anything as Signal<unknown>).brand === SIGNAL_OBJECT_BRAND;
+  return (
+    !!anything && (anything as Signal<unknown>).brand === SIGNAL_OBJECT_BRAND
+  );
 }
 
 export { $signal, $effect, $computed, $resource, isSignal };

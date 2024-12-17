@@ -1,4 +1,4 @@
-import { $resource, $signal, $computed, $effect } from "../core";
+import { $resource, $signal, $effect } from "../core";
 
 beforeAll(() => {
   global.console = {
@@ -516,6 +516,16 @@ describe("resources", () => {
       loading: false,
       error: null
     });
+  });
+
+  test("have a default identifier", () => {
+    const asyncFunction = async () => {
+      return "done";
+    };
+
+    const resource = $resource(asyncFunction);
+
+    expect(resource.identifier).toBeDefined();
   });
 });
 
