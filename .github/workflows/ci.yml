@@ -33,4 +33,3 @@ jobs:
           git add -A
           git commit -m "chore: commit changes from build"
           git push
-        if: success() && steps.build.outputs.changes_detected == 'true'
