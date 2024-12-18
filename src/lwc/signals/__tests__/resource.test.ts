@@ -580,5 +580,38 @@ describe("resources", () => {
     expect(resource.value.error).toBe(anyError);
   });
 
-  // TODO: Custom function that returns an AsyncData
+  test("allow for errors to be handled through a custom function and return the previous value", async () => {
+    function customErrorHandlerFn(_error: unknown, previousValue: string | null) {
+      return { data: previousValue, loading: false, error: null };
+    }
+
+    const counter = $signal(0);
+    const asyncFunctionThatFails = async (currentCount: number) => {
+      if (currentCount === 0) {
+        return 'success';
+      } else {
+        throw new Error("error");
+      }
+    }
+
+    const { data: resource } = $resource(asyncFunctionThatFails, () => counter.value, {
+      onError: customErrorHandlerFn
+    });
+
+    await new Promise(process.nextTick);
+
+    // The first time the async function is called, it will return a value.
+    expect(resource.value.data).toBe("success");
+    expect(resource.value.loading).toBe(false);
+    expect(resource.value.error).toBeNull();
+
+    counter.value = 1;
+    await new Promise(process.nextTick);
+
+    // The second time the async function is called, it will throw an error.
+    // We assert that the custom error handler was called and that the value was reset.
+    expect(resource.value.data).toBe("success");
+    expect(resource.value.loading).toBe(false);
+    expect(resource.value.error).toBeNull();
+  });
 });

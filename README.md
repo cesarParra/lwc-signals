@@ -220,11 +220,11 @@ The preferred way of reading a signal is through the `signal.value`.
 
 ## Error Handling
 
-When unhandled errors occur in a `computed` or `effect`, by default, the error will be logged to the console through
-a `console.error` call, and then the error will be rethrown.
+When unhandled errors occur in a `computed`, `effect` or `resource`,
+by default, the error will be logged to the console through a `console.error` call, and then the error will be rethrown.
 
-If you wish to know which `computed` or `effect` caused the error, you can pass a second argument to the `computed` or
-`effect` with a unique identifier.
+If you wish to know where the error is coming from, you can pass a second argument to the `computed`,
+`effect` or `resource` with a unique identifier.
 
 ```javascript
 $computed(
@@ -242,6 +242,14 @@ $effect(
   },
   { identifier: "test-identifier" }
 );
+
+$resource(
+  asyncFunction,
+  {},
+  {
+    identifier: "test-identifier"
+  }
+);
 ```
 
 This value will be used only for debugging purposes, and does not affect the functionality otherwise.
@@ -250,7 +258,7 @@ In this example, the test-identifier string will appear as part of the console.e
 
 ### Custom Error Handlers
 
-Both computed and effect signals can receive a custom `onError` property,
+`computed`, `effect`, and `resource` signals can all receive a custom `onError` property,
 that allows developers to completely override the default functionality that logs and rethrows the error.
 
 #### Effect handlers
@@ -310,6 +318,53 @@ $computed(
   () => {
     throw new Error("test");
   },
+  {
+    onError: customErrorHandlerFn
+  }
+);
+```
+
+#### Resource handlers
+
+For `resource` handlers, you can pass a function with the following shape:
+
+```typescript
+(error: unknown, previousValue: T | null, options: { initialValue: T | null, identifier: string | symbol }) =>
+        AsyncData<T> | void
+
+// Where AsyncData looks as follows
+// {
+//   data: T | null;
+//   loading: boolean;
+//   error: unknown | null;
+// };
+```
+
+Where you can return nothing, or a value of type `AsyncData<T>`.
+`AsyncData` is the shape that all resources take, and it contains the data, loading state, and error state.
+This allows you to provide a "fallback" value, that the computed value will receive in case of errors.
+
+As a second argument, you will receive the previous value of the resource (or null if there is none), which can be useful to provide a
+fallback value based on the previous value.
+
+The third argument is an object with the received identifier as well as any initial value that was provided to the
+resource when it was created.
+
+Example
+
+```javascript
+function customErrorHandlerFn(error, _previousValue, _options) {
+  // custom logic or logging or rethrowing here
+  return {
+    data: "fallback value",
+    loading: false,
+    error: error
+  };
+}
+
+$resource(
+  asyncFunction,
+  {},
   {
     onError: customErrorHandlerFn
   }
@@ -512,11 +567,11 @@ export default class ContactList extends LightningElement {
 }
 ```
 
-Data from a resource signal comes in the following format:
+Data from a resource signal comes in as a read-only signal in the following format:
 
 ```typescript
 type AsyncData<T> = {
-  data: ReadOnlySignal<T> | null; // The data fetched from the server. It is null until the data is fetched
+  data: T | null; // The data fetched from the server. It is null until the data is fetched
   loading: boolean; // A boolean that indicates if the data is being fetched
   error: unknown | null; // An error object that is populated if the fetch fails
 };

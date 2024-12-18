@@ -573,4 +573,10 @@ function $resource<ReturnType, Params>(
   };
 }
 
-export { $signal, $effect, $computed, $resource, };
+function isSignal(anything: unknown): anything is Signal<unknown> {
+  return (
+    !!anything && (anything as Signal<unknown>).brand === SIGNAL_OBJECT_BRAND
+  );
+}
+
+export { $signal, $effect, $computed, $resource, isSignal };
