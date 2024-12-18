@@ -524,7 +524,6 @@ function $resource<ReturnType, Params>(
         error: null
       };
     } catch (error) {
-      // sample change.
       _signal.value = onError(error, _value, { identifier, initialValue }) ?? {
         data: null,
         loading: false,

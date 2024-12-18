@@ -301,6 +301,7 @@ function $resource(fn, source, options) {
         error: null
       };
     } catch (error) {
+      // sample change.
       _signal.value = onError(error, _value, { identifier, initialValue }) ?? {
         data: null,
         loading: false,
