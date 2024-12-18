@@ -13,7 +13,7 @@
     "prettier": "prettier --write \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\"",
     "prettier:verify": "prettier --check \"**/*.{cls,cmp,component,css,html,js,json,md,page,trigger,xml,yaml,yml}\"",
     "postinstall": "husky install",
-    "precommit": "lint-staged",
+    "precommit": "lint-staged --allow-empty",
     "tw:build": "npx tailwindcss -i ./examples/tw/input.css -o ./examples/main/default/staticresources/tw/css/main.css --minify",
     "tw:build:watch": "npx tailwindcss -i ./examples/tw/input.css -o ./examples/main/default/staticresources/tw/css/main.css --minify --watch"
   },
