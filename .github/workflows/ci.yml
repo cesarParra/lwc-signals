@@ -7,6 +7,9 @@ on:
     branches: ["main", "develop"]
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -20,3 +23,7 @@ jobs:
       - run: npm ci
       - run: npm run build --if-present
       - run: npm test
+      - uses: EndBug/add-and-commit@v7
+        with:
+          commit: "--allow-empty"
+          default_author: github_actions

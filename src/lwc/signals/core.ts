@@ -159,7 +159,7 @@ function $computed<T>(
     () => {
       if (options?.onError) {
         // If this computed has a custom error handler, then the
-        // handling occurs in the computed function itself.
+        // handling occurs here, in the computed function itself.
         try {
           computedSignal.value = fn();
         } catch (error) {
@@ -364,6 +364,7 @@ type ResourceResponse<T> = {
   data: ReadOnlySignal<AsyncData<T>>;
   mutate: (newValue: T) => void;
   refetch: () => void;
+  identifier: string | symbol;
 };
 
 type MutatorCallback<T> = (value: T | null, error?: unknown) => void;
@@ -382,7 +383,35 @@ type ResourceOptions<T> = {
   onMutate: OnMutate<T>;
   storage: StorageFn<T>;
   fetchWhen: FetchWhenPredicate;
+  identifier: string | symbol;
+  onError: OnResourceError<T>;
 };
+
+type OnResourceError<T> = (
+  error: unknown,
+  previousValue: T | null,
+  options: {
+    initialValue: T | null;
+    identifier: string | symbol;
+  }
+) => AsyncData<T> | void;
+
+function defaultResourceErrorHandler<T>(
+  error: unknown,
+  _previousValue: T | null,
+  options: {
+    initialValue: T | null;
+    identifier: string | symbol;
+  }
+) {
+  const errorTemplate = `
+  LWC Signals: An error occurred in a reactive function \n
+  Type: Resource \n
+  Identifier: ${options.identifier.toString()}
+  `.trim();
+
+  console.error(errorTemplate, error);
+}
 
 /**
  * Creates a new resource that fetches data from an async source. The resource
@@ -447,6 +476,14 @@ function $resource<ReturnType, Params>(
   source?: Params | (() => Params),
   options?: Partial<ResourceOptions<ReturnType>>
 ): ResourceResponse<ReturnType> {
+  const {
+    initialValue = null,
+    optimisticMutate = true,
+    fetchWhen = () => true,
+    identifier = Symbol(),
+    onError = defaultResourceErrorHandler as OnResourceError<ReturnType>
+  } = options ?? {};
+
   function loadingState(data: ReturnType | null): AsyncData<ReturnType> {
     return {
       data: data,
@@ -456,12 +493,9 @@ function $resource<ReturnType, Params>(
   }
 
   let _isInitialLoad = true;
-  let _value: ReturnType | null = options?.initialValue ?? null;
+  let _value: ReturnType | null = initialValue;
   let _previousParams: Params | undefined;
   const _signal = $signal<AsyncData<ReturnType>>(loadingState(_value));
-  // Optimistic updates are enabled by default
-  const _optimisticMutate = options?.optimisticMutate ?? true;
-  const _fetchWhen = options?.fetchWhen ?? (() => true);
 
   const execute = async () => {
     const derivedSourceFn: () => Params | undefined =
@@ -469,7 +503,7 @@ function $resource<ReturnType, Params>(
 
     try {
       let data: ReturnType | null = null;
-      if (_fetchWhen()) {
+      if (fetchWhen()) {
         const derivedSource = derivedSourceFn();
         if (!_isInitialLoad && isEqual(derivedSource, _previousParams)) {
           // No need to fetch the data again if the params haven't changed
@@ -490,7 +524,7 @@ function $resource<ReturnType, Params>(
         error: null
       };
     } catch (error) {
-      _signal.value = {
+      _signal.value = onError(error, _value, { identifier, initialValue }) ?? {
         data: null,
         loading: false,
         error
@@ -500,7 +534,9 @@ function $resource<ReturnType, Params>(
     }
   };
 
-  $effect(execute);
+  $effect(execute, {
+    identifier
+  });
 
   /**
    * Callback function that updates the value of the resource.
@@ -520,7 +556,7 @@ function $resource<ReturnType, Params>(
     data: _signal.readOnly,
     mutate: (newValue: ReturnType) => {
       const previousValue = _value;
-      if (_optimisticMutate) {
+      if (optimisticMutate) {
         // If optimistic updates are enabled, update the value immediately
         mutatorCallback(newValue);
       }
@@ -532,12 +568,15 @@ function $resource<ReturnType, Params>(
     refetch: async () => {
       _isInitialLoad = true;
       await execute();
-    }
+    },
+    identifier
   };
 }
 
 function isSignal(anything: unknown): anything is Signal<unknown> {
-  return !!anything && (anything as Signal<unknown>).brand === SIGNAL_OBJECT_BRAND;
+  return (
+    !!anything && (anything as Signal<unknown>).brand === SIGNAL_OBJECT_BRAND
+  );
 }
 
 export { $signal, $effect, $computed, $resource, isSignal };

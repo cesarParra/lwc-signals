@@ -1,4 +1,4 @@
-import { $resource, $signal, $computed, $effect } from "../core";
+import { $resource, $signal, $effect } from "../core";
 
 beforeAll(() => {
   global.console = {
@@ -395,7 +395,6 @@ describe("resources", () => {
     });
   });
 
-
   test("do not go through the reevaluation cycle when fetchWhen does not return true", async () => {
     const asyncFunction = async (params: { [key: string]: unknown }) => {
       return params["source"];
@@ -403,11 +402,15 @@ describe("resources", () => {
 
     const source = $signal(0);
     const fetchWhenSource = $signal({ a: "a" });
-    const { data: resource } = $resource(asyncFunction, () => ({
-      source: source.value
-    }), {
-      fetchWhen: () => fetchWhenSource.value.a !== "a"
-    });
+    const { data: resource } = $resource(
+      asyncFunction,
+      () => ({
+        source: source.value
+      }),
+      {
+        fetchWhen: () => fetchWhenSource.value.a !== "a"
+      }
+    );
 
     let effectAmount = 0;
     $effect(() => {
@@ -517,5 +520,98 @@ describe("resources", () => {
       error: null
     });
   });
-});
 
+  test("have a default identifier", () => {
+    const asyncFunction = async () => {
+      return "done";
+    };
+
+    const resource = $resource(asyncFunction);
+
+    expect(resource.identifier).toBeDefined();
+  });
+
+  test("allow for custom identifiers to be provided", () => {
+    const asyncFunction = async () => {
+      return "done";
+    };
+
+    const resource = $resource(asyncFunction, undefined, {
+      identifier: "test-identifier"
+    });
+
+    expect(resource.identifier).toBe("test-identifier");
+  });
+
+  test("console error with an identifier when one was provided", async () => {
+    const asyncFunction = async () => {
+      throw new Error("error");
+    };
+
+    const spy = jest.spyOn(console, "error").mockImplementation(() => {
+    });
+
+    $resource(asyncFunction, undefined, { identifier: "test-identifier" });
+
+    await new Promise(process.nextTick);
+
+    expect(spy).toHaveBeenCalledWith(expect.stringContaining("test-identifier"), expect.any(Error));
+
+    spy.mockRestore();
+  });
+
+  test("allow for errors to be handled through a custom function", async () => {
+    const customErrorHandlerFn = jest.fn() as (error: unknown) => void;
+
+    const anyError = new Error("error");
+    const asyncFunction = async () => {
+      throw anyError
+    };
+
+    const { data: resource } = $resource(asyncFunction, undefined, {
+      onError: customErrorHandlerFn
+    });
+
+    await new Promise(process.nextTick);
+
+    expect(customErrorHandlerFn).toHaveBeenCalled();
+    expect(resource.value.data).toBeNull();
+    expect(resource.value.loading).toBe(false);
+    expect(resource.value.error).toBe(anyError);
+  });
+
+  test("allow for errors to be handled through a custom function and return the previous value", async () => {
+    function customErrorHandlerFn(_error: unknown, previousValue: string | null) {
+      return { data: previousValue, loading: false, error: null };
+    }
+
+    const counter = $signal(0);
+    const asyncFunctionThatFails = async (currentCount: number) => {
+      if (currentCount === 0) {
+        return 'success';
+      } else {
+        throw new Error("error");
+      }
+    }
+
+    const { data: resource } = $resource(asyncFunctionThatFails, () => counter.value, {
+      onError: customErrorHandlerFn
+    });
+
+    await new Promise(process.nextTick);
+
+    // The first time the async function is called, it will return a value.
+    expect(resource.value.data).toBe("success");
+    expect(resource.value.loading).toBe(false);
+    expect(resource.value.error).toBeNull();
+
+    counter.value = 1;
+    await new Promise(process.nextTick);
+
+    // The second time the async function is called, it will throw an error.
+    // We assert that the custom error handler was called and that the value was reset.
+    expect(resource.value.data).toBe("success");
+    expect(resource.value.loading).toBe(false);
+    expect(resource.value.error).toBeNull();
+  });
+});
