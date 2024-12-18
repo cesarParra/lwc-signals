@@ -574,5 +574,9 @@ describe("resources", () => {
     await new Promise(process.nextTick);
 
     expect(customErrorHandlerFn).toHaveBeenCalled();
+
+    // TODO: Since it does not return anything, let's expect the default error async data
   });
+
+  // TODO: Custom function that returns an AsyncData
 });

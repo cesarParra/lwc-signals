@@ -411,12 +411,6 @@ function defaultResourceErrorHandler<T>(
   `.trim();
 
   console.error(errorTemplate, error);
-
-  return {
-    data: null,
-    loading: false,
-    error
-  };
 }
 
 /**
