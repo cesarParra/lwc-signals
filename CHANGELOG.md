@@ -1,5 +1,18 @@
 ### 🚀 Release Notes
 
+**Version**: 1.2.1
+**Date**: 2024-12-18
+
+### 🐞 Bug Fixes
+
+- isASignal function renamed to isSignal ([899ba02](https://github.com/cesarParra/lwc-signals/commit/899ba0241494c4f9e8e0d3b650ca791956a338d1))
+
+### 🛠️ Chores
+
+- kitchen sink demo images ([2f3cab3](https://github.com/cesarParra/lwc-signals/commit/2f3cab3bd55753c88215d381275aa2300678add6))
+
+### 🚀 Release Notes
+
 **Version**: 1.2.0
 **Date**: 2024-12-11
 
