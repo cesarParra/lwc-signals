@@ -1,7 +1,7 @@
 {
   "name": "lwc-signals",
   "private": true,
-  "version": "1.2.0",
+  "version": "1.2.1",
   "scripts": {
     "test": "jest",
     "test:watch": "jest --watch",
