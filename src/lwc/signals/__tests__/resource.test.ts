@@ -559,4 +559,20 @@ describe("resources", () => {
 
     spy.mockRestore();
   });
+
+  test("allow for errors to be handled through a custom function", async () => {
+    const customErrorHandlerFn = jest.fn() as (error: unknown) => void;
+
+    const asyncFunction = async () => {
+      throw new Error("error");
+    };
+
+    $resource(asyncFunction, undefined, {
+      onError: customErrorHandlerFn
+    });
+
+    await new Promise(process.nextTick);
+
+    expect(customErrorHandlerFn).toHaveBeenCalled();
+  });
 });

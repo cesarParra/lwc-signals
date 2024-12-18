@@ -159,7 +159,7 @@ function $computed<T>(
     () => {
       if (options?.onError) {
         // If this computed has a custom error handler, then the
-        // handling occurs in the computed function itself.
+        // handling occurs here, in the computed function itself.
         try {
           computedSignal.value = fn();
         } catch (error) {
@@ -384,23 +384,25 @@ type ResourceOptions<T> = {
   storage: StorageFn<T>;
   fetchWhen: FetchWhenPredicate;
   identifier: string | symbol;
+  onError: OnResourceError<T>;
 };
 
-const defaultResourceOptions = {
-  identifier: Symbol()
-};
-
-type RequireKeys<T extends object, K extends keyof T> = Required<Pick<T, K>> &
-  Omit<T, K>;
-
-type OptionalResourceOptionsWithIdentifier<T> = RequireKeys<
-  Partial<ResourceOptions<T>>,
-  "identifier"
->;
-
-function handleResourceError<T>(
+type OnResourceError<T> = (
   error: unknown,
-  options: OptionalResourceOptionsWithIdentifier<T>
+  previousValue: T | null,
+  options: {
+    initialValue: T | null;
+    identifier: string | symbol;
+  }
+) => AsyncData<T> | void;
+
+function defaultResourceErrorHandler<T>(
+  error: unknown,
+  _previousValue: T | null,
+  options: {
+    initialValue: T | null;
+    identifier: string | symbol;
+  }
 ) {
   const errorTemplate = `
   LWC Signals: An error occurred in a reactive function \n
@@ -409,6 +411,12 @@ function handleResourceError<T>(
   `.trim();
 
   console.error(errorTemplate, error);
+
+  return {
+    data: null,
+    loading: false,
+    error
+  };
 }
 
 /**
@@ -474,8 +482,13 @@ function $resource<ReturnType, Params>(
   source?: Params | (() => Params),
   options?: Partial<ResourceOptions<ReturnType>>
 ): ResourceResponse<ReturnType> {
-  const _optionsWithDefaults: OptionalResourceOptionsWithIdentifier<ReturnType> =
-    { ...defaultResourceOptions, ...options };
+  const {
+    initialValue = null,
+    optimisticMutate = true,
+    fetchWhen = () => true,
+    identifier = Symbol(),
+    onError = defaultResourceErrorHandler as OnResourceError<ReturnType>
+  } = options ?? {};
 
   function loadingState(data: ReturnType | null): AsyncData<ReturnType> {
     return {
@@ -486,12 +499,9 @@ function $resource<ReturnType, Params>(
   }
 
   let _isInitialLoad = true;
-  let _value: ReturnType | null = _optionsWithDefaults?.initialValue ?? null;
+  let _value: ReturnType | null = initialValue;
   let _previousParams: Params | undefined;
   const _signal = $signal<AsyncData<ReturnType>>(loadingState(_value));
-  // Optimistic updates are enabled by default
-  const _optimisticMutate = _optionsWithDefaults?.optimisticMutate ?? true;
-  const _fetchWhen = _optionsWithDefaults?.fetchWhen ?? (() => true);
 
   const execute = async () => {
     const derivedSourceFn: () => Params | undefined =
@@ -499,7 +509,7 @@ function $resource<ReturnType, Params>(
 
     try {
       let data: ReturnType | null = null;
-      if (_fetchWhen()) {
+      if (fetchWhen()) {
         const derivedSource = derivedSourceFn();
         if (!_isInitialLoad && isEqual(derivedSource, _previousParams)) {
           // No need to fetch the data again if the params haven't changed
@@ -520,8 +530,7 @@ function $resource<ReturnType, Params>(
         error: null
       };
     } catch (error) {
-      handleResourceError(error, _optionsWithDefaults);
-      _signal.value = {
+      _signal.value = onError(error, _value, { identifier, initialValue }) ?? {
         data: null,
         loading: false,
         error
@@ -532,7 +541,7 @@ function $resource<ReturnType, Params>(
   };
 
   $effect(execute, {
-    identifier: _optionsWithDefaults.identifier
+    identifier
   });
 
   /**
@@ -553,7 +562,7 @@ function $resource<ReturnType, Params>(
     data: _signal.readOnly,
     mutate: (newValue: ReturnType) => {
       const previousValue = _value;
-      if (_optimisticMutate) {
+      if (optimisticMutate) {
         // If optimistic updates are enabled, update the value immediately
         mutatorCallback(newValue);
       }
@@ -566,7 +575,7 @@ function $resource<ReturnType, Params>(
       _isInitialLoad = true;
       await execute();
     },
-    identifier: _optionsWithDefaults.identifier
+    identifier
   };
 }
 
