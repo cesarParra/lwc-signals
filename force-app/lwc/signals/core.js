@@ -102,7 +102,7 @@ function $computed(fn, options) {
     () => {
       if (options?.onError) {
         // If this computed has a custom error handler, then the
-        // handling occurs in the computed function itself.
+        // handling occurs here, in the computed function itself.
         try {
           computedSignal.value = fn();
         } catch (error) {
@@ -250,7 +250,22 @@ function $signal(value, options) {
   delete returnValue.unsubscribe;
   return returnValue;
 }
+function defaultResourceErrorHandler(error, _previousValue, options) {
+  const errorTemplate = `
+  LWC Signals: An error occurred in a reactive function \n
+  Type: Resource \n
+  Identifier: ${options.identifier.toString()}
+  `.trim();
+  console.error(errorTemplate, error);
+}
 function $resource(fn, source, options) {
+  const {
+    initialValue = null,
+    optimisticMutate = true,
+    fetchWhen = () => true,
+    identifier = Symbol(),
+    onError = defaultResourceErrorHandler
+  } = options ?? {};
   function loadingState(data) {
     return {
       data: data,
@@ -259,17 +274,14 @@ function $resource(fn, source, options) {
     };
   }
   let _isInitialLoad = true;
-  let _value = options?.initialValue ?? null;
+  let _value = initialValue;
   let _previousParams;
   const _signal = $signal(loadingState(_value));
-  // Optimistic updates are enabled by default
-  const _optimisticMutate = options?.optimisticMutate ?? true;
-  const _fetchWhen = options?.fetchWhen ?? (() => true);
   const execute = async () => {
     const derivedSourceFn = source instanceof Function ? source : () => source;
     try {
       let data = null;
-      if (_fetchWhen()) {
+      if (fetchWhen()) {
         const derivedSource = derivedSourceFn();
         if (!_isInitialLoad && isEqual(derivedSource, _previousParams)) {
           // No need to fetch the data again if the params haven't changed
@@ -289,7 +301,7 @@ function $resource(fn, source, options) {
         error: null
       };
     } catch (error) {
-      _signal.value = {
+      _signal.value = onError(error, _value, { identifier, initialValue }) ?? {
         data: null,
         loading: false,
         error
@@ -298,7 +310,9 @@ function $resource(fn, source, options) {
       _isInitialLoad = false;
     }
   };
-  $effect(execute);
+  $effect(execute, {
+    identifier
+  });
   /**
    * Callback function that updates the value of the resource.
    * @param value The value we want to set the resource to.
@@ -316,7 +330,7 @@ function $resource(fn, source, options) {
     data: _signal.readOnly,
     mutate: (newValue) => {
       const previousValue = _value;
-      if (_optimisticMutate) {
+      if (optimisticMutate) {
         // If optimistic updates are enabled, update the value immediately
         mutatorCallback(newValue);
       }
@@ -327,7 +341,8 @@ function $resource(fn, source, options) {
     refetch: async () => {
       _isInitialLoad = true;
       await execute();
-    }
+    },
+    identifier
   };
 }
 function isSignal(anything) {

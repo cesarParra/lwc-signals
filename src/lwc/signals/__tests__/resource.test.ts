@@ -563,19 +563,21 @@ describe("resources", () => {
   test("allow for errors to be handled through a custom function", async () => {
     const customErrorHandlerFn = jest.fn() as (error: unknown) => void;
 
+    const anyError = new Error("error");
     const asyncFunction = async () => {
-      throw new Error("error");
+      throw anyError
     };
 
-    $resource(asyncFunction, undefined, {
+    const { data: resource } = $resource(asyncFunction, undefined, {
       onError: customErrorHandlerFn
     });
 
     await new Promise(process.nextTick);
 
     expect(customErrorHandlerFn).toHaveBeenCalled();
-
-    // TODO: Since it does not return anything, let's expect the default error async data
+    expect(resource.value.data).toBeNull();
+    expect(resource.value.loading).toBe(false);
+    expect(resource.value.error).toBe(anyError);
   });
 
   // TODO: Custom function that returns an AsyncData

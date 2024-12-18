@@ -4,6 +4,7 @@
   "version": "1.2.1",
   "scripts": {
     "test": "jest",
+    "build": "tsc",
     "test:watch": "jest --watch",
     "test:coverage": "jest --coverage",
     "create:scratch": "sf org create scratch --alias lwc-signals --definition-file config/project-scratch-def.json --set-default",
