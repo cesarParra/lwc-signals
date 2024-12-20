@@ -101,6 +101,7 @@ describe("computed values", () => {
         throw new Error("error");
       }, { identifier: "test-identifier" });
       signal.value = 1;
+      fail("should have thrown an error");
     } catch (e) {
       expect(spy).toHaveBeenCalledWith(expect.stringContaining("test-identifier"), expect.any(Error));
     }
