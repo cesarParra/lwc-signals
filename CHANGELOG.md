@@ -1,5 +1,14 @@
 ### 🚀 Release Notes
 
+**Version**: 1.3.0
+**Date**: 2024-12-20
+
+### ✨ Features
+
+- Error handling for resources ([f4f7351](https://github.com/cesarParra/lwc-signals/commit/f4f7351c0135097bf259caa967decc6a0399636f))
+
+### 🚀 Release Notes
+
 **Version**: 1.2.1
 **Date**: 2024-12-18
 
