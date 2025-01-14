@@ -1,5 +1,46 @@
 ### 🚀 Release Notes
 
+**Version**: 1.3.0
+**Date**: 2024-12-20
+
+### ✨ Features
+
+- Error handling for resources ([f4f7351](https://github.com/cesarParra/lwc-signals/commit/f4f7351c0135097bf259caa967decc6a0399636f))
+
+### 🚀 Release Notes
+
+**Version**: 1.2.1
+**Date**: 2024-12-18
+
+### 🐞 Bug Fixes
+
+- isASignal function renamed to isSignal ([899ba02](https://github.com/cesarParra/lwc-signals/commit/899ba0241494c4f9e8e0d3b650ca791956a338d1))
+
+### 🛠️ Chores
+
+- kitchen sink demo images ([2f3cab3](https://github.com/cesarParra/lwc-signals/commit/2f3cab3bd55753c88215d381275aa2300678add6))
+
+### 🚀 Release Notes
+
+**Version**: 1.2.0
+**Date**: 2024-12-11
+
+### ✨ Features
+
+- Ability to read a signal value without subscribing to it via the `peek` function. ([8dc1db3](https://github.com/cesarParra/lwc-signals/commit/8dc1db367a24190a6746543f1c470615be0eaf3a))
+- Effects and computed have a default identifier. ([74f2521](https://github.com/cesarParra/lwc-signals/commit/74f2521b7973e942c23d2879eb62dfe1e00c7600))
+- Effects and computed have a default identifier. ([7db87fb](https://github.com/cesarParra/lwc-signals/commit/7db87fb2c0b3e4d82f5b553c38e3acd192b82589))
+- Improved error handling ([#22](https://github.com/cesarParra/lwc-signals/issues/22)) ([8144196](https://github.com/cesarParra/lwc-signals/commit/8144196460f8067b4d4f8f9e319071b105def151))
+- isASignal function allows to check if an object is a signal ([c6be621](https://github.com/cesarParra/lwc-signals/commit/c6be6210c73a06e1af4332ab76de759a5c4ad4d2))
+- isASignal function allows to check if an object is a signal ([06dd95b](https://github.com/cesarParra/lwc-signals/commit/06dd95bf48a1601e1b92f070d8fe93fea645d403))
+- Signals can be identified with a symbol through the "brand" property ([17f7b10](https://github.com/cesarParra/lwc-signals/commit/17f7b100b9b8e098b87293c970230997e45a91bf))
+
+### 🐞 Bug Fixes
+
+- Computed values that return the unchanged value of a tracked signal are now recomputed when the source signal changes. ([100308e](https://github.com/cesarParra/lwc-signals/commit/100308ef3269e685fb212cb16d44ae70144bf27d))
+
+### 🚀 Release Notes
+
 **Version**: 1.1.1
 **Date**: 2024-11-29
 
