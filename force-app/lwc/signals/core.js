@@ -10,6 +10,10 @@ const UNSET = Symbol("UNSET");
 const COMPUTING = Symbol("COMPUTING");
 const ERRORED = Symbol("ERRORED");
 const READY = Symbol("READY");
+const defaultEffectOptions = {
+  _fromComputed: false,
+  identifier: Symbol()
+};
 /**
  * Creates a new effect that will be executed immediately and whenever
  * any of the signals it reads from change.
@@ -28,8 +32,10 @@ const READY = Symbol("READY");
  * ```
  *
  * @param fn The function to execute
+ * @param options Options to configure the effect
  */
-function $effect(fn) {
+function $effect(fn, options) {
+  const _optionsWithDefaults = { ...defaultEffectOptions, ...options };
   const effectNode = {
     error: null,
     state: UNSET
@@ -44,18 +50,33 @@ function $effect(fn) {
       fn();
       effectNode.error = null;
       effectNode.state = READY;
+    } catch (error) {
+      effectNode.state = ERRORED;
+      effectNode.error = error;
+      _optionsWithDefaults.onError
+        ? _optionsWithDefaults.onError(error, _optionsWithDefaults)
+        : handleEffectError(error, _optionsWithDefaults);
     } finally {
       context.pop();
     }
   };
   execute();
+  return {
+    identifier: _optionsWithDefaults.identifier
+  };
 }
-function computedGetter(node) {
-  if (node.state === ERRORED) {
-    throw node.error;
-  }
-  return node.signal.readOnly;
+function handleEffectError(error, options) {
+  const errorTemplate = `
+  LWC Signals: An error occurred in a reactive function \n
+  Type: ${options._fromComputed ? "Computed" : "Effect"} \n
+  Identifier: ${options.identifier.toString()}
+  `.trim();
+  console.error(errorTemplate, error);
+  throw error;
 }
+const defaultComputedOptions = {
+  identifier: Symbol()
+};
 /**
  * Creates a new computed value that will be updated whenever the signals
  * it reads from change. Returns a read-only signal that contains the
@@ -70,28 +91,39 @@ function computedGetter(node) {
  * ```
  *
  * @param fn The function that returns the computed value.
+ * @param options Options to configure the computed value.
  */
-function $computed(fn) {
-  const computedNode = {
-    signal: $signal(undefined),
-    error: null,
-    state: UNSET
-  };
-  $effect(() => {
-    if (computedNode.state === COMPUTING) {
-      throw new Error("Circular dependency detected");
-    }
-    try {
-      computedNode.state = COMPUTING;
-      computedNode.signal.value = fn();
-      computedNode.error = null;
-      computedNode.state = READY;
-    } catch (error) {
-      computedNode.state = ERRORED;
-      computedNode.error = error;
-    }
+function $computed(fn, options) {
+  const _optionsWithDefaults = { ...defaultComputedOptions, ...options };
+  const computedSignal = $signal(undefined, {
+    track: true
   });
-  return computedGetter(computedNode);
+  $effect(
+    () => {
+      if (options?.onError) {
+        // If this computed has a custom error handler, then the
+        // handling occurs here, in the computed function itself.
+        try {
+          computedSignal.value = fn();
+        } catch (error) {
+          const previousValue = computedSignal.peek();
+          computedSignal.value = options.onError(error, previousValue, {
+            identifier: _optionsWithDefaults.identifier
+          });
+        }
+      } else {
+        // Otherwise, the error handling is done in the $effect
+        computedSignal.value = fn();
+      }
+    },
+    {
+      _fromComputed: true,
+      identifier: _optionsWithDefaults.identifier
+    }
+  );
+  const returnValue = computedSignal.readOnly;
+  returnValue.identifier = _optionsWithDefaults.identifier;
+  return returnValue;
 }
 class UntrackedState {
   constructor(value) {
@@ -102,6 +134,9 @@ class UntrackedState {
   }
   set(value) {
     this._value = value;
+  }
+  forceUpdate() {
+    return false;
   }
 }
 class TrackedState {
@@ -119,7 +154,11 @@ class TrackedState {
   set(value) {
     this._value = this._membrane.getProxy(value);
   }
+  forceUpdate() {
+    return true;
+  }
 }
+const SIGNAL_OBJECT_BRAND = Symbol.for("lwc-signals");
 /**
  * Creates a new signal with the provided value. A signal is a reactive
  * primitive that can be used to store and update values. Signals can be
@@ -163,7 +202,10 @@ function $signal(value, options) {
     return _storageOption.get();
   }
   function setter(newValue) {
-    if (isEqual(newValue, _storageOption.get())) {
+    if (
+      !trackableState.forceUpdate() &&
+      isEqual(newValue, _storageOption.get())
+    ) {
       return;
     }
     trackableState.set(newValue);
@@ -192,19 +234,38 @@ function $signal(value, options) {
         setter(newValue);
       }
     },
+    brand: SIGNAL_OBJECT_BRAND,
     readOnly: {
       get value() {
         return getter();
       }
+    },
+    peek() {
+      return _storageOption.get();
     }
   };
-  // We don't want to expose the `get` and `set` methods, so
-  // remove before returning
   delete returnValue.get;
   delete returnValue.set;
+  delete returnValue.registerOnChange;
+  delete returnValue.unsubscribe;
   return returnValue;
 }
+function defaultResourceErrorHandler(error, _previousValue, options) {
+  const errorTemplate = `
+  LWC Signals: An error occurred in a reactive function \n
+  Type: Resource \n
+  Identifier: ${options.identifier.toString()}
+  `.trim();
+  console.error(errorTemplate, error);
+}
 function $resource(fn, source, options) {
+  const {
+    initialValue = null,
+    optimisticMutate = true,
+    fetchWhen = () => true,
+    identifier = Symbol(),
+    onError = defaultResourceErrorHandler
+  } = options ?? {};
   function loadingState(data) {
     return {
       data: data,
@@ -213,17 +274,14 @@ function $resource(fn, source, options) {
     };
   }
   let _isInitialLoad = true;
-  let _value = options?.initialValue ?? null;
+  let _value = initialValue;
   let _previousParams;
   const _signal = $signal(loadingState(_value));
-  // Optimistic updates are enabled by default
-  const _optimisticMutate = options?.optimisticMutate ?? true;
-  const _fetchWhen = options?.fetchWhen ?? (() => true);
   const execute = async () => {
     const derivedSourceFn = source instanceof Function ? source : () => source;
     try {
       let data = null;
-      if (_fetchWhen()) {
+      if (fetchWhen()) {
         const derivedSource = derivedSourceFn();
         if (!_isInitialLoad && isEqual(derivedSource, _previousParams)) {
           // No need to fetch the data again if the params haven't changed
@@ -243,7 +301,7 @@ function $resource(fn, source, options) {
         error: null
       };
     } catch (error) {
-      _signal.value = {
+      _signal.value = onError(error, _value, { identifier, initialValue }) ?? {
         data: null,
         loading: false,
         error
@@ -252,7 +310,9 @@ function $resource(fn, source, options) {
       _isInitialLoad = false;
     }
   };
-  $effect(execute);
+  $effect(execute, {
+    identifier
+  });
   /**
    * Callback function that updates the value of the resource.
    * @param value The value we want to set the resource to.
@@ -270,7 +330,7 @@ function $resource(fn, source, options) {
     data: _signal.readOnly,
     mutate: (newValue) => {
       const previousValue = _value;
-      if (_optimisticMutate) {
+      if (optimisticMutate) {
         // If optimistic updates are enabled, update the value immediately
         mutatorCallback(newValue);
       }
@@ -281,8 +341,12 @@ function $resource(fn, source, options) {
     refetch: async () => {
       _isInitialLoad = true;
       await execute();
-    }
+    },
+    identifier
   };
+}
+function isSignal(anything) {
+  return !!anything && anything.brand === SIGNAL_OBJECT_BRAND;
 }
 class Bounder {
   constructor(component, propertyName) {
@@ -300,4 +364,4 @@ class Bounder {
 function $binded(component, propertyName) {
   return new Bounder(component, propertyName);
 }
-export { $signal, $effect, $computed, $resource, $binded };
+export { $signal, $effect, $computed, $resource, $binded, isSignal };
