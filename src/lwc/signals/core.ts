@@ -29,6 +29,9 @@ const UNSET = Symbol("UNSET");
 const COMPUTING = Symbol("COMPUTING");
 const ERRORED = Symbol("ERRORED");
 const READY = Symbol("READY");
+
+// The maximum stack depth value is derived from Salesforce's maximum stack depth limit in triggers.
+// This value is chosen to prevent infinite loops while still allowing for a reasonable level of recursion.
 const MAX_STACK_DEPTH = 16;
 
 interface EffectNode {
