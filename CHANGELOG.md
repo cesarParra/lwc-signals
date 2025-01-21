@@ -1,5 +1,14 @@
 ### 🚀 Release Notes
 
+**Version**: 1.4.0
+**Date**: 2025-01-21
+
+### ✨ Features
+
+- circular dependecy management logic update ([128d330](https://github.com/cesarParra/lwc-signals/commit/128d33040e6c91191ecf9db117cc334b0a2a63ee))
+
+### 🚀 Release Notes
+
 **Version**: 1.3.0
 **Date**: 2024-12-20
 
