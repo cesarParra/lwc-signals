@@ -34,7 +34,7 @@ const MAX_STACK_DEPTH = 16;
 interface EffectNode {
   error: unknown;
   state: symbol;
-  stack_depth: number;
+  stackDepth: number;
 }
 
 type EffectOptions = {
@@ -73,18 +73,18 @@ function $effect(fn: VoidFunction, options?: Partial<EffectOptions>): Effect {
   const effectNode: EffectNode = {
     error: null,
     state: UNSET,
-    stack_depth: 0
+    stackDepth: 0
   };
 
   const execute = () => {
-    if (effectNode.state === COMPUTING && effectNode.stack_depth >= MAX_STACK_DEPTH) {
+    if (effectNode.state === COMPUTING && effectNode.stackDepth >= MAX_STACK_DEPTH) {
       throw new Error(`Circular dependency detected. Maximum stack depth of ${MAX_STACK_DEPTH} exceeded.`);
     }
 
     context.push(execute);
     try {
       effectNode.state = COMPUTING;
-      effectNode.stack_depth++; // Increment depth before execution
+      effectNode.stackDepth++;
       fn();
       effectNode.error = null;
       effectNode.state = READY;
@@ -96,8 +96,8 @@ function $effect(fn: VoidFunction, options?: Partial<EffectOptions>): Effect {
         : handleEffectError(error, _optionsWithDefaults);
     } finally {
       context.pop();
-      if (effectNode.stack_depth > 0) {
-        effectNode.stack_depth--; // Decrement stack_depth when exiting
+      if (effectNode.stackDepth > 0) {
+        effectNode.stackDepth--;
       }
     }
   };
