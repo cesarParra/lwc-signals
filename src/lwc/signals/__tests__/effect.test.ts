@@ -143,4 +143,14 @@ describe("effects", () => {
 
     expect(counter.value).toBe(1);
   });
+
+  test("throws error when circular dependency exceeds depth limit", () => {
+    const signal = $signal(0);
+  
+    expect(() => {
+      $effect(() => {
+        signal.value = signal.value + 1;
+      });
+    }).toThrow(/Circular dependency detected. Maximum stack depth of \d+ exceeded./);
+  });
 });
