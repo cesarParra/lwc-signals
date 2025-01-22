@@ -1,5 +1,14 @@
 ### 🚀 Release Notes
 
+**Version**: 1.4.1
+**Date**: 2025-01-22
+
+### 🐞 Bug Fixes
+
+- Build Last Change ([#40](https://github.com/cesarParra/lwc-signals/issues/40)) ([df8b1e8](https://github.com/cesarParra/lwc-signals/commit/df8b1e85f53f7e2510a6a5d96529b5a0eecf9f09))
+
+### 🚀 Release Notes
+
 **Version**: 1.4.0
 **Date**: 2025-01-21
 
