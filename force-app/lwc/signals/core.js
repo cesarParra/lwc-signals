@@ -10,6 +10,9 @@ const UNSET = Symbol("UNSET");
 const COMPUTING = Symbol("COMPUTING");
 const ERRORED = Symbol("ERRORED");
 const READY = Symbol("READY");
+// The maximum stack depth value is derived from Salesforce's maximum stack depth limit in triggers.
+// This value is chosen to prevent infinite loops while still allowing for a reasonable level of recursion.
+const MAX_STACK_DEPTH = 16;
 const defaultEffectOptions = {
   _fromComputed: false,
   identifier: Symbol()
@@ -38,15 +41,22 @@ function $effect(fn, options) {
   const _optionsWithDefaults = { ...defaultEffectOptions, ...options };
   const effectNode = {
     error: null,
-    state: UNSET
+    state: UNSET,
+    stackDepth: 0
   };
   const execute = () => {
-    if (effectNode.state === COMPUTING) {
-      throw new Error("Circular dependency detected");
+    if (
+      effectNode.state === COMPUTING &&
+      effectNode.stackDepth >= MAX_STACK_DEPTH
+    ) {
+      throw new Error(
+        `Circular dependency detected. Maximum stack depth of ${MAX_STACK_DEPTH} exceeded.`
+      );
     }
     context.push(execute);
     try {
       effectNode.state = COMPUTING;
+      effectNode.stackDepth++;
       fn();
       effectNode.error = null;
       effectNode.state = READY;
@@ -58,6 +68,9 @@ function $effect(fn, options) {
         : handleEffectError(error, _optionsWithDefaults);
     } finally {
       context.pop();
+      if (effectNode.stackDepth > 0) {
+        effectNode.stackDepth--;
+      }
     }
   };
   execute();
