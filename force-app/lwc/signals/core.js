@@ -361,4 +361,20 @@ function $resource(fn, source, options) {
 function isSignal(anything) {
   return !!anything && anything.brand === SIGNAL_OBJECT_BRAND;
 }
-export { $signal, $effect, $computed, $resource, isSignal };
+class Bounder {
+  constructor(component, propertyName) {
+    this.component = component;
+    this.propertyName = propertyName;
+  }
+  to(signal) {
+    $effect(() => {
+      // @ts-expect-error The property name will be found
+      this.component[this.propertyName] = signal.value;
+    });
+    return signal.value;
+  }
+}
+function $binded(component, propertyName) {
+  return new Bounder(component, propertyName);
+}
+export { $signal, $effect, $computed, $resource, $binded, isSignal };
