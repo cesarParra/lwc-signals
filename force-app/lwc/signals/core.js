@@ -361,7 +361,7 @@ function $resource(fn, source, options) {
 function isSignal(anything) {
   return !!anything && anything.brand === SIGNAL_OBJECT_BRAND;
 }
-class Bounder {
+class Binder {
   constructor(component, propertyName) {
     this.component = component;
     this.propertyName = propertyName;
@@ -374,7 +374,15 @@ class Bounder {
     return signal.value;
   }
 }
-function $binded(component, propertyName) {
-  return new Bounder(component, propertyName);
+function bind(component, propertyName) {
+  return new Binder(component, propertyName);
 }
-export { $signal, $effect, $computed, $resource, $binded, isSignal };
+export {
+  $signal,
+  $effect,
+  $computed,
+  $resource,
+  bind,
+  bind as $bind,
+  isSignal
+};

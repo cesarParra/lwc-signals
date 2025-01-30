@@ -80,8 +80,13 @@ function $effect(fn: VoidFunction, options?: Partial<EffectOptions>): Effect {
   };
 
   const execute = () => {
-    if (effectNode.state === COMPUTING && effectNode.stackDepth >= MAX_STACK_DEPTH) {
-      throw new Error(`Circular dependency detected. Maximum stack depth of ${MAX_STACK_DEPTH} exceeded.`);
+    if (
+      effectNode.state === COMPUTING &&
+      effectNode.stackDepth >= MAX_STACK_DEPTH
+    ) {
+      throw new Error(
+        `Circular dependency detected. Maximum stack depth of ${MAX_STACK_DEPTH} exceeded.`
+      );
     }
 
     context.push(execute);
@@ -589,8 +594,12 @@ function isSignal(anything: unknown): anything is Signal<unknown> {
   );
 }
 
-class Bounder {
-  constructor(private component: Record<string, object>, private propertyName: string) {}
+class Binder {
+  constructor(
+    private component: Record<string, object>,
+    private propertyName: string
+  ) {}
+
   to(signal: Signal<unknown>) {
     $effect(() => {
       // @ts-expect-error The property name will be found
@@ -601,8 +610,16 @@ class Bounder {
   }
 }
 
-function $binded(component: Record<string, object>, propertyName: string) {
-  return new Bounder(component, propertyName);
+function bind(component: Record<string, object>, propertyName: string) {
+  return new Binder(component, propertyName);
 }
 
-export { $signal, $effect, $computed, $resource, $binded, isSignal };
+export {
+  $signal,
+  $effect,
+  $computed,
+  $resource,
+  bind,
+  bind as $bind,
+  isSignal
+};
