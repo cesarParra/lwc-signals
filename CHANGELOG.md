@@ -1,5 +1,14 @@
 ### 🚀 Release Notes
 
+**Version**: 1.5.0
+**Date**: 2025-01-30
+
+### ✨ Features
+
+- Proposal bind shorthand ([#37](https://github.com/cesarParra/lwc-signals/issues/37)) ([a64ca63](https://github.com/cesarParra/lwc-signals/commit/a64ca634e88483b7bec253dde12b5385eacea7f4))
+
+### 🚀 Release Notes
+
 **Version**: 1.4.1
 **Date**: 2025-01-22
 
