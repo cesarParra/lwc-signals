@@ -117,7 +117,7 @@ clicked.
 </template>
 ```
 
-To update the counter, you can simply change the `counter.value` property directly.
+To update the counter, you can change the `counter.value` property directly.
 
 ```javascript
 // counter.js
@@ -137,9 +137,35 @@ export default class Counter extends LightningElement {
 
 ## Reacting to changes
 
-### `$computed`
+### Through `$bind`
 
-You can use the `$computed` function to create a reactive value that depends on the signal.
+You can use the `$bind` function to create a reactive value that depends on the signal.
+
+```javascript
+// display.js
+import { LightningElement } from "lwc";
+import { $bind } from "c/signals";
+import { counter } from "c/counter-signals";
+
+export default class Display extends LightningElement {
+  counterProp = $bind(this, "counterProp").to(counter);
+}
+```
+
+Note that the first argument to the `$bind` function is the `this` context of the component, and the second argument
+is the name of the property that will be created on the component as a string. Then you call the `.to` function with
+the signal you want to bind to.
+
+<p align="center">
+    <img src="./doc-assets/counter-example.gif" alt="Counter Example" />
+</p>
+
+### Through `$computed`
+
+One downside of using `$bind` is that the second argument is a string, which can lead to typos and errors if the
+property name is changed but the string is not updated.
+
+So, alternatively, you can use the `$computed` function to create a reactive value that depends on the signal.
 
 ```javascript
 // display.js
@@ -152,13 +178,30 @@ export default class Display extends LightningElement {
 }
 ```
 
+But notice that this syntax is a lot more verbose than using `$bind`.
+
 > ❗ Note that in the callback function we **need** to reassign the value to `this.counter`
 > to trigger the reactivity. This is because we need the value to be reassigned so that
 > LWC reactive system can detect the change and update the UI.
 
-<p align="center">
-    <img src="./doc-assets/counter-example.gif" alt="Counter Example" />
-</p>
+### Through `$effect`
+
+Finally, you can use the `$effect` function to create a side effect that depends on the signal.
+
+```javascript
+// display.js
+import { LightningElement } from "lwc";
+import { $effect } from "c/signals";
+import { counter } from "c/counter-signals";
+
+export default class Display extends LightningElement {
+  counter = 0;
+
+  constructor() {
+    $effect(() => (this.counter = counter.value));
+  }
+}
+```
 
 #### Stacking computed values
 
