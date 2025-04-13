@@ -1,5 +1,14 @@
 ### 🚀 Release Notes
 
+**Version**: 1.5.1
+**Date**: 2025-04-13
+
+### 🐞 Bug Fixes
+
+- Fixing/improving TS support. ([#42](https://github.com/cesarParra/lwc-signals/issues/42)) ([14a7985](https://github.com/cesarParra/lwc-signals/commit/14a7985e457d90938aceea85b20d30e2e4610623))
+
+### 🚀 Release Notes
+
 **Version**: 1.5.0
 **Date**: 2025-01-30
 
