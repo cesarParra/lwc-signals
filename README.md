@@ -37,13 +37,10 @@ Easily implement:
 
 # Getting Started
 
-Copy the `force-app/lwc/signals` folder to your project.
+- Copy the `force-app/lwc/signals` folder to your project.
 
-> ✏️ Note that the source code is written in Typescript and is located in the `src` folder. The `force-app/lwc/signals`
-> folder contains the compiled code that you will be able to use in your Salesforce project. If you wish to modify the
-> source
-> code you can either modify the resulting JS code, or you can grab the Typescript files from the `src` folder
-> and set up your project to compile them.
+If you are have enabled [Typescript Support for your LWC Project](https://developer.salesforce.com/docs/platform/lwc/guide/ts.html#enable-typescript-support-for-your-lwc-project)
+then copy the `src/lwc/signals` folder instead.
 
 ## Examples
 
