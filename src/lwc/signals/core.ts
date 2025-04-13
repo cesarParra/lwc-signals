@@ -539,11 +539,16 @@ function $resource<ReturnType, Params>(
         error: null
       };
     } catch (error) {
-      _signal.value = onError(error, _value, { identifier, initialValue }) ?? {
-        data: null,
-        loading: false,
-        error
-      };
+      const errorValue = onError(error, _value, { identifier, initialValue })
+      if (errorValue) {
+        _signal.value = errorValue;
+      } else {
+        _signal.value = {
+          data: null,
+          loading: false,
+          error
+        };
+      }
     } finally {
       _isInitialLoad = false;
     }
@@ -600,7 +605,7 @@ class Binder {
     private propertyName: string
   ) {}
 
-  to(signal: Signal<unknown>) {
+  to<T>(signal: Signal<T>) {
     $effect(() => {
       // @ts-expect-error The property name will be found
       this.component[this.propertyName] = signal.value;
