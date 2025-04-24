@@ -1,5 +1,14 @@
 ### 🚀 Release Notes
 
+**Version**: 1.5.2
+**Date**: 2025-04-24
+
+### 🐞 Bug Fixes
+
+- update Binder class and bind function for improved type safety ([#43](https://github.com/cesarParra/lwc-signals/issues/43)) ([2a9e233](https://github.com/cesarParra/lwc-signals/commit/2a9e233d5f9541303dee9af5ecba9f2280a2369b))
+
+### 🚀 Release Notes
+
 **Version**: 1.5.1
 **Date**: 2025-04-13
 
