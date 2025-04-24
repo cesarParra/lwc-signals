@@ -314,11 +314,16 @@ function $resource(fn, source, options) {
         error: null
       };
     } catch (error) {
-      _signal.value = onError(error, _value, { identifier, initialValue }) ?? {
-        data: null,
-        loading: false,
-        error
-      };
+      const errorValue = onError(error, _value, { identifier, initialValue });
+      if (errorValue) {
+        _signal.value = errorValue;
+      } else {
+        _signal.value = {
+          data: null,
+          loading: false,
+          error
+        };
+      }
     } finally {
       _isInitialLoad = false;
     }

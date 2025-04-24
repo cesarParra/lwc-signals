@@ -599,10 +599,10 @@ function isSignal(anything: unknown): anything is Signal<unknown> {
   );
 }
 
-class Binder {
+class Binder<Element extends HTMLElement> {
   constructor(
-    private component: Record<string, object>,
-    private propertyName: string
+    private component: Element,
+    private propertyName: keyof Element,
   ) {}
 
   to<T>(signal: Signal<T>) {
@@ -615,8 +615,8 @@ class Binder {
   }
 }
 
-function bind(component: Record<string, object>, propertyName: string) {
-  return new Binder(component, propertyName);
+function bind<T extends HTMLElement>(component: T, propertyName: keyof T) {
+  return new Binder<T>(component, propertyName);
 }
 
 export {
@@ -628,3 +628,4 @@ export {
   bind as $bind,
   isSignal
 };
+
