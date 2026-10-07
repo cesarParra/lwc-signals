@@ -23,6 +23,21 @@ export function createStorage<T>(
   return { get, set, registerOnChange, unsubscribe };
 }
 
+// A stored value that does not parse falls back to the default instead of throwing.
+// `JSON.stringify(undefined)` is not a string, so writing `undefined` stores the literal
+// "undefined" -- without this every later read, every write (the setter compares against
+// the current value) and every module that reads the signal on load would throw.
+function parseStored<T>(raw: string | null | undefined, fallback: T): T {
+  if (!raw) {
+    return fallback;
+  }
+  try {
+    return JSON.parse(raw);
+  } catch {
+    return fallback;
+  }
+}
+
 export function useInMemoryStorage<T>(value: T): State<T> {
   let _value: T = value;
 
@@ -39,11 +54,7 @@ export function useInMemoryStorage<T>(value: T): State<T> {
 
 function useLocalStorageCreator<T>(key: string, value: T): State<T> {
   function getter() {
-    const item = localStorage.getItem(key);
-    if (item) {
-      return JSON.parse(item);
-    }
-    return value;
+    return parseStored(localStorage.getItem(key), value);
   }
 
   function setter(newValue: T) {
@@ -66,11 +77,7 @@ export function useLocalStorage(key: string) {
 
 function useSessionStorageCreator<T>(key: string, value: T): State<T> {
   function getter() {
-    const item = sessionStorage.getItem(key);
-    if (item) {
-      return JSON.parse(item);
-    }
-    return value;
+    return parseStored(sessionStorage.getItem(key), value);
   }
 
   function setter(newValue: T) {
@@ -97,11 +104,7 @@ export function useCookies<T>(key: string, expires?: Date) {
       const cookie = document.cookie
         .split("; ")
         .find((row) => row.startsWith(key));
-      if (cookie) {
-        const value = cookie.replace(`${key}=`, "");
-        return JSON.parse(value);
-      }
-      return value;
+      return parseStored(cookie?.replace(`${key}=`, ""), value);
     }
 
     function setter(newValue: T) {

@@ -2,6 +2,21 @@ import { subscribe, unsubscribe as empApiUnsubscribe, isEmpEnabled, onError as e
 export function createStorage(get, set, registerOnChange, unsubscribe) {
     return { get, set, registerOnChange, unsubscribe };
 }
+// A stored value that does not parse falls back to the default instead of throwing.
+// `JSON.stringify(undefined)` is not a string, so writing `undefined` stores the literal
+// "undefined" -- without this every later read, every write (the setter compares against
+// the current value) and every module that reads the signal on load would throw.
+function parseStored(raw, fallback) {
+    if (!raw) {
+        return fallback;
+    }
+    try {
+        return JSON.parse(raw);
+    }
+    catch {
+        return fallback;
+    }
+}
 export function useInMemoryStorage(value) {
     let _value = value;
     function getter() {
@@ -14,11 +29,7 @@ export function useInMemoryStorage(value) {
 }
 function useLocalStorageCreator(key, value) {
     function getter() {
-        const item = localStorage.getItem(key);
-        if (item) {
-            return JSON.parse(item);
-        }
-        return value;
+        return parseStored(localStorage.getItem(key), value);
     }
     function setter(newValue) {
         localStorage.setItem(key, JSON.stringify(newValue));
@@ -36,11 +47,7 @@ export function useLocalStorage(key) {
 }
 function useSessionStorageCreator(key, value) {
     function getter() {
-        const item = sessionStorage.getItem(key);
-        if (item) {
-            return JSON.parse(item);
-        }
-        return value;
+        return parseStored(sessionStorage.getItem(key), value);
     }
     function setter(newValue) {
         sessionStorage.setItem(key, JSON.stringify(newValue));
@@ -62,11 +69,7 @@ export function useCookies(key, expires) {
             const cookie = document.cookie
                 .split("; ")
                 .find((row) => row.startsWith(key));
-            if (cookie) {
-                const value = cookie.replace(`${key}=`, "");
-                return JSON.parse(value);
-            }
-            return value;
+            return parseStored(cookie?.replace(`${key}=`, ""), value);
         }
         function setter(newValue) {
             document.cookie = `${key}=${JSON.stringify(newValue)}; expires=${expires?.toUTCString()}`;
