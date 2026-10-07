@@ -1,4 +1,11 @@
-import { createStorage, useCookies, useEventBus, useLocalStorage, useSessionStorage } from "../use";
+import {
+  createStorage,
+  State,
+  useCookies,
+  useEventBus,
+  useLocalStorage,
+  useSessionStorage
+} from "../use";
 import { $signal, Signal } from "../core";
 import { jestMockPublish } from "../../../__mocks__/lightning/empApi";
 
@@ -97,7 +104,9 @@ describe("storing values in cookies", () => {
 
 describe("when receiving a value from the empApi", () => {
   it("should update the signal when the message is received", async () => {
-    function handleEvent(event?: { data: { payload: Record<string, unknown> } }) {
+    function handleEvent(event?: {
+      data: { payload: Record<string, unknown> };
+    }) {
       return event?.data.payload.Message__c ?? "";
     }
 
@@ -120,5 +129,55 @@ describe("when receiving a value from the empApi", () => {
     await new Promise(process.nextTick);
 
     expect(signal.value).toBe("Hello World!");
+  });
+});
+
+describe("stored values that do not parse", () => {
+  type Case = [
+    string,
+    (key: string) => (value: unknown) => State<unknown>,
+    (key: string, raw: string) => void
+  ];
+  const cases: Case[] = [
+    ["local storage", useLocalStorage, (k, v) => localStorage.setItem(k, v)],
+    [
+      "session storage",
+      useSessionStorage,
+      (k, v) => sessionStorage.setItem(k, v)
+    ],
+    ["cookies", (k) => useCookies(k), (k, v) => (document.cookie = `${k}=${v}`)]
+  ];
+
+  beforeEach(() => {
+    localStorage.clear();
+    sessionStorage.clear();
+  });
+
+  describe.each(cases)("in %s", (_name, use, write) => {
+    test("fall back to the default instead of throwing", () => {
+      write("poisoned", "undefined");
+      const signal = $signal<unknown>("default", { storage: use("poisoned") });
+      expect(signal.value).toBe("default");
+    });
+
+    test("can still be written", () => {
+      write("poisoned-write", "{not json");
+      const signal = $signal<unknown>("default", {
+        storage: use("poisoned-write")
+      });
+      expect(() => (signal.value = "next")).not.toThrow();
+      expect(signal.value).toBe("next");
+    });
+
+    test("survive undefined being written through the signal", () => {
+      const signal = $signal<unknown>("default", {
+        storage: use("written-undefined")
+      });
+      signal.value = undefined;
+      const reloaded = $signal<unknown>("default", {
+        storage: use("written-undefined")
+      });
+      expect(() => reloaded.value).not.toThrow();
+    });
   });
 });
